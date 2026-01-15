@@ -1,11 +1,11 @@
 export default function Brands() {
   const brands = [
-    { name: 'HCA Healthcare', logo: '/assets/hca-logo.svg', width: 58 },
-    { name: 'Klarna', logo: '/assets/klarna-logo.svg', width: 86 },
-    { name: 'Adobe', logo: '/assets/adobe-logo.svg', width: 125 },
-    { name: 'Netflix', logo: '/assets/netflix-logo.svg', width: 130 },
-    { name: 'PayPal', logo: '/assets/paypal-logo.svg', width: 119 },
-    { name: 'Salesforce', logo: '/assets/salesforce-logo.svg', width: 102 },
+    { name: 'HCA Healthcare', logo: '/assets/hca-logo.svg', width: 29 },
+    { name: 'Klarna', logo: '/assets/klarna-logo.svg', width: 43 },
+    { name: 'Adobe', logo: '/assets/adobe-logo.svg', width: 62.5 },
+    { name: 'Netflix', logo: '/assets/netflix-logo.svg', width: 65 },
+    { name: 'PayPal', logo: '/assets/paypal-logo.svg', width: 59.5 },
+    { name: 'Salesforce', logo: '/assets/salesforce-logo.svg', width: 51 },
   ]
 
   return (
@@ -14,15 +14,15 @@ export default function Brands() {
         327 of Fortune 500 are automating presentations with Camaral
       </p>
       
-      <div className="relative w-full overflow-hidden h-[40px] pointer-events-none">
+      <div className="relative w-full overflow-hidden h-[20px] pointer-events-none">
         {/* Scrolling container */}
-        <div className="flex gap-[120px] items-center animate-scroll">
+        <div className="flex gap-[60px] items-center animate-scroll">
           {/* First set of logos */}
           {brands.map((brand, index) => (
             <div 
               key={`brand-1-${index}`} 
               className="flex items-center justify-center shrink-0 grayscale opacity-60 transition-all duration-300 pointer-events-none"
-              style={{ width: `${brand.width}px`, height: '40px' }}
+              style={{ width: `${brand.width}px`, height: '20px' }}
             >
               <img 
                 src={brand.logo} 
@@ -38,7 +38,7 @@ export default function Brands() {
             <div 
               key={`brand-2-${index}`} 
               className="flex items-center justify-center shrink-0 grayscale opacity-60 transition-all duration-300 pointer-events-none"
-              style={{ width: `${brand.width}px`, height: '40px' }}
+              style={{ width: `${brand.width}px`, height: '20px' }}
             >
               <img 
                 src={brand.logo} 
