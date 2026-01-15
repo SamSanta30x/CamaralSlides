@@ -1,8 +1,15 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
+import { useState } from 'react'
+import LoginModal from './LoginModal'
 
 export default function Header() {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+
   return (
+    <>
     <header className="flex items-center justify-between p-4 w-full">
       {/* Logo Section */}
       <div className="flex items-center shrink-0">
@@ -55,8 +62,8 @@ export default function Header() {
       {/* Action Buttons */}
       <div className="flex items-center shrink-0">
         <div className="flex gap-[6px] items-center shrink-0">
-          <Link 
-            href="/login" 
+          <button 
+            onClick={() => setIsLoginModalOpen(true)}
             className="bg-gradient-to-b from-white to-[#f7f4ed] border border-[#dcdcdc] border-solid flex items-start rounded-[16px] shrink-0"
           >
             <div className="flex items-center justify-center px-[14px] py-2 rounded-[999px]">
@@ -64,7 +71,7 @@ export default function Header() {
                 <p className="leading-[20px] whitespace-pre">Login</p>
               </div>
             </div>
-          </Link>
+          </button>
           <Link 
             href="/signup" 
             className="bg-[#222] border border-[#dcdcdc] border-solid flex items-start rounded-[16px] shrink-0"
@@ -78,5 +85,12 @@ export default function Header() {
         </div>
       </div>
     </header>
+
+    {/* Login Modal */}
+    <LoginModal 
+      isOpen={isLoginModalOpen} 
+      onClose={() => setIsLoginModalOpen(false)} 
+    />
+    </>
   )
 }

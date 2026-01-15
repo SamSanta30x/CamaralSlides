@@ -1,6 +1,5 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import Brands from "@/components/Brands";
 
 export default function Home() {
   return (
@@ -14,7 +13,7 @@ export default function Home() {
       <main className="flex w-full flex-col items-center justify-center">
         <Hero />
         <div className="mt-4 w-full">
-          <Brands />
+         
         </div>
       </main>
     </div>
