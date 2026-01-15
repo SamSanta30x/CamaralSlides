@@ -29,14 +29,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       onClick={onClose}
     >
       <div 
-        className="bg-white flex flex-col gap-[10px] items-center px-[17px] py-[34px] rounded-[16px] relative"
+        className="bg-white flex flex-col gap-[10px] items-center px-[17px] rounded-[16px] relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Logo Icon */}
-        <div className="w-[48px] h-[48px] shrink-0">
+        <div className="w-[120px] h-[120px] shrink-0">
           <img 
             alt="Camaral" 
-            className="w-full h-full" 
+            className="w-full h-[175%]" 
             src="/favicon.svg"
           />
         </div>
@@ -100,7 +100,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <div className="text-center">
             <span className="font-['Inter',sans-serif] text-[12.8px] leading-[21px] text-[#5f5f5d]">
               Don&apos;t have an account?{' '}
-              <a href="/signup" className="text-[#1c1c1c] underline">
+              <a href="/sign-up" className="text-[#1c1c1c] underline">
                 Create your account
               </a>
             </span>
