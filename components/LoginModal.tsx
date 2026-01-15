@@ -100,7 +100,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <div className="text-center">
             <span className="font-['Inter',sans-serif] text-[12.8px] leading-[21px] text-[#5f5f5d]">
               Don&apos;t have an account?{' '}
-              <a href="/sign-up" className="text-[#1c1c1c] underline">
+              <a href="/signup" className="text-[#1c1c1c] underline">
                 Create your account
               </a>
             </span>
