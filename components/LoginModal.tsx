@@ -33,56 +33,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Logo Icon */}
-        <div className="relative w-[46px] h-[46px] shrink-0">
-          <div className="absolute left-0 top-[3.32px] w-[15.428px] h-[15.084px]">
-            <img 
-              alt="" 
-              className="w-full h-full" 
-              src="/assets/group-137.svg"
-            />
-          </div>
-          <div className="absolute left-[20.57px] top-[3.32px] w-[15.428px] h-[15.084px]">
-            <img 
-              alt="" 
-              className="w-full h-full" 
-              src="/assets/group-135.svg"
-            />
-          </div>
-          <div className="absolute left-[10.29px] top-0 w-[15.428px] h-[15.084px]">
-            <img 
-              alt="" 
-              className="w-full h-full" 
-              src="/assets/group-134.svg"
-            />
-          </div>
-          <div className="absolute left-0 top-[24.92px] w-[15.428px] h-[15.084px] scale-y-[-100%]">
-            <img 
-              alt="" 
-              className="w-full h-full" 
-              src="/assets/group-138.svg"
-            />
-          </div>
-          <div className="absolute left-[20.57px] top-[24.92px] w-[15.428px] h-[15.084px] scale-y-[-100%]">
-            <img 
-              alt="" 
-              className="w-full h-full" 
-              src="/assets/group-136.svg"
-            />
-          </div>
-          <div className="absolute left-[10.29px] top-[21.6px] w-[15.428px] h-[15.084px] scale-y-[-100%]">
-            <img 
-              alt="" 
-              className="w-full h-full" 
-              src="/assets/group-139.svg"
-            />
-          </div>
-          <div className="absolute left-[11.66px] top-[11.76px] w-[12.57px] h-[12.57px]">
-            <img 
-              alt="" 
-              className="w-full h-full" 
-              src="/assets/ellipse-1.svg"
-            />
-          </div>
+        <div className="w-[48px] h-[48px] shrink-0">
+          <img 
+            alt="Camaral" 
+            className="w-full h-full" 
+            src="/favicon.svg"
+          />
         </div>
 
         {/* Title */}
