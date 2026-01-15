@@ -1,15 +1,8 @@
+import Link from 'next/link'
+
 export default function Hero() {
   return (
     <div className="flex flex-col gap-[10px] items-center justify-center px-0 py-[40px] w-full">
-      {/* See an example button - now at the top */}
-      <div className="bg-white border border-[#dcdcdc] border-solid flex flex-col items-center justify-center px-[16px] py-[6px] rounded-[16px] shrink-0">
-        <div className="flex items-center justify-center shrink-0">
-          <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic shrink-0 text-[#1c1c1c] text-[12px] text-center tracking-[-0.8px] whitespace-nowrap">
-            <p className="leading-[normal] whitespace-pre">See an example</p>
-          </div>
-        </div>
-      </div>
-
       {/* Main content */}
       <div className="flex flex-col gap-[30px] items-center shrink-0">
         {/* Heading and description */}
@@ -55,6 +48,18 @@ export default function Hero() {
               <br aria-hidden="true" />
               and start now.
             </p>
+            
+            {/* See an example button - styled like Login button */}
+            <Link 
+              href="/example" 
+              className="bg-gradient-to-b from-white to-[#f7f4ed] border border-[#dcdcdc] border-solid flex items-start rounded-[16px] shrink-0 mt-2"
+            >
+              <div className="flex items-center justify-center px-[14px] py-2 rounded-[999px]">
+                <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-black whitespace-nowrap">
+                  <p className="leading-[20px] whitespace-pre">See an example</p>
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </div>
