@@ -11,11 +11,6 @@ export default function LoginPage() {
     console.log('Google login')
   }
 
-  const handleGitHubLogin = () => {
-    // Implement GitHub OAuth login
-    console.log('GitHub login')
-  }
-
   const handleEmailLogin = (e: React.FormEvent) => {
     e.preventDefault()
     // Implement email login
@@ -25,10 +20,10 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen bg-[#fcfbf8] flex">
       {/* Left Side - Form */}
-      <div className="w-[720px] flex items-center justify-center px-8 py-20">
+      <div className="w-[720px] flex items-center justify-center px-8 py-[115px]">
         <div className="flex flex-col gap-[10px] w-[350px]">
           {/* Logo Icon */}
-          <div className="w-[34.5px] h-[36px] mb-[79px]">
+          <div className="w-[48px] h-[48px] mb-2">
             <img 
               alt="Camaral" 
               className="w-full h-full" 
@@ -37,7 +32,7 @@ export default function LoginPage() {
           </div>
 
           {/* Title */}
-          <h1 className="font-['Inter',sans-serif] font-normal text-[27.8px] leading-[45px] text-[#1c1c1c] mb-[54.5px]">
+          <h1 className="font-['Inter',sans-serif] font-normal text-[27.8px] leading-[45px] text-[#1c1c1c] mb-2">
             Log in
           </h1>
 
@@ -56,23 +51,8 @@ export default function LoginPage() {
             </span>
           </button>
 
-          {/* GitHub Button */}
-          <button
-            onClick={handleGitHubLogin}
-            className="bg-[#f7f4ed] border border-[#eceae4] h-[32px] rounded-[6px] w-full relative flex items-center justify-center gap-2 mt-[16px]"
-          >
-            <img 
-              alt="" 
-              className="w-4 h-4" 
-              src="/assets/github-icon.svg"
-            />
-            <span className="font-['Inter',sans-serif] text-[13.2px] leading-[21px] text-[#1c1c1c]">
-              Continue with GitHub
-            </span>
-          </button>
-
           {/* Divider with OR */}
-          <div className="relative w-full h-px border-t border-[#eceae4] mt-[32px] mb-[34px]">
+          <div className="relative w-full h-px border-t border-[#eceae4] my-2">
             <div className="absolute bg-[#fcfbf8] px-2 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
               <span className="font-['Inter',sans-serif] text-[11.3px] leading-[18px] text-[#5f5f5d] uppercase">
                 Or
