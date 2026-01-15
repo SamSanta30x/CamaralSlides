@@ -1,13 +1,27 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import LoginModal from './LoginModal'
 
 export default function Hero() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -45,8 +59,12 @@ export default function Hero() {
     ]
     
     if (validTypes.includes(file.type)) {
-      // Open login modal when file is uploaded
-      setIsLoginModalOpen(true)
+      // Redirect to login on mobile, open modal on desktop
+      if (isMobile) {
+        router.push('/login')
+      } else {
+        setIsLoginModalOpen(true)
+      }
     } else {
       alert('Please upload a PDF or PowerPoint file')
     }
@@ -138,11 +156,13 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Login Modal */}
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)} 
-      />
+      {/* Login Modal - Desktop only */}
+      {!isMobile && (
+        <LoginModal 
+          isOpen={isLoginModalOpen} 
+          onClose={() => setIsLoginModalOpen(false)} 
+        />
+      )}
     </>
   )
 }
