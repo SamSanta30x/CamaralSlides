@@ -8,8 +8,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CamaralSlides",
-  description: "Create beautiful presentations with Camaral",
+  title: "Camaral - Your slides always on",
+  description: "Turn your presentations 24/7 into an AI agent that explains, pitch and answer questions automatically to anyone, anytime.",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
