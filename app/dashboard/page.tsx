@@ -5,34 +5,27 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import FileUploadCard from '@/components/FileUploadCard'
+import { useAuth } from '@/lib/auth/AuthContext'
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const { user, loading, signOut } = useAuth()
 
   useEffect(() => {
-    // TODO: Check if user is logged in
-    // For now, simulate checking auth
-    const checkAuth = () => {
-      // Simulate auth check - replace with real auth later
-      const isLoggedIn = false // Change this when you implement real auth
-      
-      if (!isLoggedIn) {
-        router.push('/')
-      } else {
-        setIsAuthenticated(true)
-      }
-      setIsLoading(false)
+    if (!loading && !user) {
+      router.push('/')
     }
-
-    checkAuth()
-  }, [router])
+  }, [user, loading, router])
 
   const handleFileUpload = (file: File) => {
     console.log('File uploaded:', file.name)
     // TODO: Handle file upload logic
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
   }
 
   // Dummy presentation data
@@ -41,7 +34,7 @@ export default function DashboardPage() {
     thumbnail: '/assets/slide-demo.png'
   })
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <p className="font-['Inter',sans-serif] text-[16px] text-[#0d0d0d]">Loading...</p>
@@ -49,7 +42,7 @@ export default function DashboardPage() {
     )
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null
   }
 
@@ -83,13 +76,30 @@ export default function DashboardPage() {
             </span>
           </button>
 
-          {/* Avatar */}
-          <div className="w-[36px] h-[36px] rounded-full border-[1.125px] border-[#fbff00] overflow-hidden">
-            <img 
-              src="/assets/avatar-demo.png" 
-              alt="User avatar" 
-              className="w-full h-full object-cover"
-            />
+          {/* Avatar with dropdown */}
+          <div className="relative group">
+            <button className="w-[36px] h-[36px] rounded-full border-[1.125px] border-[#fbff00] overflow-hidden">
+              <img 
+                src="/assets/avatar-demo.png" 
+                alt="User avatar" 
+                className="w-full h-full object-cover"
+              />
+            </button>
+            
+            {/* Dropdown menu */}
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-[12px] shadow-lg border border-[#eceae4] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="py-2">
+                <div className="px-4 py-2 text-sm text-[#5f5f5d] border-b border-[#eceae4]">
+                  {user.email}
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left px-4 py-2 text-sm text-[#0d0d0d] hover:bg-[#f5f5f5] font-['Inter',sans-serif]"
+                >
+                  Sign out
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>

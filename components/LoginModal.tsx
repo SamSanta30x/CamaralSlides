@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth/AuthContext'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -9,18 +11,26 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { signInWithGoogle } = useAuth()
+  const router = useRouter()
 
   if (!isOpen) return null
 
-  const handleGoogleLogin = () => {
-    // Implement Google OAuth login
-    console.log('Google login')
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    const { error } = await signInWithGoogle()
+    if (error) {
+      console.error('Google login error:', error.message)
+      setLoading(false)
+    }
   }
 
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailContinue = (e: React.FormEvent) => {
     e.preventDefault()
-    // Implement email login
-    console.log('Email login:', email)
+    // Redirect to /login with email as query param
+    router.push(`/login?email=${encodeURIComponent(email)}`)
+    onClose()
   }
 
   return (
@@ -73,7 +83,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleEmailLogin} className="w-full max-w-[350px] flex flex-col gap-4">
+        <form onSubmit={handleEmailContinue} className="w-full max-w-[350px] flex flex-col gap-4">
           {/* Email Label and Input */}
           <div className="flex flex-col gap-1">
             <label className="font-['Inter',sans-serif] text-[13px] sm:text-[13.9px] leading-[21px] text-[#1c1c1c]">
@@ -85,13 +95,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               onChange={(e) => setEmail(e.target.value)}
               className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13px] sm:text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
               required
+              disabled={loading}
             />
           </div>
 
           {/* Continue Button */}
           <button
             type="submit"
-            className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13px] sm:text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333]"
+            className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13px] sm:text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333] disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
           >
             Continue
           </button>

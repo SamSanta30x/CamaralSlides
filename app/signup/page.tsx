@@ -1,20 +1,61 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth/AuthContext'
 
 export default function SignUpPage() {
-  const [email, setEmail] = useState('')
+  const searchParams = useSearchParams()
+  const [email, setEmail] = useState(searchParams.get('email') || '')
+  const [isEditingEmail, setIsEditingEmail] = useState(!searchParams.get('email'))
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [passwordValidation, setPasswordValidation] = useState({
+    minLength: false,
+    hasNumber: false
+  })
+  const { signUp, signInWithGoogle, user } = useAuth()
+  const router = useRouter()
 
-  const handleGoogleSignup = () => {
-    // Implement Google OAuth signup
-    console.log('Google signup')
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard')
+    }
+  }, [user, router])
+
+  useEffect(() => {
+    // Validate password in real-time
+    setPasswordValidation({
+      minLength: password.length >= 8,
+      hasNumber: /\d/.test(password)
+    })
+  }, [password])
+
+  const handleGoogleSignup = async () => {
+    setLoading(true)
+    setError('')
+    const { error } = await signInWithGoogle()
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+    }
   }
 
-  const handleEmailSignup = (e: React.FormEvent) => {
+  const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Implement email signup
-    console.log('Email signup:', email)
+    setLoading(true)
+    setError('')
+    
+    const { error } = await signUp(email, password)
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+    } else {
+      // Redirect to verify email page
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`)
+    }
   }
 
   return (
@@ -62,19 +103,84 @@ export default function SignUpPage() {
 
           {/* Form */}
           <form onSubmit={handleEmailSignup} className="flex flex-col gap-4">
-            {/* Email Label and Input */}
-            <div className="flex flex-col gap-1">
-              <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
-                required
-              />
-            </div>
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-[6px] text-[13px]">
+                {error}
+              </div>
+            )}
+
+
+            {/* Email Section */}
+            {isEditingEmail ? (
+              <div className="flex flex-col gap-1">
+                <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
+                  required
+                  disabled={loading}
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1">
+                <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
+                  Email
+                </label>
+                <div className="bg-[#f5f5f5] h-[36px] rounded-[6px] px-3 flex items-center justify-between">
+                  <span className="font-['Inter',sans-serif] text-[13.9px] text-[#1c1c1c]">
+                    {email}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingEmail(true)}
+                    className="font-['Inter',sans-serif] text-[13.9px] text-[#1c1c1c] underline"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Password Label and Input - Only show if email is set */}
+            {!isEditingEmail && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
+                    required
+                    disabled={loading}
+                    minLength={8}
+                  />
+                </div>
+
+                {/* Password Requirements */}
+                <div className="flex flex-col gap-1">
+                  <p className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
+                    Password must contain:
+                  </p>
+                  <ul className="list-disc list-inside text-[#5f5f5d] font-['Inter',sans-serif] text-[11.1px] leading-[18px]">
+                    <li className={passwordValidation.minLength ? 'text-green-600' : ''}>
+                      at least 8 characters
+                    </li>
+                    <li className={passwordValidation.hasNumber ? 'text-green-600' : ''}>
+                      a number (0-9)
+                    </li>
+                  </ul>
+                </div>
+              </>
+            )}
 
             {/* Terms Text */}
             <div className="text-[#5f5f5d] font-['Inter',sans-serif] text-[11.1px] leading-[18px]">
@@ -85,13 +191,16 @@ export default function SignUpPage() {
               <span>.</span>
             </div>
 
-            {/* Continue Button */}
-            <button
-              type="submit"
-              className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333]"
-            >
-              Continue
-            </button>
+            {/* Continue/Create Account Button */}
+            {!isEditingEmail && (
+              <button
+                type="submit"
+                className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || !passwordValidation.minLength || !passwordValidation.hasNumber}
+              >
+                {loading ? 'Loading...' : 'Create your account'}
+              </button>
+            )}
 
             {/* Already have account */}
             <div className="text-center">

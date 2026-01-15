@@ -1,20 +1,89 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth/AuthContext'
+import { checkEmailExists } from '@/lib/auth/checkEmail'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
+  const searchParams = useSearchParams()
+  const [email, setEmail] = useState(searchParams.get('email') || '')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [isGoogleAccount, setIsGoogleAccount] = useState(false)
+  const [checkingEmail, setCheckingEmail] = useState(false)
+  const { signIn, signInWithGoogle, user } = useAuth()
+  const router = useRouter()
 
-  const handleGoogleLogin = () => {
-    // Implement Google OAuth login
-    console.log('Google login')
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard')
+    }
+  }, [user, router])
+
+  useEffect(() => {
+    // If email comes from query param, check it automatically
+    const emailParam = searchParams.get('email')
+    if (emailParam) {
+      setEmail(emailParam)
+      handleEmailCheck(emailParam)
+    }
+  }, [searchParams])
+
+  const handleEmailCheck = async (emailToCheck: string) => {
+    setCheckingEmail(true)
+    setError('')
+    
+    const { exists, isGoogleAccount: isGoogle } = await checkEmailExists(emailToCheck)
+    
+    if (isGoogle) {
+      setIsGoogleAccount(true)
+      setShowPassword(false)
+    } else if (!exists) {
+      // Email not registered, redirect to signup without page reload
+      router.replace(`/signup?email=${encodeURIComponent(emailToCheck)}`)
+      return
+    } else {
+      // Email exists and is not Google, show password field
+      setIsGoogleAccount(false)
+      setShowPassword(true)
+    }
+    
+    setCheckingEmail(false)
   }
 
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Implement email login
-    console.log('Email login:', email)
+    if (!showPassword && !isGoogleAccount) {
+      await handleEmailCheck(email)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    setError('')
+    const { error } = await signInWithGoogle()
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+    }
+  }
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    
+    const { error } = await signIn(email, password)
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+    } else {
+      router.push('/dashboard')
+    }
   }
 
   return (
@@ -61,7 +130,21 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleEmailLogin} className="flex flex-col gap-4">
+          <form onSubmit={showPassword ? handlePasswordLogin : handleEmailSubmit} className="flex flex-col gap-4">
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-[6px] text-[13px]">
+                {error}
+              </div>
+            )}
+
+            {/* Google Account Message */}
+            {isGoogleAccount && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-700 px-3 py-2 rounded-[6px] text-[13px]">
+                This email uses Google sign-in. Please use "Continue with Google" button above.
+              </div>
+            )}
+
             {/* Email Label and Input */}
             <div className="flex flex-col gap-1">
               <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
@@ -73,16 +156,38 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
                 required
+                disabled={loading || checkingEmail || showPassword}
               />
             </div>
 
+            {/* Password Label and Input - Only show if email is verified and not Google */}
+            {showPassword && !isGoogleAccount && (
+              <div className="flex flex-col gap-1">
+                <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
+                  required
+                  disabled={loading}
+                  minLength={8}
+                />
+              </div>
+            )}
+
             {/* Continue Button */}
-            <button
-              type="submit"
-              className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333] mt-[16px]"
-            >
-              Continue
-            </button>
+            {!isGoogleAccount && (
+              <button
+                type="submit"
+                className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333] mt-[16px] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || checkingEmail}
+              >
+                {checkingEmail ? 'Checking...' : loading ? 'Loading...' : 'Continue'}
+              </button>
+            )}
 
             {/* Don't have account */}
             <div className="text-center mt-[24px]">
