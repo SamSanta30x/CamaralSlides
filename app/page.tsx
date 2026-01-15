@@ -1,7 +1,28 @@
-import Header from "@/components/Header";
-import Hero from "@/components/Hero";
+'use client'
+
+import { useAuth } from "@/lib/auth/AuthContext"
+import Header from "@/components/Header"
+import Hero from "@/components/Hero"
+import Brands from "@/components/Brands"
+import DashboardContent from "@/components/DashboardContent"
 
 export default function Home() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="font-['Inter',sans-serif] text-[16px] text-[#0d0d0d]">Loading...</p>
+      </div>
+    )
+  }
+
+  // If user is authenticated, show dashboard
+  if (user) {
+    return <DashboardContent />
+  }
+
+  // If not authenticated, show landing
   return (
     <div 
       className="min-h-screen"
@@ -12,10 +33,8 @@ export default function Home() {
       <Header />
       <main className="flex w-full flex-col items-center justify-center">
         <Hero />
-        <div className="mt-4 w-full">
-         
-        </div>
+        <Brands />
       </main>
     </div>
-  );
+  )
 }

@@ -1,22 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import FileUploadCard from '@/components/FileUploadCard'
 import { useAuth } from '@/lib/auth/AuthContext'
 
-export default function DashboardPage() {
+export default function DashboardContent() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const { user, loading, signOut } = useAuth()
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/')
-    }
-  }, [user, loading, router])
+  const { user, signOut } = useAuth()
 
   const handleFileUpload = (file: File) => {
     console.log('File uploaded:', file.name)
@@ -34,24 +28,12 @@ export default function DashboardPage() {
     thumbnail: '/assets/slide-demo.png'
   })
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="font-['Inter',sans-serif] text-[16px] text-[#0d0d0d]">Loading...</p>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return null
-  }
-
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
       {/* Header */}
       <header className="w-full flex items-center justify-between p-4 max-w-[1440px]">
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center">
+        <Link href="/" className="flex items-center">
           <div className="flex items-center px-[14px] py-2">
             <Image 
               src="/Camaral Logo.svg" 
@@ -90,7 +72,7 @@ export default function DashboardPage() {
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-[12px] shadow-lg border border-[#eceae4] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
               <div className="py-2">
                 <div className="px-4 py-2 text-sm text-[#5f5f5d] border-b border-[#eceae4]">
-                  {user.email}
+                  {user?.email}
                 </div>
                 <button
                   onClick={handleSignOut}
