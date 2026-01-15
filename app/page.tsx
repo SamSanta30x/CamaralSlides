@@ -11,9 +11,9 @@ export default function Home() {
       }}
     >
       <Header />
-      <main className="flex w-full flex-col items-center justify-center py-12">
+      <main className="flex w-full flex-col items-center justify-center">
         <Hero />
-        <div className="mt-16 w-full">
+        <div className="mt-4 w-full">
           <Brands />
         </div>
       </main>

@@ -11,10 +11,10 @@ export default function Header() {
             <Image 
               src="/Camaral Logo.svg" 
               alt="Camaral" 
-              width={142}
-              height={36}
+              width={180}
+              height={48}
               priority
-              className="h-auto"
+              className="h-[36px] w-auto"
             />
           </div>
         </Link>
