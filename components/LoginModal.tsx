@@ -25,29 +25,29 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   return (
     <div 
-      className="fixed inset-0 bg-[rgba(0,0,0,0.7)] flex items-center justify-center z-50"
+      className="fixed inset-0 bg-[rgba(0,0,0,0.7)] flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div 
-        className="bg-white flex flex-col gap-[10px] items-center px-[17px] rounded-[16px] relative"
+        className="bg-white flex flex-col gap-[10px] items-center px-[17px] sm:px-[17px] py-[24px] sm:py-[34px] rounded-[16px] relative w-full max-w-[384px] max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Logo Icon */}
-        <div className="w-[120px] h-[120px] shrink-0">
+        <div className="w-[40px] h-[40px] sm:w-[48px] sm:h-[48px] shrink-0 mb-2">
           <img 
             alt="Camaral" 
-            className="w-full h-[175%]" 
+            className="w-full h-full" 
             src="/favicon.svg"
           />
         </div>
 
         {/* Title */}
-        <h2 className="font-['Inter',sans-serif] font-normal text-[27.8px] leading-[45px] text-[#1c1c1c] text-center shrink-0">
+        <h2 className="font-['Inter',sans-serif] font-normal text-[24px] sm:text-[27.8px] leading-[1.2] text-[#1c1c1c] text-center shrink-0 mb-2">
           Log in
         </h2>
 
         {/* Google Button */}
-        <div className="pb-[10px] pt-0 w-[350px]">
+        <div className="pb-[10px] pt-0 w-full max-w-[350px]">
           <button
             onClick={handleGoogleLogin}
             className="bg-[#f7f4ed] border border-[#eceae4] h-[32px] rounded-[6px] w-full relative flex items-center justify-center gap-2"
@@ -57,14 +57,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               className="w-4 h-4" 
               src="/assets/google-icon.svg"
             />
-            <span className="font-['Inter',sans-serif] text-[13.3px] leading-[21px] text-[#1c1c1c]">
+            <span className="font-['Inter',sans-serif] text-[13px] sm:text-[13.3px] leading-[21px] text-[#1c1c1c]">
               Continue with Google
             </span>
           </button>
         </div>
 
         {/* Divider with OR */}
-        <div className="relative w-[350px] h-px border-t border-[#eceae4] mb-[10px]">
+        <div className="relative w-full max-w-[350px] h-px border-t border-[#eceae4] mb-[10px]">
           <div className="absolute bg-white px-2 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <span className="font-['Inter',sans-serif] text-[11.3px] leading-[18px] text-[#5f5f5d] uppercase">
               Or
@@ -73,17 +73,17 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleEmailLogin} className="w-[350px] flex flex-col gap-4">
+        <form onSubmit={handleEmailLogin} className="w-full max-w-[350px] flex flex-col gap-4">
           {/* Email Label and Input */}
           <div className="flex flex-col gap-1">
-            <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
+            <label className="font-['Inter',sans-serif] text-[13px] sm:text-[13.9px] leading-[21px] text-[#1c1c1c]">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
+              className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13px] sm:text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
               required
             />
           </div>
@@ -91,14 +91,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           {/* Continue Button */}
           <button
             type="submit"
-            className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333]"
+            className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13px] sm:text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333]"
           >
             Continue
           </button>
 
           {/* Don't have account */}
           <div className="text-center">
-            <span className="font-['Inter',sans-serif] text-[12.8px] leading-[21px] text-[#5f5f5d]">
+            <span className="font-['Inter',sans-serif] text-[12px] sm:text-[12.8px] leading-[21px] text-[#5f5f5d]">
               Don&apos;t have an account?{' '}
               <a href="/signup" className="text-[#1c1c1c] underline">
                 Create your account
@@ -110,13 +110,13 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <div className="border-t border-[#eceae4] my-2" />
 
           {/* SSO Text with Lock Icon */}
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center">
             <img 
               alt="" 
               className="w-4 h-4" 
               src="/assets/lock-icon.svg"
             />
-            <span className="font-['Inter',sans-serif] text-[13.2px] leading-[21px] text-[#5f5f5d]">
+            <span className="font-['Inter',sans-serif] text-[12px] sm:text-[13.2px] leading-[21px] text-[#5f5f5d]">
               SSO available on{' '}
               <span className="underline">Business and Enterprise</span>
               {' '}plans

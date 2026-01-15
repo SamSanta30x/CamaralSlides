@@ -10,7 +10,7 @@ export default function Header() {
 
   return (
     <>
-    <header className="flex items-center justify-between p-4 w-full">
+    <header className="flex items-center justify-between p-4 w-full max-w-[1440px] mx-auto">
       {/* Logo Section */}
       <div className="flex items-center shrink-0">
         <Link href="/" className="flex items-center">
@@ -21,14 +21,14 @@ export default function Header() {
               width={90}
               height={20}
               priority
-              className="h-[24px] w-auto"
+              className="h-[20px] sm:h-[24px] w-auto"
             />
           </div>
         </Link>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex gap-[10px] items-center shrink-0">
+      {/* Navigation Links - Hidden on mobile */}
+      <nav className="hidden lg:flex gap-[10px] items-center shrink-0">
         <Link href="/solutions" className="flex items-start rounded-[16px] shrink-0">
           <div className="flex items-center justify-center px-[14px] py-2 rounded-[999px]">
             <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-black whitespace-nowrap">
@@ -66,8 +66,8 @@ export default function Header() {
             onClick={() => setIsLoginModalOpen(true)}
             className="bg-gradient-to-b from-white to-[#f7f4ed] border border-[#dcdcdc] border-solid flex items-start rounded-[16px] shrink-0"
           >
-            <div className="flex items-center justify-center px-[14px] py-2 rounded-[999px]">
-              <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-black whitespace-nowrap">
+            <div className="flex items-center justify-center px-[10px] sm:px-[14px] py-2 rounded-[999px]">
+              <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[13px] sm:text-[14px] text-black whitespace-nowrap">
                 <p className="leading-[20px] whitespace-pre">Login</p>
               </div>
             </div>
@@ -76,8 +76,8 @@ export default function Header() {
             href="/signup" 
             className="bg-[#222] border border-[#dcdcdc] border-solid flex items-start rounded-[16px] shrink-0"
           >
-            <div className="flex items-center justify-center px-[14px] py-2 rounded-[999px]">
-              <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-white whitespace-nowrap">
+            <div className="flex items-center justify-center px-[10px] sm:px-[14px] py-2 rounded-[999px]">
+              <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[13px] sm:text-[14px] text-white whitespace-nowrap">
                 <p className="leading-[20px] whitespace-pre">Sign up</p>
               </div>
             </div>
