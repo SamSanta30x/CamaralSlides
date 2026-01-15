@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -30,174 +29,142 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       onClick={onClose}
     >
       <div 
-        className="bg-white flex flex-col gap-[10px] items-center px-[17px] py-[34px] rounded-[16px] w-[384px]"
+        className="bg-white flex flex-col gap-[10px] items-center px-[17px] py-[34px] rounded-[16px] relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Logo Icon */}
-        <div className="inline-grid grid-cols-[max-content] grid-rows-[max-content] items-start justify-items-start leading-[0] shrink-0">
-          <div className="col-1 row-1 inline-grid grid-cols-[max-content] grid-rows-[max-content] items-start justify-items-start ml-0 mt-0">
-            <div className="col-1 row-1 inline-grid grid-cols-[max-content] grid-rows-[max-content] items-start justify-items-start ml-0 mt-0">
-              <div className="col-1 row-1 ml-0 mt-[3.32px] w-[15.428px] h-[15.084px]">
-                <img 
-                  alt="" 
-                  className="block max-w-none w-full h-full" 
-                  src="/assets/group-137.svg"
-                />
-              </div>
-              <div className="col-1 row-1 ml-[20.57px] mt-[3.32px] w-[15.428px] h-[15.084px]">
-                <img 
-                  alt="" 
-                  className="block max-w-none w-full h-full" 
-                  src="/assets/group-135.svg"
-                />
-              </div>
-              <div className="col-1 row-1 ml-[10.29px] mt-0 w-[15.428px] h-[15.084px]">
-                <img 
-                  alt="" 
-                  className="block max-w-none w-full h-full" 
-                  src="/assets/group-134.svg"
-                />
-              </div>
-            </div>
-            <div className="col-1 row-1 inline-grid grid-cols-[max-content] grid-rows-[max-content] items-start justify-items-start ml-0 mt-[17.6px]">
-              <div className="col-1 row-1 flex items-center justify-center ml-0 mt-[3.32px] w-[15.428px] h-[15.084px]">
-                <div className="flex-none scale-y-[-100%]">
-                  <div className="w-[15.428px] h-[15.084px]">
-                    <img 
-                      alt="" 
-                      className="block max-w-none w-full h-full" 
-                      src="/assets/group-138.svg"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="col-1 row-1 flex items-center justify-center ml-[20.57px] mt-[3.32px] w-[15.428px] h-[15.084px]">
-                <div className="flex-none scale-y-[-100%]">
-                  <div className="w-[15.428px] h-[15.084px]">
-                    <img 
-                      alt="" 
-                      className="block max-w-none w-full h-full" 
-                      src="/assets/group-136.svg"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="col-1 row-1 flex items-center justify-center ml-[10.29px] mt-0 w-[15.428px] h-[15.084px]">
-                <div className="flex-none scale-y-[-100%]">
-                  <div className="w-[15.428px] h-[15.084px]">
-                    <img 
-                      alt="" 
-                      className="block max-w-none w-full h-full" 
-                      src="/assets/group-139.svg"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-1 row-1 ml-[11.66px] mt-[11.76px] w-[12.57px] h-[12.57px]">
-              <div className="absolute inset-[-5.6%]">
-                <img 
-                  alt="" 
-                  className="block max-w-none w-full h-full" 
-                  src="/assets/ellipse-1.svg"
-                />
-              </div>
-            </div>
+        <div className="relative w-[46px] h-[46px] shrink-0">
+          <div className="absolute left-0 top-[3.32px] w-[15.428px] h-[15.084px]">
+            <img 
+              alt="" 
+              className="w-full h-full" 
+              src="/assets/group-137.svg"
+            />
+          </div>
+          <div className="absolute left-[20.57px] top-[3.32px] w-[15.428px] h-[15.084px]">
+            <img 
+              alt="" 
+              className="w-full h-full" 
+              src="/assets/group-135.svg"
+            />
+          </div>
+          <div className="absolute left-[10.29px] top-0 w-[15.428px] h-[15.084px]">
+            <img 
+              alt="" 
+              className="w-full h-full" 
+              src="/assets/group-134.svg"
+            />
+          </div>
+          <div className="absolute left-0 top-[24.92px] w-[15.428px] h-[15.084px] scale-y-[-100%]">
+            <img 
+              alt="" 
+              className="w-full h-full" 
+              src="/assets/group-138.svg"
+            />
+          </div>
+          <div className="absolute left-[20.57px] top-[24.92px] w-[15.428px] h-[15.084px] scale-y-[-100%]">
+            <img 
+              alt="" 
+              className="w-full h-full" 
+              src="/assets/group-136.svg"
+            />
+          </div>
+          <div className="absolute left-[10.29px] top-[21.6px] w-[15.428px] h-[15.084px] scale-y-[-100%]">
+            <img 
+              alt="" 
+              className="w-full h-full" 
+              src="/assets/group-139.svg"
+            />
+          </div>
+          <div className="absolute left-[11.66px] top-[11.76px] w-[12.57px] h-[12.57px]">
+            <img 
+              alt="" 
+              className="w-full h-full" 
+              src="/assets/ellipse-1.svg"
+            />
           </div>
         </div>
 
         {/* Title */}
-        <div className="flex flex-col font-['Inter',sans-serif] font-normal h-[45px] justify-center leading-[0] not-italic shrink-0 text-[#1c1c1c] text-[27.8px] w-[80.11px]">
-          <p className="leading-[45px] whitespace-pre-wrap">Log in</p>
-        </div>
+        <h2 className="font-['Inter',sans-serif] font-normal text-[27.8px] leading-[45px] text-[#1c1c1c] text-center shrink-0">
+          Log in
+        </h2>
 
         {/* Google Button */}
-        <div className="flex flex-col items-start pb-[10px] pt-0 px-0 shrink-0 w-full">
+        <div className="pb-[10px] pt-0 w-[350px]">
           <button
             onClick={handleGoogleLogin}
-            className="bg-[#f7f4ed] border border-[#eceae4] border-solid h-[32px] rounded-[6px] shrink-0 w-[350px] relative"
+            className="bg-[#f7f4ed] border border-[#eceae4] h-[32px] rounded-[6px] w-full relative flex items-center justify-center gap-2"
           >
-            <div className="absolute left-[calc(50%-71.77px)] w-[16px] h-[16px] top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <img 
-                alt="" 
-                className="block max-w-none w-full h-full" 
-                src="/assets/google-icon.svg"
-              />
-            </div>
-            <div className="absolute flex flex-col font-['Inter',sans-serif] font-normal h-[18px] justify-center leading-[0] left-[calc(50%+12.09px)] not-italic text-[#1c1c1c] text-[13.3px] text-center top-[calc(50%-0.5px)] -translate-x-1/2 -translate-y-1/2 w-[135.72px]">
-              <p className="leading-[21px] whitespace-pre-wrap">Continue with Google</p>
-            </div>
+            <img 
+              alt="" 
+              className="w-4 h-4" 
+              src="/assets/google-icon.svg"
+            />
+            <span className="font-['Inter',sans-serif] text-[13.3px] leading-[21px] text-[#1c1c1c]">
+              Continue with Google
+            </span>
           </button>
         </div>
 
         {/* Divider with OR */}
-        <div className="relative w-[350px] h-px border-t border-[#eceae4] border-solid shrink-0">
-          <div className="absolute bg-white h-[18px] left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[31.73px]">
-            <div className="absolute flex flex-col font-['Inter',sans-serif] font-normal h-[16px] justify-center leading-[0] left-[8px] not-italic text-[#5f5f5d] text-[11.3px] top-[9px] -translate-y-1/2 uppercase w-[15.93px]">
-              <p className="leading-[18px] whitespace-pre-wrap">Or</p>
-            </div>
+        <div className="relative w-[350px] h-px border-t border-[#eceae4] mb-[10px]">
+          <div className="absolute bg-white px-2 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <span className="font-['Inter',sans-serif] text-[11.3px] leading-[18px] text-[#5f5f5d] uppercase">
+              Or
+            </span>
           </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleEmailLogin} className="h-[191px] relative shrink-0 w-[350px]">
-          {/* Email Label */}
-          <div className="absolute flex flex-col font-['Inter',sans-serif] font-normal h-[21px] justify-center leading-[0] left-0 not-italic text-[#1c1c1c] text-[13.9px] top-[10.5px] -translate-y-1/2 w-[34.89px]">
-            <p className="leading-[21px] whitespace-pre-wrap">Email</p>
+        <form onSubmit={handleEmailLogin} className="w-[350px] flex flex-col gap-4">
+          {/* Email Label and Input */}
+          <div className="flex flex-col gap-1">
+            <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
+              required
+            />
           </div>
-
-          {/* Email Input */}
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="absolute border border-[#eceae4] border-solid h-[36px] left-0 right-0 rounded-[6px] top-[25px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
-            required
-          />
 
           {/* Continue Button */}
           <button
             type="submit"
-            className="absolute bg-[#1c1c1c] h-[32px] left-0 right-0 rounded-[6px] top-[77px]"
+            className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333]"
           >
-            <div className="absolute flex flex-col font-['Inter',sans-serif] font-normal h-[18px] justify-center leading-[0] left-[calc(50%+0.09px)] not-italic text-[#fcfbf8] text-[13.5px] text-center top-[calc(50%-0.5px)] -translate-x-1/2 -translate-y-1/2 w-[57.51px]">
-              <p className="leading-[21px] whitespace-pre-wrap">Continue</p>
-            </div>
+            Continue
           </button>
 
           {/* Don't have account */}
-          <div className="absolute flex flex-col font-['Inter',sans-serif] font-normal h-[18px] justify-center leading-[0] left-[calc(50%+0.1px)] not-italic text-[#5f5f5d] text-[0px] text-center top-[133px] -translate-x-1/2 -translate-y-1/2 w-[268.53px]">
-            <p className="leading-[21px] text-[12.8px] whitespace-pre-wrap">
-              <span>Don&apos;t have an account? </span>
-              <a href="/signup" className="text-[#1c1c1c] underline decoration-solid">Create your account</a>
-            </p>
+          <div className="text-center">
+            <span className="font-['Inter',sans-serif] text-[12.8px] leading-[21px] text-[#5f5f5d]">
+              Don&apos;t have an account?{' '}
+              <a href="/signup" className="text-[#1c1c1c] underline">
+                Create your account
+              </a>
+            </span>
           </div>
 
           {/* Divider */}
-          <div className="absolute border-t border-[#eceae4] border-solid h-px left-0 right-0 top-[157px]" />
+          <div className="border-t border-[#eceae4] my-2" />
 
-          {/* Lock Icon */}
-          <div className="absolute left-[calc(50%-147.97px)] w-[16px] h-[16px] top-[calc(50%+85px)] -translate-x-1/2 -translate-y-1/2">
+          {/* SSO Text with Lock Icon */}
+          <div className="flex items-center justify-center gap-2">
             <img 
               alt="" 
-              className="block max-w-none w-full h-full" 
+              className="w-4 h-4" 
               src="/assets/lock-icon.svg"
             />
-          </div>
-
-          {/* SSO Text */}
-          <div className="absolute flex gap-[2px] items-center left-[41.03px] top-[170px]">
-            <div className="flex flex-col font-['Inter',sans-serif] font-normal h-[21px] justify-center leading-[0] not-italic shrink-0 text-[#5f5f5d] text-[13.2px] w-[105.03px]">
-              <p className="leading-[21px] whitespace-pre-wrap">SSO available on </p>
-            </div>
-            <div className="h-[18px] shrink-0 w-[148.73px]">
-              <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic text-[#5f5f5d] text-[13.2px] whitespace-nowrap">
-                <p className="decoration-solid leading-[21px] underline whitespace-pre">Business and Enterprise</p>
-              </div>
-            </div>
-            <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic shrink-0 text-[#5f5f5d] text-[13.2px] whitespace-nowrap">
-              <p className="leading-[21px] whitespace-pre"> plans</p>
-            </div>
+            <span className="font-['Inter',sans-serif] text-[13.2px] leading-[21px] text-[#5f5f5d]">
+              SSO available on{' '}
+              <span className="underline">Business and Enterprise</span>
+              {' '}plans
+            </span>
           </div>
         </form>
       </div>
