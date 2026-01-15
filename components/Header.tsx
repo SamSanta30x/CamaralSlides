@@ -93,12 +93,13 @@ export default function Header() {
         <span className={`w-6 h-0.5 bg-black transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} />
       </button>
 
-      {/* Action Buttons - Desktop only */}
-      <div className="hidden lg:flex items-center shrink-0">
+      {/* Action Buttons */}
+      <div className="flex items-center shrink-0">
         <div className="flex gap-[6px] items-center shrink-0">
+          {/* Login button - Desktop only */}
           <button 
             onClick={handleLoginClick}
-            className="bg-gradient-to-b from-white to-[#f7f4ed] border border-[#dcdcdc] border-solid flex items-start rounded-[16px] shrink-0"
+            className="hidden lg:flex bg-gradient-to-b from-white to-[#f7f4ed] border border-[#dcdcdc] border-solid items-start rounded-[16px] shrink-0"
           >
             <div className="flex items-center justify-center px-[14px] py-2 rounded-[999px]">
               <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-black whitespace-nowrap">
@@ -106,13 +107,15 @@ export default function Header() {
               </div>
             </div>
           </button>
+          
+          {/* Get started button - All devices */}
           <Link 
             href="/signup" 
             className="bg-[#222] border border-[#dcdcdc] border-solid flex items-start rounded-[16px] shrink-0"
           >
-            <div className="flex items-center justify-center px-[14px] py-2 rounded-[999px]">
-              <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-white whitespace-nowrap">
-                <p className="leading-[20px] whitespace-pre">Sign up</p>
+            <div className="flex items-center justify-center px-[10px] sm:px-[14px] py-2 rounded-[999px]">
+              <div className="flex flex-col font-['Inter',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[13px] sm:text-[14px] text-white whitespace-nowrap">
+                <p className="leading-[20px] whitespace-pre">Get started</p>
               </div>
             </div>
           </Link>
@@ -179,7 +182,7 @@ export default function Header() {
             className="bg-[#222] border border-[#dcdcdc] rounded-[16px] py-3 text-center font-['Inter',sans-serif] text-[14px] text-white"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            Sign up
+            Get started
           </Link>
         </div>
       </div>
