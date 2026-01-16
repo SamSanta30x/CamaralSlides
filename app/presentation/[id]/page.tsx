@@ -138,49 +138,7 @@ export default function PresentationPage() {
 
   const currentSlide = presentation?.slides?.[currentSlideIndex]
   const totalSlides = presentation?.slides?.length || 0
-
-  // Show processing state
-  if (isProcessing || (presentation && totalSlides === 0)) {
-    return (
-      <div className="min-h-screen bg-white flex flex-col">
-        {/* Top Navigation Bar */}
-        <nav className="w-full px-6 py-3 flex items-center justify-between bg-white border-b border-[#e5e5e5]">
-          <Link href="/" className="flex items-center">
-            <Image 
-              src="/Camaral Logo.svg" 
-              alt="Camaral" 
-              width={90}
-              height={20}
-              priority
-              className="h-[24px] w-auto"
-            />
-          </Link>
-        </nav>
-
-        {/* Processing State */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-6 max-w-md text-center px-4">
-            <div className="relative">
-              <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#e5e5e5] border-t-[#66e7f5]"></div>
-            </div>
-            <div>
-              <h2 className="font-['Inter',sans-serif] text-[24px] font-semibold text-[#0d0d0d] mb-2">
-                Processing your PDF...
-              </h2>
-              <p className="font-['Inter',sans-serif] text-[16px] text-[#666]">
-                Converting pages to slides. This usually takes a few seconds.
-              </p>
-              {totalSlides > 0 && (
-                <p className="font-['Inter',sans-serif] text-[14px] text-[#66e7f5] mt-4">
-                  {totalSlides} {totalSlides === 1 ? 'slide' : 'slides'} processed so far...
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const hasSlides = totalSlides > 0
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -285,17 +243,24 @@ export default function PresentationPage() {
         <div className="flex-1 flex flex-col items-center px-8 pb-6">
           {/* Carousel with 3 Slides Visible */}
           <div className="relative w-full max-w-[1200px] mb-6 flex items-center justify-center">
-            {loading ? (
-              /* Loading State */
+            {loading || !hasSlides ? (
+              /* Loading/Processing State */
               <div className="flex items-center justify-center gap-4">
-                <div className="w-[756px] h-[423px] bg-white border border-[#e5e5e5] rounded-[16px] opacity-90"></div>
+                <div className="w-[756px] h-[423px] bg-white border border-[#e5e5e5] rounded-[16px] opacity-30"></div>
                 <div className="w-[840px] h-[470px] bg-white border border-[#e5e5e5] rounded-[16px] flex items-center justify-center">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-[#1c1c1c]"></div>
-                    <p className="font-['Inter',sans-serif] text-[14px] text-[#999]">Loading slides...</p>
+                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#e5e5e5] border-t-[#66e7f5]"></div>
+                    <div className="text-center">
+                      <p className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d] mb-1">
+                        {loading ? 'Loading...' : 'Processing PDF...'}
+                      </p>
+                      <p className="font-['Inter',sans-serif] text-[14px] text-[#999]">
+                        {loading ? 'Please wait' : 'Converting pages to slides'}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="w-[756px] h-[423px] bg-white border border-[#e5e5e5] rounded-[16px] opacity-90"></div>
+                <div className="w-[756px] h-[423px] bg-white border border-[#e5e5e5] rounded-[16px] opacity-30"></div>
               </div>
             ) : (
               <>
@@ -431,10 +396,12 @@ export default function PresentationPage() {
 
           {/* Bottom Carousel - Thumbnails */}
           <div className="w-full max-w-[840px] flex justify-center">
-            {loading ? (
-              <div className="flex gap-[12px] overflow-x-auto pb-2">
+            {loading || !hasSlides ? (
+              <div className="flex gap-[12px] overflow-x-auto pb-2 justify-center">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="flex-shrink-0 w-[156px] h-[88px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-[#dcdcdc] animate-pulse"></div>
+                  <div key={i} className="flex-shrink-0 w-[156px] h-[88px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-[#dcdcdc] flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#e5e5e5] border-t-[#66e7f5]"></div>
+                  </div>
                 ))}
               </div>
             ) : (
