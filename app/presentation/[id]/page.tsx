@@ -14,10 +14,8 @@ export default function PresentationPage() {
   const [presentation, setPresentation] = useState<Presentation | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
-  const [editingSlide, setEditingSlide] = useState<string | null>(null)
-  const [editTitle, setEditTitle] = useState('')
-  const [editDescription, setEditDescription] = useState('')
   const [imageLoading, setImageLoading] = useState(true)
+  const [showMenu, setShowMenu] = useState(false)
 
   const presentationId = params.id as string
 
@@ -33,7 +31,6 @@ export default function PresentationPage() {
     }
   }, [user, presentationId])
 
-  // Reset image loading when slide changes
   useEffect(() => {
     setImageLoading(true)
   }, [currentSlideIndex])
@@ -66,39 +63,9 @@ export default function PresentationPage() {
     }
   }
 
-  const handleEditSlide = (slide: Slide) => {
-    setEditingSlide(slide.id)
-    setEditTitle(slide.title || '')
-    setEditDescription(slide.description || '')
-  }
-
-  const handleSaveEdit = async () => {
-    if (!editingSlide) return
-
-    const { error } = await updateSlide(editingSlide, editTitle, editDescription)
-    
-    if (!error) {
-      await loadPresentation()
-      setEditingSlide(null)
-    }
-  }
-
-  const handleCancelEdit = () => {
-    setEditingSlide(null)
-    setEditTitle('')
-    setEditDescription('')
-  }
-
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (editingSlide) {
-        if (e.key === 'Escape') {
-          handleCancelEdit()
-        }
-        return
-      }
-
       if (e.key === 'ArrowLeft') {
         handlePrevSlide()
       } else if (e.key === 'ArrowRight') {
@@ -108,7 +75,7 @@ export default function PresentationPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentSlideIndex, presentation, editingSlide])
+  }, [currentSlideIndex, presentation])
 
   if (authLoading) {
     return (
@@ -125,65 +92,180 @@ export default function PresentationPage() {
   const totalSlides = presentation?.slides?.length || 0
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex flex-col">
-      {/* Header */}
-      <header className="w-full bg-[#1a1a1a] border-b border-[#2a2a2a] px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center">
-            <Image 
-              src="/Camaral Logo.svg" 
-              alt="Camaral" 
-              width={90}
-              height={20}
-              priority
-              className="h-[20px] w-auto brightness-0 invert"
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Top Navigation Bar */}
+      <nav className="w-full border-b border-[#e5e5e5] px-6 py-3 flex items-center justify-between bg-white">
+        {/* Left - Logo */}
+        <Link href="/" className="flex items-center">
+          <Image 
+            src="/Camaral Logo.svg" 
+            alt="Camaral" 
+            width={90}
+            height={20}
+            priority
+            className="h-[24px] w-auto"
+          />
+        </Link>
+
+        {/* Center - Tabs */}
+        <div className="flex items-center gap-2">
+          <button className="px-4 py-2 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] border-b-2 border-[#0d0d0d]">
+            Agent
+          </button>
+          <button className="px-4 py-2 font-['Inter',sans-serif] text-[14px] text-[#666] hover:text-[#0d0d0d]">
+            Content
+          </button>
+          <button className="px-4 py-2 font-['Inter',sans-serif] text-[14px] text-[#666] hover:text-[#0d0d0d]">
+            Analytics
+          </button>
+          <button className="px-4 py-2 font-['Inter',sans-serif] text-[14px] text-[#666] hover:text-[#0d0d0d] flex items-center gap-1">
+            Responses
+            <span className="bg-[#f5f5f5] px-2 py-0.5 rounded-full text-[12px]">12</span>
+          </button>
+        </div>
+
+        {/* Right - Actions */}
+        <div className="flex items-center gap-3">
+          <button className="px-4 py-2 bg-[#66e7f5] rounded-[8px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] hover:bg-[#56d7e5] flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 4V12M4 8H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            Upgrade Now
+          </button>
+          <button className="px-4 py-2 border border-[#e5e5e5] rounded-[8px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] hover:bg-[#f5f5f5] flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M13 10v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2M11 5L8 2m0 0L5 5m3-3v9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Share
+          </button>
+          <div className="w-[32px] h-[32px] rounded-full border-[1.125px] border-[#fbff00] overflow-hidden cursor-pointer">
+            <img 
+              src="/assets/avatar-demo.png" 
+              alt="User avatar" 
+              className="w-full h-full object-cover"
             />
-          </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Presentation Header */}
+      <div className="w-full bg-[#fafafa] border-b border-[#e5e5e5] px-8 py-4">
+        <div className="max-w-[1400px] mx-auto flex items-center gap-3">
+          {/* Presentation Icon/Logo */}
           {presentation && (
             <>
-              <span className="text-[#5f5f5d] text-[14px]">|</span>
-              <h1 className="font-['Inter',sans-serif] text-[14px] font-medium text-white">
-                {presentation.title}
-              </h1>
+              <div className="w-[40px] h-[40px] bg-white border border-[#e5e5e5] rounded-[8px] flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="18" height="18" rx="2" stroke="#0d0d0d" strokeWidth="2"/>
+                  <path d="M8 8h8M8 12h6M8 16h4" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <h1 className="font-['Inter',sans-serif] text-[18px] font-semibold text-[#0d0d0d]">
+                  {presentation.title}
+                </h1>
+                <p className="font-['Inter',sans-serif] text-[13px] text-[#666]">
+                  Click here to change the description of this presentation
+                </p>
+              </div>
             </>
           )}
+          <button className="ml-auto px-4 py-2 bg-[#0d0d0d] rounded-[8px] font-['Inter',sans-serif] text-[13px] text-white hover:bg-[#1a1a1a]">
+            + Add call to action
+          </button>
         </div>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <Link 
-            href="/"
-            className="px-4 py-2 bg-[#2a2a2a] rounded-[8px] font-['Inter',sans-serif] text-[14px] text-white hover:bg-[#3a3a3a] transition-colors"
-          >
-            Close
-          </Link>
-        </div>
-      </header>
-
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Slide Viewer */}
-        <div className="flex-1 flex flex-col items-center justify-center bg-[#0d0d0d] p-8 relative">
-          {/* Slide Container */}
-          <div className="relative w-full max-w-[1400px] aspect-[16/9]">
+        {/* Left Sidebar - Slide Navigation */}
+        <div className="w-[280px] bg-white border-r border-[#e5e5e5] overflow-y-auto">
+          <div className="p-4">
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Describe what your agent should say here or"
+                className="w-full px-3 py-2 border border-[#e5e5e5] rounded-[8px] font-['Inter',sans-serif] text-[13px] outline-none focus:border-[#66e7f5]"
+              />
+              <button className="mt-2 w-full px-3 py-2 border border-[#e5e5e5] rounded-[8px] font-['Inter',sans-serif] text-[13px] text-[#666] hover:bg-[#f5f5f5] flex items-center justify-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 4V12M4 8H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                Generate it with AI
+              </button>
+            </div>
+
+            {/* Slide Thumbnails */}
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="w-full aspect-[16/9] bg-[#f5f5f5] rounded-[8px] animate-pulse"></div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {presentation?.slides?.map((slide, index) => (
+                  <button
+                    key={slide.id}
+                    onClick={() => setCurrentSlideIndex(index)}
+                    className={`w-full rounded-[8px] overflow-hidden border-2 transition-all ${
+                      index === currentSlideIndex
+                        ? 'border-[#66e7f5] shadow-md'
+                        : 'border-[#e5e5e5] hover:border-[#d0d0d0]'
+                    }`}
+                  >
+                    <div className="aspect-[16/9] bg-white p-2">
+                      <img
+                        src={slide.image_url}
+                        alt={slide.title || `Slide ${index + 1}`}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </button>
+                ))}
+                {/* Add New Slide Button */}
+                <button className="w-full aspect-[16/9] border-2 border-dashed border-[#d0d0d0] rounded-[8px] flex items-center justify-center hover:border-[#66e7f5] hover:bg-[#f5f5f5] transition-all">
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M16 8V24M8 16H24" stroke="#999" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Improve with AI Button */}
+          <div className="p-4 border-t border-[#e5e5e5]">
+            <button className="w-full px-3 py-2 border border-[#e5e5e5] rounded-[8px] font-['Inter',sans-serif] text-[13px] text-[#666] hover:bg-[#f5f5f5] flex items-center justify-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2L10 6L14 6.5L11 9.5L11.5 14L8 12L4.5 14L5 9.5L2 6.5L6 6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+              </svg>
+              Improve it with AI
+            </button>
+          </div>
+        </div>
+
+        {/* Center - Slide Viewer */}
+        <div className="flex-1 bg-[#f9f9f9] flex items-center justify-center p-8 overflow-hidden">
+          <div className="relative w-full max-w-[900px]">
             {loading || !currentSlide ? (
-              /* Loading State - Show empty slide with spinner */
-              <div className="w-full h-full bg-[#1a1a1a] rounded-[12px] border border-[#2a2a2a] flex items-center justify-center">
+              /* Loading State */
+              <div className="w-full aspect-[16/9] bg-white rounded-[16px] shadow-lg flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                  <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-white"></div>
-                  <p className="font-['Inter',sans-serif] text-[14px] text-white">
+                  <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-[#1c1c1c]"></div>
+                  <p className="font-['Inter',sans-serif] text-[14px] text-[#666]">
                     Loading slides...
                   </p>
                 </div>
               </div>
             ) : (
-              /* Slide Image */
-              <div className="relative w-full h-full bg-[#1a1a1a] rounded-[12px] border border-[#2a2a2a] overflow-hidden">
+              /* Slide Display */
+              <div className="relative w-full aspect-[16/9] bg-white rounded-[16px] shadow-lg overflow-hidden">
                 {imageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                  <div className="absolute inset-0 flex items-center justify-center z-10 bg-white">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#1c1c1c]"></div>
                   </div>
                 )}
-                <img 
+                <img
                   src={currentSlide.image_url}
                   alt={currentSlide.title || `Slide ${currentSlideIndex + 1}`}
                   className={`w-full h-full object-contain transition-opacity duration-300 ${
@@ -194,162 +276,56 @@ export default function PresentationPage() {
                 />
               </div>
             )}
-          </div>
 
-          {/* Navigation Controls */}
-          {!loading && totalSlides > 0 && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-[999px] px-6 py-3 shadow-lg">
-              <button
-                onClick={handlePrevSlide}
-                disabled={currentSlideIndex === 0}
-                className="w-[32px] h-[32px] flex items-center justify-center rounded-full hover:bg-[#2a2a2a] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M10 12L6 8L10 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-
-              <span className="font-['Inter',sans-serif] text-[14px] text-white min-w-[60px] text-center">
-                {currentSlideIndex + 1} / {totalSlides}
-              </span>
-
-              <button
-                onClick={handleNextSlide}
-                disabled={currentSlideIndex === totalSlides - 1}
-                className="w-[32px] h-[32px] flex items-center justify-center rounded-full hover:bg-[#2a2a2a] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M6 12L10 8L6 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar - Slide Details */}
-        <div className="w-[360px] border-l border-[#2a2a2a] bg-[#1a1a1a] p-6 overflow-y-auto">
-          {loading ? (
-            /* Loading state for sidebar */
-            <div className="flex flex-col gap-4">
-              <div className="h-[24px] bg-[#2a2a2a] rounded animate-pulse"></div>
-              <div className="h-[60px] bg-[#2a2a2a] rounded animate-pulse"></div>
-              <div className="h-[200px] bg-[#2a2a2a] rounded animate-pulse"></div>
-            </div>
-          ) : currentSlide ? (
-            editingSlide === currentSlide.id ? (
-              /* Edit Mode */
-              <div className="flex flex-col gap-4">
-                <h2 className="font-['Inter',sans-serif] text-[18px] font-medium text-white">
-                  Edit Slide
-                </h2>
-
-                <div className="flex flex-col gap-2">
-                  <label className="font-['Inter',sans-serif] text-[14px] text-[#9f9f9f]">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    className="bg-[#2a2a2a] border border-[#3a3a3a] rounded-[8px] px-3 py-2 font-['Inter',sans-serif] text-[14px] text-white outline-none focus:border-[#66e7f5]"
-                    placeholder="Slide title"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="font-['Inter',sans-serif] text-[14px] text-[#9f9f9f]">
-                    Description
-                  </label>
-                  <textarea
-                    value={editDescription}
-                    onChange={(e) => setEditDescription(e.target.value)}
-                    className="bg-[#2a2a2a] border border-[#3a3a3a] rounded-[8px] px-3 py-2 font-['Inter',sans-serif] text-[14px] text-white outline-none focus:border-[#66e7f5] min-h-[100px] resize-none"
-                    placeholder="Slide description"
-                  />
-                </div>
-
-                <div className="flex gap-2">
+            {/* Navigation Arrows */}
+            {!loading && totalSlides > 0 && (
+              <>
+                {/* Previous Button */}
+                {currentSlideIndex > 0 && (
                   <button
-                    onClick={handleSaveEdit}
-                    className="flex-1 px-4 py-2 bg-[#66e7f5] rounded-[8px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] hover:bg-[#56d7e5] transition-colors"
+                    onClick={handlePrevSlide}
+                    className="absolute left-[-80px] top-1/2 -translate-y-1/2 w-[56px] h-[56px] bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5f5f5] transition-colors"
                   >
-                    Save
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M15 18L9 12L15 6" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="flex-1 px-4 py-2 bg-[#2a2a2a] rounded-[8px] font-['Inter',sans-serif] text-[14px] text-white hover:bg-[#3a3a3a] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* View Mode */
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-['Inter',sans-serif] text-[18px] font-medium text-white">
-                    Slide Details
-                  </h2>
-                  <button
-                    onClick={() => handleEditSlide(currentSlide)}
-                    className="px-3 py-1 bg-[#2a2a2a] rounded-[6px] font-['Inter',sans-serif] text-[12px] text-white hover:bg-[#3a3a3a] transition-colors"
-                  >
-                    Edit
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <span className="font-['Inter',sans-serif] text-[16px] font-medium text-white">
-                    {currentSlide.title || `Slide ${currentSlideIndex + 1}`}
-                  </span>
-                  {currentSlide.description && (
-                    <p className="font-['Inter',sans-serif] text-[14px] text-[#9f9f9f]">
-                      {currentSlide.description}
-                    </p>
-                  )}
-                </div>
-
-                {/* Thumbnail List */}
-                {presentation?.slides && presentation.slides.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="font-['Inter',sans-serif] text-[14px] font-medium text-white mb-3">
-                      All Slides ({totalSlides})
-                    </h3>
-                    <div className="flex flex-col gap-2">
-                      {presentation.slides.map((slide, index) => (
-                        <button
-                          key={slide.id}
-                          onClick={() => setCurrentSlideIndex(index)}
-                          className={`flex gap-3 p-2 rounded-[8px] transition-colors ${
-                            index === currentSlideIndex 
-                              ? 'bg-[#2a2a2a] border border-[#66e7f5]' 
-                              : 'hover:bg-[#2a2a2a] border border-transparent'
-                          }`}
-                        >
-                          <div className="w-[80px] h-[45px] bg-[#0d0d0d] border border-[#3a3a3a] rounded-[4px] overflow-hidden flex-shrink-0">
-                            <img 
-                              src={slide.image_url}
-                              alt={slide.title || `Slide ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 text-left">
-                            <p className="font-['Inter',sans-serif] text-[13px] font-medium text-white truncate">
-                              {slide.title || `Slide ${index + 1}`}
-                            </p>
-                            <p className="font-['Inter',sans-serif] text-[11px] text-[#9f9f9f]">
-                              Slide {index + 1}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 )}
-              </div>
-            )
-          ) : null}
+
+                {/* Next Button */}
+                {currentSlideIndex < totalSlides - 1 && (
+                  <button
+                    onClick={handleNextSlide}
+                    className="absolute right-[-80px] top-1/2 -translate-y-1/2 w-[56px] h-[56px] bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5f5f5] transition-colors"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18L15 12L9 6" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
+
+        {/* Right Sidebar - Placeholder */}
+        <div className="w-[60px] bg-white border-l border-[#e5e5e5] flex flex-col items-center py-4 gap-4">
+          {/* Placeholder for future tools/actions */}
+        </div>
+      </div>
+
+      {/* Bottom Bar - Powered by */}
+      <div className="w-full bg-white border-t border-[#e5e5e5] py-3 flex items-center justify-center">
+        <p className="font-['Inter',sans-serif] text-[12px] text-[#999] flex items-center gap-2">
+          Powered by
+          <Image 
+            src="/Camaral Logo.svg" 
+            alt="Camaral" 
+            width={70}
+            height={16}
+            className="h-[16px] w-auto"
+          />
+        </p>
       </div>
     </div>
   )
