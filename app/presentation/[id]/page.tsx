@@ -194,25 +194,25 @@ export default function PresentationPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Slide Viewer with Bottom Carousel */}
-        <div className="flex-1 bg-[#f9f9f9] flex flex-col items-center justify-center px-8 pt-8 pb-4">
-          {/* Main Slide Container */}
-          <div className="relative w-full max-w-[1100px] flex-1 flex items-center justify-center">
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#fafafa]">
+        {/* Slide Viewer Area */}
+        <div className="flex-1 flex flex-col items-center px-8 pt-12 pb-6">
+          {/* Main Slide Container with Navigation */}
+          <div className="relative w-full max-w-[1040px] mb-6">
             {loading || !currentSlide ? (
               /* Loading State */
-              <div className="w-full h-full max-h-[600px] aspect-[16/9] bg-white rounded-[12px] shadow-lg flex items-center justify-center">
+              <div className="w-full aspect-[16/9] bg-white rounded-[16px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                   <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-[#1c1c1c]"></div>
-                  <p className="font-['Inter',sans-serif] text-[14px] text-[#666]">
+                  <p className="font-['Inter',sans-serif] text-[14px] text-[#999]">
                     Loading slides...
                   </p>
                 </div>
               </div>
             ) : (
               /* Slide Display */
-              <>
-                <div className="relative w-full h-full max-h-[600px] aspect-[16/9] bg-white rounded-[12px] shadow-lg overflow-hidden">
+              <div className="relative">
+                <div className="relative w-full aspect-[16/9] bg-white rounded-[16px] shadow-[0px_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
                   {imageLoading && (
                     <div className="absolute inset-0 flex items-center justify-center z-10 bg-white">
                       <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#1c1c1c]"></div>
@@ -221,7 +221,7 @@ export default function PresentationPage() {
                   <img
                     src={currentSlide.image_url}
                     alt={currentSlide.title || `Slide ${currentSlideIndex + 1}`}
-                    className={`w-full h-full object-contain transition-opacity duration-300 ${
+                    className={`w-full h-full object-contain p-4 transition-opacity duration-300 ${
                       imageLoading ? 'opacity-0' : 'opacity-100'
                     }`}
                     onLoad={() => setImageLoading(false)}
@@ -229,17 +229,17 @@ export default function PresentationPage() {
                   />
                 </div>
 
-                {/* Navigation Arrows - Outside Slide */}
-                {totalSlides > 0 && (
+                {/* Navigation Arrows */}
+                {totalSlides > 1 && (
                   <>
                     {/* Previous Button */}
                     <button
                       onClick={handlePrevSlide}
                       disabled={currentSlideIndex === 0}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-[48px] h-[48px] bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5f5f5] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="absolute left-[-60px] top-1/2 -translate-y-1/2 w-[48px] h-[48px] bg-white rounded-full shadow-[0px_2px_8px_rgba(0,0,0,0.12)] flex items-center justify-center hover:shadow-[0px_4px_12px_rgba(0,0,0,0.16)] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                     >
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M15 18L9 12L15 6" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M12.5 15L7.5 10L12.5 5" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </button>
 
@@ -247,64 +247,79 @@ export default function PresentationPage() {
                     <button
                       onClick={handleNextSlide}
                       disabled={currentSlideIndex === totalSlides - 1}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-[48px] h-[48px] bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5f5f5] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="absolute right-[-60px] top-1/2 -translate-y-1/2 w-[48px] h-[48px] bg-white rounded-full shadow-[0px_2px_8px_rgba(0,0,0,0.12)] flex items-center justify-center hover:shadow-[0px_4px_12px_rgba(0,0,0,0.16)] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                     >
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18L15 12L9 6" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M7.5 15L12.5 10L7.5 5" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </button>
                   </>
                 )}
-              </>
+              </div>
             )}
           </div>
 
+          {/* Description/Prompt Area */}
+          <div className="w-full max-w-[1040px] mb-6">
+            <div className="bg-white rounded-[12px] border border-[#e5e5e5] p-6 shadow-[0px_1px_3px_rgba(0,0,0,0.06)]">
+              <textarea
+                placeholder="Describe what your agent should say here or"
+                className="w-full min-h-[80px] bg-transparent font-['Inter',sans-serif] text-[15px] text-[#0d0d0d] placeholder:text-[#999] outline-none resize-none"
+                defaultValue={currentSlide?.description || ''}
+              />
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#f0f0f0]">
+                <button className="px-4 py-2 bg-white border border-[#e5e5e5] rounded-[8px] font-['Inter',sans-serif] text-[13px] text-[#0d0d0d] hover:bg-[#fafafa] transition-colors flex items-center gap-2 shadow-sm">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 2.625L8.75 5.25L11.375 5.6875L9.1875 7.875L9.625 10.5L7 9.25L4.375 10.5L4.8125 7.875L2.625 5.6875L5.25 5.25L7 2.625Z" fill="currentColor"/>
+                  </svg>
+                  Generate it with AI
+                </button>
+                <button className="px-4 py-2 bg-white border border-[#e5e5e5] rounded-[8px] font-['Inter',sans-serif] text-[13px] text-[#0d0d0d] hover:bg-[#fafafa] transition-colors flex items-center gap-2 shadow-sm">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 2.625L8.75 5.25L11.375 5.6875L9.1875 7.875L9.625 10.5L7 9.25L4.375 10.5L4.8125 7.875L2.625 5.6875L5.25 5.25L7 2.625Z" fill="currentColor"/>
+                  </svg>
+                  Improve it with AI
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Bottom Carousel - Thumbnails */}
-          <div className="w-full max-w-[1100px] mt-8">
+          <div className="w-full max-w-[1040px]">
             {loading ? (
-              <div className="flex gap-4 overflow-x-auto">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex-shrink-0 w-[160px] h-[100px] bg-[#f5f5f5] rounded-[10px] animate-pulse"></div>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-[120px] h-[67.5px] bg-white rounded-[8px] border border-[#e5e5e5] animate-pulse"></div>
                 ))}
               </div>
             ) : (
-              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {presentation?.slides?.map((slide, index) => (
                   <button
                     key={slide.id}
                     onClick={() => setCurrentSlideIndex(index)}
-                    className={`flex-shrink-0 group relative transition-all ${
-                      index === currentSlideIndex ? '' : 'opacity-60 hover:opacity-100'
-                    }`}
+                    className="flex-shrink-0 group relative"
                   >
-                    <div className={`relative w-[160px] rounded-[10px] overflow-hidden border-[3px] transition-all ${
+                    <div className={`relative w-[120px] rounded-[8px] overflow-hidden transition-all ${
                       index === currentSlideIndex
-                        ? 'border-[#0d0d0d]'
-                        : 'border-transparent'
+                        ? 'ring-[2.5px] ring-[#0d0d0d] ring-offset-2'
+                        : 'opacity-50 hover:opacity-100'
                     }`}>
-                      <div className="aspect-[16/9] bg-white p-2">
+                      <div className="aspect-[16/9] bg-white border border-[#e5e5e5]">
                         <img
                           src={slide.image_url}
                           alt={slide.title || `Slide ${index + 1}`}
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-contain p-1"
                         />
-                      </div>
-                      {/* Slide Number Badge */}
-                      <div className={`absolute top-2 right-2 px-2 py-1 rounded-[6px] text-[11px] font-['Inter',sans-serif] font-semibold shadow-sm ${
-                        index === currentSlideIndex
-                          ? 'bg-[#0d0d0d] text-white'
-                          : 'bg-white text-[#666] border border-[#e5e5e5]'
-                      }`}>
-                        {index + 1}
                       </div>
                     </div>
                   </button>
                 ))}
 
                 {/* Add New Slide Button */}
-                <button className="flex-shrink-0 w-[160px] aspect-[16/9] border-[3px] border-dashed border-[#d0d0d0] rounded-[10px] flex items-center justify-center hover:border-[#0d0d0d] hover:bg-[#fafafa] transition-all opacity-60 hover:opacity-100">
-                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                    <path d="M16 8V24M8 16H24" stroke="#999" strokeWidth="2.5" strokeLinecap="round"/>
+                <button className="flex-shrink-0 w-[120px] aspect-[16/9] border-[2px] border-dashed border-[#d0d0d0] rounded-[8px] flex items-center justify-center hover:border-[#0d0d0d] hover:bg-white transition-all opacity-50 hover:opacity-100">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 6V18M6 12H18" stroke="#999" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </button>
               </div>
