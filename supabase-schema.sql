@@ -29,6 +29,9 @@ ON CONFLICT (id) DO NOTHING;
 ALTER TABLE presentations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE slides ENABLE ROW LEVEL SECURITY;
 
+-- Enable Realtime for slides table (for live updates)
+ALTER PUBLICATION supabase_realtime ADD TABLE slides;
+
 -- Presentations policies
 CREATE POLICY "Users can view their own presentations"
   ON presentations FOR SELECT
@@ -66,6 +69,11 @@ CREATE POLICY "Users can insert slides to their presentations"
       AND presentations.user_id = auth.uid()
     )
   );
+
+-- Allow service role to insert slides (for Edge Functions)
+CREATE POLICY "Service role can insert slides"
+  ON slides FOR INSERT
+  WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
 
 CREATE POLICY "Users can update slides from their presentations"
   ON slides FOR UPDATE

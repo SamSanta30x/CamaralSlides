@@ -58,23 +58,16 @@ export async function createPresentation(
     const isPDF = files.length === 1 && files[0].type === 'application/pdf'
 
     if (isPDF) {
-      // Use Edge Function to process PDF
-      console.log('Processing PDF with Edge Function...')
-      const result = await uploadAndProcessPDF(presentation.id, files[0])
+      // Start Edge Function processing in background (don't wait)
+      console.log('Starting PDF processing in background...')
+      uploadAndProcessPDF(presentation.id, files[0]).catch(error => {
+        console.error('Background PDF processing failed:', error)
+      })
 
-      if (!result.success || !result.slides) {
-        // If Edge Function fails, delete the presentation
-        await supabase.from('presentations').delete().eq('id', presentation.id)
-        return {
-          data: null,
-          error: new Error(result.error || 'Failed to process PDF'),
-        }
-      }
-
-      console.log(`✓ PDF processed successfully: ${result.pageCount} slides`)
-
+      // Return immediately with empty presentation
+      // Slides will be added progressively by the Edge Function
       return {
-        data: { ...presentation, slides: result.slides },
+        data: { ...presentation, slides: [] },
         error: null,
       }
     }

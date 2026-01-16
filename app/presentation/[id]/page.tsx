@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { getPresentation, updateSlide, type Presentation, type Slide } from '@/lib/supabase/presentations'
 import UpgradeButton from '@/components/UpgradeButton'
+import { createClient } from '@/lib/supabase/client'
 
 export default function PresentationPage() {
   const router = useRouter()
@@ -18,6 +19,7 @@ export default function PresentationPage() {
   const [imageLoading, setImageLoading] = useState(true)
   const [showMenu, setShowMenu] = useState(false)
   const [descriptionValue, setDescriptionValue] = useState('')
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const presentationId = params.id as string
 
@@ -30,6 +32,7 @@ export default function PresentationPage() {
   useEffect(() => {
     if (user && presentationId) {
       loadPresentation()
+      subscribeToSlideUpdates()
     }
   }, [user, presentationId])
 
@@ -50,8 +53,50 @@ export default function PresentationPage() {
 
     if (data) {
       setPresentation(data)
+      // Check if presentation has no slides (still processing)
+      if (!data.slides || data.slides.length === 0) {
+        setIsProcessing(true)
+      } else {
+        setIsProcessing(false)
+      }
     }
     setLoading(false)
+  }
+
+  const subscribeToSlideUpdates = () => {
+    const supabase = createClient()
+    
+    // Subscribe to new slides being added
+    const channel = supabase
+      .channel(`presentation-${presentationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'slides',
+          filter: `presentation_id=eq.${presentationId}`,
+        },
+        (payload) => {
+          console.log('New slide added:', payload.new)
+          setPresentation((prev) => {
+            if (!prev) return prev
+            const newSlide = payload.new as Slide
+            const existingSlides = prev.slides || []
+            // Add new slide and sort by order
+            const updatedSlides = [...existingSlides, newSlide].sort(
+              (a, b) => a.slide_order - b.slide_order
+            )
+            return { ...prev, slides: updatedSlides }
+          })
+          setIsProcessing(false)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }
 
   const handlePrevSlide = () => {
@@ -93,6 +138,49 @@ export default function PresentationPage() {
 
   const currentSlide = presentation?.slides?.[currentSlideIndex]
   const totalSlides = presentation?.slides?.length || 0
+
+  // Show processing state
+  if (isProcessing || (presentation && totalSlides === 0)) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        {/* Top Navigation Bar */}
+        <nav className="w-full px-6 py-3 flex items-center justify-between bg-white border-b border-[#e5e5e5]">
+          <Link href="/" className="flex items-center">
+            <Image 
+              src="/Camaral Logo.svg" 
+              alt="Camaral" 
+              width={90}
+              height={20}
+              priority
+              className="h-[24px] w-auto"
+            />
+          </Link>
+        </nav>
+
+        {/* Processing State */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-6 max-w-md text-center px-4">
+            <div className="relative">
+              <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#e5e5e5] border-t-[#66e7f5]"></div>
+            </div>
+            <div>
+              <h2 className="font-['Inter',sans-serif] text-[24px] font-semibold text-[#0d0d0d] mb-2">
+                Processing your PDF...
+              </h2>
+              <p className="font-['Inter',sans-serif] text-[16px] text-[#666]">
+                Converting pages to slides. This usually takes a few seconds.
+              </p>
+              {totalSlides > 0 && (
+                <p className="font-['Inter',sans-serif] text-[14px] text-[#66e7f5] mt-4">
+                  {totalSlides} {totalSlides === 1 ? 'slide' : 'slides'} processed so far...
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
