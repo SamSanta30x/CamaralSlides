@@ -260,53 +260,55 @@ export default function PresentationPage() {
           </div>
 
           {/* Bottom Carousel - Thumbnails */}
-          <div className="w-full max-w-[1100px] mt-6">
-            <div className="bg-white rounded-[12px] border border-[#e5e5e5] p-4">
-              {loading ? (
-                <div className="flex gap-3 overflow-x-auto">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="flex-shrink-0 w-[140px] h-[90px] bg-[#f5f5f5] rounded-[8px] animate-pulse"></div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#d0d0d0] scrollbar-track-transparent">
-                  {presentation?.slides?.map((slide, index) => (
-                    <button
-                      key={slide.id}
-                      onClick={() => setCurrentSlideIndex(index)}
-                      className={`flex-shrink-0 w-[140px] rounded-[8px] overflow-hidden border-2 transition-all ${
-                        index === currentSlideIndex
-                          ? 'border-[#0d0d0d] shadow-md'
-                          : 'border-[#e5e5e5] hover:border-[#d0d0d0]'
-                      }`}
-                    >
-                      <div className="relative aspect-[16/9] bg-[#fafafa] p-2 group">
+          <div className="w-full max-w-[1100px] mt-8">
+            {loading ? (
+              <div className="flex gap-4 overflow-x-auto">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-[160px] h-[100px] bg-[#f5f5f5] rounded-[10px] animate-pulse"></div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                {presentation?.slides?.map((slide, index) => (
+                  <button
+                    key={slide.id}
+                    onClick={() => setCurrentSlideIndex(index)}
+                    className={`flex-shrink-0 group relative transition-all ${
+                      index === currentSlideIndex ? '' : 'opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <div className={`relative w-[160px] rounded-[10px] overflow-hidden border-[3px] transition-all ${
+                      index === currentSlideIndex
+                        ? 'border-[#0d0d0d]'
+                        : 'border-transparent'
+                    }`}>
+                      <div className="aspect-[16/9] bg-white p-2">
                         <img
                           src={slide.image_url}
                           alt={slide.title || `Slide ${index + 1}`}
                           className="w-full h-full object-contain"
                         />
-                        {/* Slide Number Overlay */}
-                        <div className={`absolute bottom-1 right-1 px-2 py-0.5 rounded-[4px] text-[10px] font-['Inter',sans-serif] font-medium ${
-                          index === currentSlideIndex
-                            ? 'bg-[#0d0d0d] text-white'
-                            : 'bg-white text-[#666] border border-[#e5e5e5]'
-                        }`}>
-                          {index + 1}
-                        </div>
                       </div>
-                    </button>
-                  ))}
-
-                  {/* Add New Slide Button */}
-                  <button className="flex-shrink-0 w-[140px] aspect-[16/9] border-2 border-dashed border-[#d0d0d0] rounded-[8px] flex items-center justify-center hover:border-[#66e7f5] hover:bg-[#fafafa] transition-all">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 6V18M6 12H18" stroke="#999" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
+                      {/* Slide Number Badge */}
+                      <div className={`absolute top-2 right-2 px-2 py-1 rounded-[6px] text-[11px] font-['Inter',sans-serif] font-semibold shadow-sm ${
+                        index === currentSlideIndex
+                          ? 'bg-[#0d0d0d] text-white'
+                          : 'bg-white text-[#666] border border-[#e5e5e5]'
+                      }`}>
+                        {index + 1}
+                      </div>
+                    </div>
                   </button>
-                </div>
-              )}
-            </div>
+                ))}
+
+                {/* Add New Slide Button */}
+                <button className="flex-shrink-0 w-[160px] aspect-[16/9] border-[3px] border-dashed border-[#d0d0d0] rounded-[10px] flex items-center justify-center hover:border-[#0d0d0d] hover:bg-[#fafafa] transition-all opacity-60 hover:opacity-100">
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M16 8V24M8 16H24" stroke="#999" strokeWidth="2.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
