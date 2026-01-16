@@ -6,12 +6,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import FileUploadCard from '@/components/FileUploadCard'
 import PendingUploadHandler from '@/components/PendingUploadHandler'
+import UpgradeButton from '@/components/UpgradeButton'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { 
   getPresentations, 
   createPresentation, 
   type Presentation 
 } from '@/lib/supabase/presentations'
+import { convertPDFToImages, optimizeImage } from '@/lib/utils/pdfProcessor'
 
 export default function DashboardContent() {
   const router = useRouter()
@@ -41,7 +43,6 @@ export default function DashboardContent() {
     setUploading(true)
     
     try {
-      // Check if it's a PDF or image
       const isPDF = file.type === 'application/pdf'
       const isImage = file.type.startsWith('image/')
       
@@ -51,23 +52,41 @@ export default function DashboardContent() {
         return
       }
 
-      // For now, treat single files as presentations with one slide
-      // You can extend this to handle multiple images or PDF conversion
-      const files = [file]
-      const title = file.name.replace(/\.[^/.]+$/, '') // Remove extension
+      let filesToUpload: File[] = []
+      const title = file.name.replace(/\.[^/.]+$/, '')
+
+      if (isPDF) {
+        // Convert PDF to images (one per page)
+        console.log('Converting PDF to images...')
+        const images = await convertPDFToImages(file)
+        filesToUpload = images
+      } else if (isImage) {
+        // Optimize single image
+        console.log('Optimizing image...')
+        const optimized = await optimizeImage(file)
+        filesToUpload = [optimized]
+      }
       
-      const { data, error } = await createPresentation(title, files)
+      if (filesToUpload.length === 0) {
+        alert('No slides could be created from the file')
+        setUploading(false)
+        return
+      }
+
+      console.log(`Creating presentation with ${filesToUpload.length} slides...`)
+      const { data, error } = await createPresentation(title, filesToUpload)
       
       if (error) {
         console.error('Error creating presentation:', error)
-        alert('Failed to create presentation')
+        alert('Failed to create presentation: ' + error.message)
       } else if (data) {
-        // Redirect to the new presentation
+        // Reload presentations and redirect
+        await loadPresentations()
         router.push(`/presentation/${data.id}`)
       }
     } catch (error) {
       console.error('Upload error:', error)
-      alert('An error occurred during upload')
+      alert('An error occurred during upload: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setUploading(false)
     }
@@ -105,15 +124,7 @@ export default function DashboardContent() {
 
         {/* Right side - Upgrade button and Avatar */}
         <div className="flex items-center gap-[10px]">
-          {/* Upgrade Now button */}
-          <button className="bg-gradient-to-b from-[#66e7f5] to-white border border-black rounded-[16px] px-[14px] py-2 flex items-center gap-2">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M10 4.16667V15.8333M4.16667 10H15.8333" stroke="#0d0d0d" strokeWidth="1.67" strokeLinecap="round"/>
-            </svg>
-            <span className="font-['Inter',sans-serif] text-[14px] leading-[20px] text-black">
-              Upgrade Now
-            </span>
-          </button>
+          <UpgradeButton />
 
           {/* Avatar with dropdown */}
           <div className="relative">

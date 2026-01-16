@@ -9,6 +9,7 @@ import {
   clearPendingUpload,
 } from '@/lib/utils/pendingUpload'
 import { createPresentation } from '@/lib/supabase/presentations'
+import { convertPDFToImages, optimizeImage } from '@/lib/utils/pdfProcessor'
 
 /**
  * Component that handles pending file uploads after authentication
@@ -34,10 +35,31 @@ export default function PendingUploadHandler() {
       try {
         // Convert pending upload back to File
         const file = await pendingUploadToFile(pendingUpload)
+        const title = file.name.replace(/\.[^/.]+$/, '')
+        
+        let filesToUpload: File[] = []
+        const isPDF = file.type === 'application/pdf'
+        const isImage = file.type.startsWith('image/')
+
+        if (isPDF) {
+          // Convert PDF to images
+          console.log('Converting PDF to images...')
+          const images = await convertPDFToImages(file)
+          filesToUpload = images
+        } else if (isImage) {
+          // Optimize image
+          console.log('Optimizing image...')
+          const optimized = await optimizeImage(file)
+          filesToUpload = [optimized]
+        }
+
+        if (filesToUpload.length === 0) {
+          throw new Error('No slides could be created')
+        }
 
         // Create presentation
-        const title = file.name.replace(/\.[^/.]+$/, '') // Remove extension
-        const { data, error} = await createPresentation(title, [file])
+        console.log(`Creating presentation with ${filesToUpload.length} slides...`)
+        const { data, error } = await createPresentation(title, filesToUpload)
 
         // Clear pending upload immediately to prevent retry
         clearPendingUpload()
@@ -69,13 +91,13 @@ export default function PendingUploadHandler() {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-[16px] p-8 max-w-md mx-4 text-center">
         <div className="mb-4">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#1c1c1c]"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#66e7f5]"></div>
         </div>
         <h2 className="font-['Inter',sans-serif] text-[18px] font-medium text-[#0d0d0d] mb-2">
           Processing your file...
         </h2>
         <p className="font-['Inter',sans-serif] text-[14px] text-[#5f5f5d]">
-          Please wait while we create your presentation
+          Converting pages to slides and optimizing images
         </p>
       </div>
     </div>
