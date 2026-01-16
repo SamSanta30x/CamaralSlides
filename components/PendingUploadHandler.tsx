@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/AuthContext'
 import {
@@ -18,14 +18,17 @@ export default function PendingUploadHandler() {
   const { user } = useAuth()
   const router = useRouter()
   const [processing, setProcessing] = useState(false)
+  const hasProcessed = useRef(false)
 
   useEffect(() => {
-    if (!user || processing) return
+    if (!user || processing || hasProcessed.current) return
 
     const processPendingUpload = async () => {
       const pendingUpload = getPendingUpload()
       if (!pendingUpload) return
 
+      // Mark as processed to prevent duplicate runs
+      hasProcessed.current = true
       setProcessing(true)
 
       try {
@@ -34,15 +37,17 @@ export default function PendingUploadHandler() {
 
         // Create presentation
         const title = file.name.replace(/\.[^/.]+$/, '') // Remove extension
-        const { data, error } = await createPresentation(title, [file])
+        const { data, error} = await createPresentation(title, [file])
+
+        // Clear pending upload immediately to prevent retry
+        clearPendingUpload()
 
         if (error) {
           console.error('Error creating presentation:', error)
           alert('Failed to create presentation. Please try uploading again.')
+          setProcessing(false)
+          hasProcessed.current = false
         } else if (data) {
-          // Clear pending upload
-          clearPendingUpload()
-          
           // Redirect to presentation
           router.push(`/presentation/${data.id}`)
         }
@@ -50,8 +55,8 @@ export default function PendingUploadHandler() {
         console.error('Error processing pending upload:', error)
         alert('An error occurred while processing your file. Please try uploading again.')
         clearPendingUpload()
-      } finally {
         setProcessing(false)
+        hasProcessed.current = false
       }
     }
 
