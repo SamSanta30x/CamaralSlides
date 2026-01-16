@@ -9,7 +9,6 @@ import {
   clearPendingUpload,
 } from '@/lib/utils/pendingUpload'
 import { createPresentation } from '@/lib/supabase/presentations'
-import { convertPDFToImages, optimizeImage } from '@/lib/utils/pdfProcessor'
 
 /**
  * Component that handles pending file uploads after authentication
@@ -37,29 +36,10 @@ export default function PendingUploadHandler() {
         const file = await pendingUploadToFile(pendingUpload)
         const title = file.name.replace(/\.[^/.]+$/, '')
         
-        let filesToUpload: File[] = []
-        const isPDF = file.type === 'application/pdf'
-        const isImage = file.type.startsWith('image/')
-
-        if (isPDF) {
-          // Convert PDF to images
-          console.log('Converting PDF to images...')
-          const images = await convertPDFToImages(file)
-          filesToUpload = images
-        } else if (isImage) {
-          // Optimize image
-          console.log('Optimizing image...')
-          const optimized = await optimizeImage(file)
-          filesToUpload = [optimized]
-        }
-
-        if (filesToUpload.length === 0) {
-          throw new Error('No slides could be created')
-        }
-
-        // Create presentation
-        console.log(`Creating presentation with ${filesToUpload.length} slides...`)
-        const { data, error } = await createPresentation(title, filesToUpload)
+        // PDF processing now happens on the server via Edge Function
+        // Images are uploaded directly
+        console.log('Creating presentation...')
+        const { data, error } = await createPresentation(title, [file])
 
         // Clear pending upload immediately to prevent retry
         clearPendingUpload()
@@ -97,7 +77,7 @@ export default function PendingUploadHandler() {
           Processing your file...
         </h2>
         <p className="font-['Inter',sans-serif] text-[14px] text-[#5f5f5d]">
-          Converting pages to slides and optimizing images
+          Processing your file on the server...
         </p>
       </div>
     </div>

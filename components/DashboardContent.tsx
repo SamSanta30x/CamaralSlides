@@ -13,7 +13,6 @@ import {
   createPresentation, 
   type Presentation 
 } from '@/lib/supabase/presentations'
-import { convertPDFToImages, optimizeImage } from '@/lib/utils/pdfProcessor'
 
 export default function DashboardContent() {
   const router = useRouter()
@@ -52,29 +51,11 @@ export default function DashboardContent() {
         return
       }
 
-      let filesToUpload: File[] = []
       const title = file.name.replace(/\.[^/.]+$/, '')
 
-      if (isPDF) {
-        // Convert PDF to images (one per page)
-        console.log('Converting PDF to images...')
-        const images = await convertPDFToImages(file)
-        filesToUpload = images
-      } else if (isImage) {
-        // Optimize single image
-        console.log('Optimizing image...')
-        const optimized = await optimizeImage(file)
-        filesToUpload = [optimized]
-      }
-      
-      if (filesToUpload.length === 0) {
-        alert('No slides could be created from the file')
-        setUploading(false)
-        return
-      }
-
-      console.log(`Creating presentation with ${filesToUpload.length} slides...`)
-      const { data, error } = await createPresentation(title, filesToUpload)
+      // PDF processing now happens on the server via Edge Function
+      // Images are uploaded directly
+      const { data, error } = await createPresentation(title, [file])
       
       if (error) {
         console.error('Error creating presentation:', error)

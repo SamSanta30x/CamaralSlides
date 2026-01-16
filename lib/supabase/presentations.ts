@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { uploadAndProcessPDF } from '@/lib/supabase/edgeFunctions'
 
 export interface Slide {
   id: string
@@ -21,6 +22,8 @@ export interface Presentation {
 
 /**
  * Create a new presentation with slides
+ * For PDFs: Uses Edge Function for server-side processing
+ * For images: Uploads directly
  */
 export async function createPresentation(
   title: string,
@@ -51,7 +54,32 @@ export async function createPresentation(
       return { data: null, error: presentationError }
     }
 
-    // Upload slides
+    // Check if it's a PDF
+    const isPDF = files.length === 1 && files[0].type === 'application/pdf'
+
+    if (isPDF) {
+      // Use Edge Function to process PDF
+      console.log('Processing PDF with Edge Function...')
+      const result = await uploadAndProcessPDF(presentation.id, files[0])
+
+      if (!result.success || !result.slides) {
+        // If Edge Function fails, delete the presentation
+        await supabase.from('presentations').delete().eq('id', presentation.id)
+        return {
+          data: null,
+          error: new Error(result.error || 'Failed to process PDF'),
+        }
+      }
+
+      console.log(`✓ PDF processed successfully: ${result.pageCount} slides`)
+
+      return {
+        data: { ...presentation, slides: result.slides },
+        error: null,
+      }
+    }
+
+    // For images, upload directly
     const slides: Slide[] = []
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
