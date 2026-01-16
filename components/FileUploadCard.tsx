@@ -9,6 +9,7 @@ interface FileUploadCardProps {
   buttonHref?: string
   className?: string
   descriptionText?: string
+  uploading?: boolean
 }
 
 export default function FileUploadCard({ 
@@ -17,7 +18,8 @@ export default function FileUploadCard({
   buttonText = "Or browse a file",
   buttonHref,
   className = "",
-  descriptionText = "Drag a PDF, PPTX or Images to start a new presentation"
+  descriptionText = "Drag a PDF, PPTX or Images to start a new presentation",
+  uploading = false
 }: FileUploadCardProps) {
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -50,17 +52,21 @@ export default function FileUploadCard({
   }
 
   const handleFileValidation = (file: File) => {
-    // Check if file is PDF or PowerPoint
+    // Check if file is PDF, PowerPoint, or Image
     const validTypes = [
       'application/pdf',
       'application/vnd.ms-powerpoint',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp'
     ]
     
     if (validTypes.includes(file.type)) {
       onFileUpload(file)
     } else {
-      alert('Please upload a PDF or PowerPoint file')
+      alert('Please upload a PDF, PowerPoint, or Image file')
     }
   }
 
@@ -81,9 +87,10 @@ export default function FileUploadCard({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf,.ppt,.pptx,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        accept=".pdf,.ppt,.pptx,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,image/*"
         onChange={handleFileSelect}
         className="hidden"
+        disabled={uploading}
       />
       
       {/* Illustration */}
@@ -101,10 +108,10 @@ export default function FileUploadCard({
       {/* Content */}
       <div className="flex flex-col gap-[10px] items-center justify-center leading-[17.786px] min-h-[35.57250213623047px] not-italic px-[19.44px] py-[12.96px] shrink-0 text-[#0d0d0d] tracking-[-0.2371px] max-w-[840px] w-full pointer-events-none">
         <p className="font-['Inter',sans-serif] font-medium shrink-0 text-[14px] sm:text-[16px]">
-          Create your AI presentation
+          {uploading ? 'Uploading...' : 'Create your AI presentation'}
         </p>
         <p className="font-['Inter',sans-serif] font-normal shrink-0 text-[11px] sm:text-[12px] text-center max-w-[172px]">
-          {descriptionText}
+          {uploading ? 'Please wait while we process your file' : descriptionText}
         </p>
         
         {/* Button */}

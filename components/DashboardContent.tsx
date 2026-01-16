@@ -1,33 +1,81 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import FileUploadCard from '@/components/FileUploadCard'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { 
+  getPresentations, 
+  createPresentation, 
+  type Presentation 
+} from '@/lib/supabase/presentations'
 
 export default function DashboardContent() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [presentations, setPresentations] = useState<Presentation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
   const { user, signOut } = useAuth()
 
-  const handleFileUpload = (file: File) => {
-    console.log('File uploaded:', file.name)
-    // TODO: Handle file upload logic
+  useEffect(() => {
+    if (user) {
+      loadPresentations()
+    }
+  }, [user])
+
+  const loadPresentations = async () => {
+    setLoading(true)
+    const { data, error } = await getPresentations()
+    if (data) {
+      setPresentations(data)
+    }
+    setLoading(false)
+  }
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true)
+    
+    try {
+      // Check if it's a PDF or image
+      const isPDF = file.type === 'application/pdf'
+      const isImage = file.type.startsWith('image/')
+      
+      if (!isPDF && !isImage) {
+        alert('Please upload a PDF or image file')
+        setUploading(false)
+        return
+      }
+
+      // For now, treat single files as presentations with one slide
+      // You can extend this to handle multiple images or PDF conversion
+      const files = [file]
+      const title = file.name.replace(/\.[^/.]+$/, '') // Remove extension
+      
+      const { data, error } = await createPresentation(title, files)
+      
+      if (error) {
+        console.error('Error creating presentation:', error)
+        alert('Failed to create presentation')
+      } else if (data) {
+        // Redirect to the new presentation
+        router.push(`/presentation/${data.id}`)
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('An error occurred during upload')
+    } finally {
+      setUploading(false)
+    }
   }
 
   const handleSignOut = async () => {
     await signOut()
     router.push('/')
   }
-
-  // Dummy presentation data
-  const presentations = Array(8).fill({
-    title: 'Sales Pitch Presentation',
-    thumbnail: '/assets/slide-demo.png'
-  })
 
   // Get user name from email
   const userName = user?.email?.split('@')[0] || 'User'
@@ -225,6 +273,7 @@ export default function DashboardContent() {
           onFileUpload={handleFileUpload}
           buttonText="Or Browse a file"
           className="w-full max-w-[840px] h-[400px]"
+          uploading={uploading}
         />
 
         {/* Presentations Section */}
@@ -265,37 +314,82 @@ export default function DashboardContent() {
             </div>
           </div>
 
-          {/* Presentations Grid */}
-          <div className="grid grid-cols-4 gap-[17px]">
-            {presentations.map((presentation, index) => (
-              <div key={index} className="flex flex-col gap-[6px]">
-                {/* Thumbnail */}
-                <div className="border border-[#dcdcdc] rounded-[13.703px] overflow-hidden aspect-[16/9] relative">
-                  <img 
-                    src={presentation.thumbnail} 
-                    alt={presentation.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-8">
+              <p className="font-['Inter',sans-serif] text-[14px] text-[#5f5f5d]">
+                Loading presentations...
+              </p>
+            </div>
+          )}
 
-                {/* Title and Menu */}
-                <div className="flex items-center justify-between">
-                  <p className="font-['Inter',sans-serif] text-[12px] leading-[17.786px] tracking-[-0.2371px] text-[#0d0d0d] truncate flex-1">
-                    {presentation.title}
-                  </p>
-                  {index === 0 && (
-                    <button className="w-[12px] h-[12px] flex items-center justify-center">
-                      <svg width="4" height="12" viewBox="0 0 4 12" fill="none">
-                        <circle cx="2" cy="2" r="1.5" fill="#0d0d0d"/>
-                        <circle cx="2" cy="6" r="1.5" fill="#0d0d0d"/>
-                        <circle cx="2" cy="10" r="1.5" fill="#0d0d0d"/>
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Empty State */}
+          {!loading && presentations.length === 0 && (
+            <div className="text-center py-12">
+              <p className="font-['Inter',sans-serif] text-[16px] text-[#5f5f5d] mb-2">
+                No presentations yet
+              </p>
+              <p className="font-['Inter',sans-serif] text-[14px] text-[#999]">
+                Upload a file to create your first presentation
+              </p>
+            </div>
+          )}
+
+          {/* Presentations Grid */}
+          {!loading && presentations.length > 0 && (
+            <div className="grid grid-cols-4 gap-[17px]">
+              {presentations
+                .filter((p) =>
+                  searchQuery
+                    ? p.title.toLowerCase().includes(searchQuery.toLowerCase())
+                    : true
+                )
+                .map((presentation, index) => {
+                  // Get first slide as thumbnail
+                  const thumbnail =
+                    presentation.slides && presentation.slides.length > 0
+                      ? presentation.slides[0].image_url
+                      : '/assets/slide-demo.png'
+
+                  return (
+                    <Link
+                      key={presentation.id}
+                      href={`/presentation/${presentation.id}`}
+                      className="flex flex-col gap-[6px] group cursor-pointer"
+                    >
+                      {/* Thumbnail */}
+                      <div className="border border-[#dcdcdc] rounded-[13.703px] overflow-hidden aspect-[16/9] relative group-hover:border-[#1c1c1c] transition-colors">
+                        <img
+                          src={thumbnail}
+                          alt={presentation.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      {/* Title and Menu */}
+                      <div className="flex items-center justify-between">
+                        <p className="font-['Inter',sans-serif] text-[12px] leading-[17.786px] tracking-[-0.2371px] text-[#0d0d0d] truncate flex-1">
+                          {presentation.title}
+                        </p>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            // TODO: Add presentation menu (delete, rename, etc)
+                          }}
+                          className="w-[12px] h-[12px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <svg width="4" height="12" viewBox="0 0 4 12" fill="none">
+                            <circle cx="2" cy="2" r="1.5" fill="#0d0d0d" />
+                            <circle cx="2" cy="6" r="1.5" fill="#0d0d0d" />
+                            <circle cx="2" cy="10" r="1.5" fill="#0d0d0d" />
+                          </svg>
+                        </button>
+                      </div>
+                    </Link>
+                  )
+                })}
+            </div>
+          )}
         </div>
       </div>
     </div>
