@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import FileUploadCard from '@/components/FileUploadCard'
+import PendingUploadHandler from '@/components/PendingUploadHandler'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { 
   getPresentations, 
@@ -83,6 +84,9 @@ export default function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
+      {/* Pending Upload Handler */}
+      <PendingUploadHandler />
+      
       {/* Header */}
       <header className="w-full flex items-center justify-between p-4 max-w-[1440px]">
         {/* Logo */}

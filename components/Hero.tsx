@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import LoginModal from './LoginModal'
 import FileUploadCard from './FileUploadCard'
+import { savePendingUpload } from '@/lib/utils/pendingUpload'
 
 export default function Hero() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
@@ -22,7 +23,16 @@ export default function Hero() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = async (file: File) => {
+    // Save file to localStorage for after authentication
+    try {
+      await savePendingUpload(file)
+    } catch (error) {
+      console.error('Error saving pending upload:', error)
+      alert('Error preparing file for upload. Please try again.')
+      return
+    }
+
     // Redirect to login on mobile, open modal on desktop
     if (isMobile) {
       router.push('/login')
