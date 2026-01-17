@@ -117,8 +117,22 @@ function SettingsContent() {
         }
       })
 
+      console.log('📧 Edge Function response:', { data, error })
+
       if (error) {
+        console.error('❌ Edge Function error details:', {
+          name: error.name,
+          message: error.message,
+          context: error.context,
+          details: error
+        })
         throw error
+      }
+
+      if (!data || !data.success) {
+        const errorMessage = data?.error || 'Unknown error'
+        console.error('❌ Edge Function returned error:', errorMessage)
+        throw new Error(errorMessage)
       }
 
       // Add member to local state (in production, this would come from database)
