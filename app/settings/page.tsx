@@ -173,23 +173,31 @@ function SettingsContent() {
       
       try {
         // Save to Supabase user metadata
-        const { error } = await supabase.auth.updateUser({
+        console.log('💾 Saving to Supabase...')
+        const { data, error } = await supabase.auth.updateUser({
           data: { 
             is_organization: true,
             organization_name: 'My Organization'
           }
         })
 
+        console.log('📦 Update result:', { data, error })
+
         if (error) {
           throw error
         }
 
+        console.log('✅ Saved successfully, updating local state')
         setIsOrganization(true)
         setOrganizationName('My Organization')
         setOriginalOrgName('My Organization')
         showToast('Account converted to Organization!', 'success')
+        
+        // Force refresh user data
+        const { data: { user: refreshedUser } } = await supabase.auth.getUser()
+        console.log('🔄 Refreshed user metadata:', refreshedUser?.user_metadata)
       } catch (error) {
-        console.error('Error converting to organization:', error)
+        console.error('❌ Error converting to organization:', error)
         showToast(`Failed to convert account: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
       }
     } else {
@@ -290,12 +298,26 @@ function SettingsContent() {
     
     // Load user data (only on initial load)
     if (user && !hasInitialized) {
+      console.log('🔍 Loading user data:', {
+        email: user.email,
+        metadata: user.user_metadata
+      })
+      
       setEmail(user.email || '')
       setName(user.user_metadata?.full_name || user.email?.split('@')[0] || '')
       
       // Initialize organization data
-      const isOrg = user.user_metadata?.is_organization || false
+      // Handle both boolean and string types for is_organization
+      const isOrgValue = user.user_metadata?.is_organization
+      const isOrg = isOrgValue === true || isOrgValue === 'true'
       const orgName = user.user_metadata?.organization_name || (isOrg ? 'My Organization' : 'Personal Account')
+      
+      console.log('🏢 Organization data:', {
+        isOrgValue,
+        isOrg,
+        orgName
+      })
+      
       setIsOrganization(isOrg)
       setOrganizationName(orgName)
       setOriginalOrgName(orgName) // Initialize original name to prevent false "Save" button
