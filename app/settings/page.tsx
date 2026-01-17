@@ -120,13 +120,28 @@ function SettingsContent() {
       console.log('📧 Edge Function response:', { data, error })
 
       if (error) {
+        // Try to get the actual error message from the response
+        let errorMessage = error.message
+        
+        if (error.context && error.context instanceof Response) {
+          try {
+            const responseText = await error.context.text()
+            console.log('📄 Response body:', responseText)
+            const responseJson = JSON.parse(responseText)
+            errorMessage = responseJson.error || errorMessage
+            console.log('❌ Parsed error:', errorMessage)
+          } catch (e) {
+            console.log('⚠️ Could not parse error response')
+          }
+        }
+        
         console.error('❌ Edge Function error details:', {
           name: error.name,
-          message: error.message,
+          message: errorMessage,
           context: error.context,
           details: error
         })
-        throw error
+        throw new Error(errorMessage)
       }
 
       if (!data || !data.success) {
