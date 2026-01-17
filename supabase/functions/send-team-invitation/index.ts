@@ -83,6 +83,28 @@ serve(async (req) => {
 
     if (inviteError) {
       console.error('Error creating invitation:', inviteError)
+      
+      // Check if it's a duplicate invitation
+      if (inviteError.code === '23505') {
+        // Check if there's an existing pending invitation
+        const { data: existing } = await supabase
+          .from('team_invitations')
+          .select('*')
+          .eq('organization_id', user.id)
+          .eq('invited_email', invitedEmail)
+          .single()
+        
+        if (existing) {
+          if (existing.status === 'pending') {
+            throw new Error(`An invitation has already been sent to ${invitedEmail}. They need to accept or decline it first.`)
+          } else if (existing.status === 'accepted') {
+            throw new Error(`${invitedEmail} has already accepted an invitation and is part of your team.`)
+          } else {
+            throw new Error(`A previous invitation to ${invitedEmail} is ${existing.status}.`)
+          }
+        }
+      }
+      
       throw new Error(`Failed to create invitation: ${inviteError.message}`)
     }
 
