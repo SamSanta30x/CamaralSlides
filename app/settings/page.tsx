@@ -167,41 +167,62 @@ function SettingsContent() {
   }
 
   const handleConvertToOrganization = async () => {
-    console.log('🔍 handleConvertToOrganization called') // Debug log
+    console.log('🔍 handleConvertToOrganization called')
     if (confirm('Convert your personal account to an organization? You can add team members and manage permissions.')) {
-      console.log('✅ User confirmed conversion') // Debug log
+      console.log('✅ User confirmed conversion')
       
       try {
-        // Save to Supabase user metadata
-        console.log('💾 Saving to Supabase...')
-        const { data, error } = await supabase.auth.updateUser({
-          data: { 
-            is_organization: true,
-            organization_name: 'My Organization'
-          }
-        })
-
-        console.log('📦 Update result:', { data, error })
-
-        if (error) {
-          throw error
+        if (!user) {
+          throw new Error('No user logged in')
         }
 
-        console.log('✅ Saved successfully, updating local state')
+        // Create organization record in database
+        console.log('💾 Creating organization in database...')
+        const { data: orgData, error: orgError } = await supabase
+          .from('organizations')
+          .insert({
+            owner_id: user.id,
+            name: 'My Organization',
+            is_organization: true
+          })
+          .select()
+          .single()
+
+        console.log('📦 Insert result:', { orgData, orgError })
+
+        if (orgError) {
+          throw orgError
+        }
+
+        console.log('✅ Organization created successfully, updating local state')
         setIsOrganization(true)
         setOrganizationName('My Organization')
         setOriginalOrgName('My Organization')
         showToast('Account converted to Organization!', 'success')
-        
-        // Force refresh user data
-        const { data: { user: refreshedUser } } = await supabase.auth.getUser()
-        console.log('🔄 Refreshed user metadata:', refreshedUser?.user_metadata)
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Error converting to organization:', error)
-        showToast(`Failed to convert account: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
+        
+        // Check if organization already exists
+        if (error.code === '23505') { // Unique constraint violation
+          showToast('Organization already exists for this account', 'info')
+          // Try to load the existing organization
+          const { data: existingOrg } = await supabase
+            .from('organizations')
+            .select('*')
+            .eq('owner_id', user?.id)
+            .single()
+          
+          if (existingOrg) {
+            setIsOrganization(true)
+            setOrganizationName(existingOrg.name)
+            setOriginalOrgName(existingOrg.name)
+          }
+        } else {
+          showToast(`Failed to convert account: ${error.message}`, 'error')
+        }
       }
     } else {
-      console.log('❌ User cancelled conversion') // Debug log
+      console.log('❌ User cancelled conversion')
     }
   }
 
@@ -211,13 +232,17 @@ function SettingsContent() {
       return
     }
 
+    if (!user) {
+      showToast('No user logged in', 'error')
+      return
+    }
+
     try {
-      // Save to Supabase user metadata
-      const { error } = await supabase.auth.updateUser({
-        data: { 
-          organization_name: organizationName
-        }
-      })
+      // Update organization name in database
+      const { error } = await supabase
+        .from('organizations')
+        .update({ name: organizationName })
+        .eq('owner_id', user.id)
 
       if (error) {
         throw error
@@ -300,27 +325,35 @@ function SettingsContent() {
     if (user && !hasInitialized) {
       console.log('🔍 Loading user data:', {
         email: user.email,
-        metadata: user.user_metadata
+        userId: user.id
       })
       
       setEmail(user.email || '')
       setName(user.user_metadata?.full_name || user.email?.split('@')[0] || '')
       
-      // Initialize organization data
-      // Handle both boolean and string types for is_organization
-      const isOrgValue = user.user_metadata?.is_organization
-      const isOrg = isOrgValue === true || isOrgValue === 'true'
-      const orgName = user.user_metadata?.organization_name || (isOrg ? 'My Organization' : 'Personal Account')
+      // Load organization data from organizations table
+      const loadOrganization = async () => {
+        const { data: orgData, error: orgError } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('owner_id', user.id)
+          .single()
+        
+        console.log('🏢 Organization data from DB:', { orgData, orgError })
+        
+        if (orgData && !orgError) {
+          setIsOrganization(true)
+          setOrganizationName(orgData.name)
+          setOriginalOrgName(orgData.name)
+        } else {
+          // No organization record, user is personal account
+          setIsOrganization(false)
+          setOrganizationName('Personal Account')
+          setOriginalOrgName('Personal Account')
+        }
+      }
       
-      console.log('🏢 Organization data:', {
-        isOrgValue,
-        isOrg,
-        orgName
-      })
-      
-      setIsOrganization(isOrg)
-      setOrganizationName(orgName)
-      setOriginalOrgName(orgName) // Initialize original name to prevent false "Save" button
+      loadOrganization()
       setHasInitialized(true) // Mark as initialized
     }
   }, [user, authLoading, router, hasInitialized])
