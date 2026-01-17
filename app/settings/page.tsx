@@ -37,8 +37,13 @@ function SettingsContent() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [language, setLanguage] = useState('Spanish')
-  const [organizationName, setOrganizationName] = useState('Camaral Inc.')
+  
+  // Organization and team states
+  const [isOrganization, setIsOrganization] = useState(false) // Personal vs Organization account
+  const [organizationName, setOrganizationName] = useState('Personal Account')
+  const [originalOrgName, setOriginalOrgName] = useState('Personal Account')
   const [inviteEmail, setInviteEmail] = useState('')
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null)
   
   // Password change states
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -48,10 +53,8 @@ function SettingsContent() {
   
   // Loading states
   const [savingName, setSavingName] = useState(false)
-  const [teamMembers, setTeamMembers] = useState([
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     { id: '1', name: 'Samuel Santa', email: 'sam@camaral.ai', role: 'Owner', avatar: '/assets/avatar-demo.png' },
-    { id: '2', name: 'Sofia Hoyos', email: 'sofia@camaral.ai', role: 'Admin', avatar: '/assets/avatar-demo.png' },
-    { id: '3', name: 'Laura Mejia', email: 'laura@camaral.ai', role: 'Member', avatar: '/assets/avatar-demo.png' },
   ])
   const [currentPlan] = useState({
     name: 'Pro Plan',
@@ -72,17 +75,74 @@ function SettingsContent() {
   ])
 
   const handleInviteMember = () => {
-    if (inviteEmail && inviteEmail.includes('@')) {
-      // Aquí iría la lógica para enviar la invitación
-      console.log('Inviting:', inviteEmail)
-      setInviteEmail('')
-      showToast('Invitation sent successfully!', 'success')
+    if (!isOrganization) {
+      showToast('Convert to Organization account first', 'error')
+      return
     }
+    
+    if (!inviteEmail || !inviteEmail.includes('@')) {
+      showToast('Please enter a valid email address', 'error')
+      return
+    }
+
+    if (teamMembers.some(member => member.email === inviteEmail)) {
+      showToast('This email is already a team member', 'error')
+      return
+    }
+
+    const newMember: TeamMember = {
+      id: String(Date.now()),
+      name: inviteEmail.split('@')[0],
+      email: inviteEmail,
+      role: 'Member',
+      avatar: '/assets/avatar-demo.png',
+    }
+    
+    setTeamMembers([...teamMembers, newMember])
+    setInviteEmail('')
+    showToast('Team member invited successfully!', 'success')
   }
 
   const handleRemoveMember = (memberId: string) => {
-    setTeamMembers(teamMembers.filter(member => member.id !== memberId))
-    showToast('Member removed successfully!', 'success')
+    const member = teamMembers.find(m => m.id === memberId)
+    if (!member) return
+    
+    if (member.role === 'Owner') {
+      showToast('Cannot remove the owner', 'error')
+      return
+    }
+
+    if (confirm(`Are you sure you want to remove ${member.name} from the team?`)) {
+      setTeamMembers(teamMembers.filter(m => m.id !== memberId))
+      showToast('Member removed successfully!', 'success')
+    }
+  }
+
+  const handleChangeRole = (memberId: string, newRole: TeamMember['role']) => {
+    setTeamMembers(teamMembers.map(member =>
+      member.id === memberId ? { ...member, role: newRole } : member
+    ))
+    setEditingRoleId(null)
+    showToast('Role updated successfully!', 'success')
+  }
+
+  const handleConvertToOrganization = () => {
+    if (confirm('Convert your personal account to an organization? You can add team members and manage permissions.')) {
+      setIsOrganization(true)
+      setOrganizationName('My Organization')
+      setOriginalOrgName('My Organization')
+      showToast('Account converted to Organization!', 'success')
+    }
+  }
+
+  const handleSaveOrganizationName = () => {
+    if (!organizationName.trim()) {
+      showToast('Organization name cannot be empty', 'error')
+      return
+    }
+
+    setOriginalOrgName(organizationName)
+    showToast('Organization name updated!', 'success')
   }
 
   const handleUpdateName = async () => {
@@ -408,41 +468,98 @@ function SettingsContent() {
                   Team
                 </h1>
 
-                {/* Organization Name */}
-                <div className="flex flex-col gap-2">
-                  <label className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d]">
-                    Organization name
-                  </label>
-                  <input
-                    type="text"
-                    value={organizationName}
-                    onChange={(e) => setOrganizationName(e.target.value)}
-                    className="w-full bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] outline-none focus:border-[#66e7f5] transition-colors"
-                  />
+                {/* Account Type Badge */}
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1.5 rounded-[8px] font-['Inter',sans-serif] text-[14px] font-medium ${
+                    isOrganization
+                      ? 'bg-[#CBFFA3] text-[#0d0d0d] border border-[#88E73F]'
+                      : 'bg-[#f5f5f5] text-[#666] border border-[#e5e5e5]'
+                  }`}>
+                    {isOrganization ? '🏢 Organization Account' : '👤 Personal Account'}
+                  </span>
                 </div>
 
-                {/* Invite Member Section */}
-                <div className="flex flex-col gap-3">
-                  <label className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d]">
-                    Invite team member
-                  </label>
-                  <div className="flex gap-3">
-                    <input
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleInviteMember()}
-                      placeholder="email@example.com"
-                      className="flex-1 bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] placeholder:text-[#999] outline-none focus:border-[#66e7f5] transition-colors"
-                    />
-                    <button
-                      onClick={handleInviteMember}
-                      className="bg-[#0d0d0d] text-white rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2d2d2d] transition-colors whitespace-nowrap"
-                    >
-                      Send invite
-                    </button>
+                {/* Convert to Organization (only for personal accounts) */}
+                {!isOrganization && (
+                  <div className="p-6 bg-[#f5f5f5] border border-[#e5e5e5] rounded-[12px] flex flex-col gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#66e7f5] flex items-center justify-center flex-shrink-0">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <path d="M10 2L3 7V16C3 16.5523 3.44772 17 4 17H16C16.5523 17 17 16.5523 17 16V7L10 2Z" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M7 17V10H13V17" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-['Inter',sans-serif] text-[16px] font-semibold text-[#0d0d0d] mb-1">
+                          Upgrade to Organization
+                        </h3>
+                        <p className="font-['Inter',sans-serif] text-[14px] text-[#666] mb-4">
+                          Convert your personal account to an organization to invite team members, manage permissions, and collaborate with your team.
+                        </p>
+                        <button
+                          onClick={handleConvertToOrganization}
+                          className="bg-[#0d0d0d] text-white rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2d2d2d] transition-colors"
+                        >
+                          Convert to Organization
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Organization Name (only for organizations) */}
+                {isOrganization && (
+                  <div className="flex flex-col gap-2">
+                    <label className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d]">
+                      Organization name
+                    </label>
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        value={organizationName}
+                        onChange={(e) => setOrganizationName(e.target.value)}
+                        placeholder="Enter organization name"
+                        className="flex-1 bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] outline-none focus:border-[#66e7f5] transition-colors"
+                      />
+                      {organizationName !== originalOrgName && (
+                        <button
+                          onClick={handleSaveOrganizationName}
+                          className="bg-[#0d0d0d] text-white rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2d2d2d] transition-colors whitespace-nowrap"
+                        >
+                          Save
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Invite Member Section (only for organizations) */}
+                {isOrganization && (
+                  <div className="flex flex-col gap-3 pt-6 border-t border-[#e5e5e5]">
+                    <label className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d]">
+                      Invite team member
+                    </label>
+                    <p className="font-['Inter',sans-serif] text-[14px] text-[#666]">
+                      Send an invitation to join your organization
+                    </p>
+                    <div className="flex gap-3">
+                      <input
+                        type="email"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleInviteMember()}
+                        placeholder="email@example.com"
+                        className="flex-1 bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] placeholder:text-[#999] outline-none focus:border-[#66e7f5] transition-colors"
+                      />
+                      <button
+                        onClick={handleInviteMember}
+                        className="bg-[#0d0d0d] text-white rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2d2d2d] transition-colors whitespace-nowrap"
+                      >
+                        Send invite
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Team Members List */}
                 <div className="flex flex-col gap-3 pt-6 border-t border-[#e5e5e5]">
@@ -462,7 +579,7 @@ function SettingsContent() {
                         key={member.id}
                         className="flex items-center justify-between p-4 bg-white border border-[#e5e5e5] rounded-[12px] hover:bg-[#fafafa] transition-colors"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
                           {/* Avatar */}
                           <div className="w-[40px] h-[40px] rounded-full bg-gradient-to-br from-[#66e7f5] to-[#4ade80] flex items-center justify-center overflow-hidden flex-shrink-0">
                             <Image
@@ -475,7 +592,7 @@ function SettingsContent() {
                           </div>
                           
                           {/* Info */}
-                          <div className="flex flex-col min-w-0">
+                          <div className="flex flex-col min-w-0 flex-1">
                             <p className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d] truncate">
                               {member.name}
                             </p>
@@ -487,19 +604,53 @@ function SettingsContent() {
 
                         {/* Role and Actions */}
                         <div className="flex items-center gap-3 flex-shrink-0">
-                          {/* Role Badge */}
-                          <span className={`px-2.5 py-1 rounded-[6px] font-['Inter',sans-serif] text-[12px] font-medium ${
-                            member.role === 'Owner'
-                              ? 'bg-[#CBFFA3] text-[#0d0d0d] border border-[#88E73F]'
-                              : member.role === 'Admin'
-                              ? 'bg-[#e0f2fe] text-[#0369a1] border border-[#7dd3fc]'
-                              : 'bg-[#f5f5f5] text-[#666] border border-[#e5e5e5]'
-                          }`}>
-                            {member.role}
-                          </span>
+                          {/* Role Selector (only for non-owners in organizations) */}
+                          {isOrganization && member.role !== 'Owner' ? (
+                            editingRoleId === member.id ? (
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={member.role}
+                                  onChange={(e) => handleChangeRole(member.id, e.target.value as 'Admin' | 'Member')}
+                                  className="px-2.5 py-1 rounded-[6px] font-['Inter',sans-serif] text-[12px] font-medium border border-[#e5e5e5] bg-white outline-none focus:border-[#66e7f5]"
+                                >
+                                  <option value="Admin">Admin</option>
+                                  <option value="Member">Member</option>
+                                </select>
+                                <button
+                                  onClick={() => setEditingRoleId(null)}
+                                  className="p-1 text-[#666] hover:text-[#0d0d0d]"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                  </svg>
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setEditingRoleId(member.id)}
+                                className={`px-2.5 py-1 rounded-[6px] font-['Inter',sans-serif] text-[12px] font-medium cursor-pointer hover:opacity-80 transition-opacity ${
+                                  member.role === 'Admin'
+                                    ? 'bg-[#e0f2fe] text-[#0369a1] border border-[#7dd3fc]'
+                                    : 'bg-[#f5f5f5] text-[#666] border border-[#e5e5e5]'
+                                }`}
+                              >
+                                {member.role}
+                              </button>
+                            )
+                          ) : (
+                            <span className={`px-2.5 py-1 rounded-[6px] font-['Inter',sans-serif] text-[12px] font-medium ${
+                              member.role === 'Owner'
+                                ? 'bg-[#CBFFA3] text-[#0d0d0d] border border-[#88E73F]'
+                                : member.role === 'Admin'
+                                ? 'bg-[#e0f2fe] text-[#0369a1] border border-[#7dd3fc]'
+                                : 'bg-[#f5f5f5] text-[#666] border border-[#e5e5e5]'
+                            }`}>
+                              {member.role}
+                            </span>
+                          )}
 
-                          {/* Remove Button (only if not Owner) */}
-                          {member.role !== 'Owner' && (
+                          {/* Remove Button (only if not Owner and is organization) */}
+                          {isOrganization && member.role !== 'Owner' && (
                             <button
                               onClick={() => handleRemoveMember(member.id)}
                               className="p-1.5 text-[#666] hover:text-[#ef4444] hover:bg-[#fef2f2] rounded-[6px] transition-colors"
