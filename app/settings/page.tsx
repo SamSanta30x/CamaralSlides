@@ -276,7 +276,8 @@ function SettingsContent() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="flex-1 bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] outline-none focus:border-[#66e7f5] transition-colors"
+                      placeholder={user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Enter your name'}
+                      className="flex-1 bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] outline-none focus:border-[#66e7f5] transition-colors placeholder:text-[#999]"
                     />
                     <button
                       onClick={handleUpdateName}
@@ -296,6 +297,7 @@ function SettingsContent() {
                   <input
                     type="email"
                     value={email}
+                    placeholder={user?.email || 'your.email@example.com'}
                     disabled
                     className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#999] outline-none cursor-not-allowed"
                   />
