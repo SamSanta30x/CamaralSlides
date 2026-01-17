@@ -44,6 +44,7 @@ function SettingsContent() {
   const [originalOrgName, setOriginalOrgName] = useState('Personal Account')
   const [inviteEmail, setInviteEmail] = useState('')
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null)
+  const [hasInitialized, setHasInitialized] = useState(false) // Track if data has been loaded
   
   // Password change states
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -166,11 +167,15 @@ function SettingsContent() {
   }
 
   const handleConvertToOrganization = () => {
+    console.log('🔍 handleConvertToOrganization called') // Debug log
     if (confirm('Convert your personal account to an organization? You can add team members and manage permissions.')) {
+      console.log('✅ User confirmed conversion') // Debug log
       setIsOrganization(true)
       setOrganizationName('My Organization')
       setOriginalOrgName('My Organization')
       showToast('Account converted to Organization!', 'success')
+    } else {
+      console.log('❌ User cancelled conversion') // Debug log
     }
   }
 
@@ -249,8 +254,8 @@ function SettingsContent() {
       router.push('/')
     }
     
-    // Load user data
-    if (user) {
+    // Load user data (only on initial load)
+    if (user && !hasInitialized) {
       setEmail(user.email || '')
       setName(user.user_metadata?.full_name || user.email?.split('@')[0] || '')
       
@@ -260,8 +265,9 @@ function SettingsContent() {
       setIsOrganization(isOrg)
       setOrganizationName(orgName)
       setOriginalOrgName(orgName) // Initialize original name to prevent false "Save" button
+      setHasInitialized(true) // Mark as initialized
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router, hasInitialized])
 
   // Update activeTab when URL changes
   useEffect(() => {
