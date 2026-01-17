@@ -21,9 +21,15 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🔍 Received request:', {
+      method: req.method,
+      headers: Object.fromEntries(req.headers.entries())
+    })
+
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('❌ Missing authorization header')
       throw new Error('Missing authorization header')
     }
 
@@ -36,15 +42,22 @@ serve(async (req) => {
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
+    console.log('👤 User verification:', { userId: user?.id, authError })
+    
     if (authError || !user) {
+      console.error('❌ Invalid authorization token:', authError)
       throw new Error('Invalid authorization token')
     }
 
     // Parse request body
-    const { invitedEmail, organizationName, inviterName, role }: InvitationRequest = await req.json()
+    const body = await req.json()
+    console.log('📦 Request body:', body)
+    
+    const { invitedEmail, organizationName, inviterName, role }: InvitationRequest = body
 
     // Validate input
     if (!invitedEmail || !organizationName || !inviterName) {
+      console.error('❌ Missing required fields:', { invitedEmail, organizationName, inviterName })
       throw new Error('Missing required fields')
     }
 
@@ -275,11 +288,19 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Error in send-team-invitation:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
+    console.error('❌ Error in send-team-invitation:', {
+      message: errorMessage,
+      stack: errorStack,
+      error
+    })
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
