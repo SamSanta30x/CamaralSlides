@@ -53,6 +53,7 @@ function SettingsContent() {
   
   // Loading states
   const [savingName, setSavingName] = useState(false)
+  const [sendingInvitation, setSendingInvitation] = useState(false)
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     { id: '1', name: 'Samuel Santa', email: 'sam@camaral.ai', role: 'Owner', avatar: '/assets/avatar-demo.png' },
   ])
@@ -90,13 +91,23 @@ function SettingsContent() {
       return
     }
 
-    setSavingName(true)
+    setSendingInvitation(true)
     try {
       const inviterName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Someone'
       const orgName = organizationName || 'the team'
       
+      // Get the session to include authorization header
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        throw new Error('No active session')
+      }
+      
       // Call the send-team-invitation Edge Function
       const { data, error } = await supabase.functions.invoke('send-team-invitation', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        },
         body: {
           invitedEmail: inviteEmail,
           organizationName: orgName,
@@ -127,7 +138,7 @@ function SettingsContent() {
       console.error('Error sending invitation:', error)
       showToast(`Failed to send invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
     } finally {
-      setSavingName(false)
+      setSendingInvitation(false)
     }
   }
 
@@ -242,6 +253,13 @@ function SettingsContent() {
     if (user) {
       setEmail(user.email || '')
       setName(user.user_metadata?.full_name || user.email?.split('@')[0] || '')
+      
+      // Initialize organization data
+      const isOrg = user.user_metadata?.is_organization || false
+      const orgName = user.user_metadata?.organization_name || (isOrg ? 'My Organization' : 'Personal Account')
+      setIsOrganization(isOrg)
+      setOrganizationName(orgName)
+      setOriginalOrgName(orgName) // Initialize original name to prevent false "Save" button
     }
   }, [user, authLoading, router])
 
@@ -581,9 +599,10 @@ function SettingsContent() {
                       />
                       <button
                         onClick={handleInviteMember}
-                        className="bg-[#0d0d0d] text-white rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2d2d2d] transition-colors whitespace-nowrap"
+                        disabled={sendingInvitation}
+                        className="bg-[#0d0d0d] text-white rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2d2d2d] transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Send invite
+                        {sendingInvitation ? 'Sending...' : 'Send invite'}
                       </button>
                     </div>
                   </div>
