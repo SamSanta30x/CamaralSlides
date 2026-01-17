@@ -74,7 +74,7 @@ function SettingsContent() {
     { id: '3', date: 'Nov 15, 2025', amount: 29.00, status: 'Paid', invoice: 'INV-2025-011' },
   ])
 
-  const handleInviteMember = () => {
+  const handleInviteMember = async () => {
     if (!isOrganization) {
       showToast('Convert to Organization account first', 'error')
       return
@@ -90,17 +90,45 @@ function SettingsContent() {
       return
     }
 
-    const newMember: TeamMember = {
-      id: String(Date.now()),
-      name: inviteEmail.split('@')[0],
-      email: inviteEmail,
-      role: 'Member',
-      avatar: '/assets/avatar-demo.png',
+    setSavingName(true)
+    try {
+      const inviterName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Someone'
+      const orgName = organizationName || 'the team'
+      
+      // Call the send-team-invitation Edge Function
+      const { data, error } = await supabase.functions.invoke('send-team-invitation', {
+        body: {
+          invitedEmail: inviteEmail,
+          organizationName: orgName,
+          inviterName: inviterName,
+          role: 'Member'
+        }
+      })
+
+      if (error) {
+        throw error
+      }
+
+      // Add member to local state (in production, this would come from database)
+      const newMember: TeamMember = {
+        id: String(Date.now()),
+        name: inviteEmail.split('@')[0],
+        email: inviteEmail,
+        role: 'Member',
+        avatar: '/assets/avatar-demo.png',
+      }
+      
+      setTeamMembers([...teamMembers, newMember])
+      setInviteEmail('')
+      showToast('Invitation email sent successfully!', 'success')
+      
+      console.log('Invitation sent:', data)
+    } catch (error) {
+      console.error('Error sending invitation:', error)
+      showToast(`Failed to send invitation: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
+    } finally {
+      setSavingName(false)
     }
-    
-    setTeamMembers([...teamMembers, newMember])
-    setInviteEmail('')
-    showToast('Team member invited successfully!', 'success')
   }
 
   const handleRemoveMember = (memberId: string) => {
