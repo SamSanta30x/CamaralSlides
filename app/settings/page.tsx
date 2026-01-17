@@ -3,8 +3,10 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { useToast } from '@/components/Toast'
 import DashboardHeader from '@/components/DashboardHeader'
 import Image from 'next/image'
+import { createClient } from '@/lib/supabase/client'
 
 interface TeamMember {
   id: string
@@ -26,15 +28,26 @@ function SettingsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
+  const { showToast, ToastContainer } = useToast()
+  const supabase = createClient()
   
   // Get tab from URL or default to 'profile'
   const tabFromUrl = searchParams.get('tab') as 'profile' | 'team' | 'billing' | null
   const [activeTab, setActiveTab] = useState<'profile' | 'team' | 'billing'>(tabFromUrl || 'profile')
-  const [name, setName] = useState('Max')
-  const [email, setEmail] = useState('sam@supersonik.ai')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [language, setLanguage] = useState('Spanish')
   const [organizationName, setOrganizationName] = useState('Camaral Inc.')
   const [inviteEmail, setInviteEmail] = useState('')
+  
+  // Password change states
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  
+  // Loading states
+  const [savingName, setSavingName] = useState(false)
   const [teamMembers, setTeamMembers] = useState([
     { id: '1', name: 'Samuel Santa', email: 'sam@camaral.ai', role: 'Owner', avatar: '/assets/avatar-demo.png' },
     { id: '2', name: 'Sofia Hoyos', email: 'sofia@camaral.ai', role: 'Admin', avatar: '/assets/avatar-demo.png' },
@@ -63,17 +76,84 @@ function SettingsContent() {
       // Aquí iría la lógica para enviar la invitación
       console.log('Inviting:', inviteEmail)
       setInviteEmail('')
-      // Mostrar toast de éxito
+      showToast('Invitation sent successfully!', 'success')
     }
   }
 
   const handleRemoveMember = (memberId: string) => {
     setTeamMembers(teamMembers.filter(member => member.id !== memberId))
+    showToast('Member removed successfully!', 'success')
+  }
+
+  const handleUpdateName = async () => {
+    if (!name.trim()) {
+      showToast('Name cannot be empty', 'error')
+      return
+    }
+
+    setSavingName(true)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: name }
+      })
+
+      if (error) throw error
+
+      showToast('Name updated successfully!', 'success')
+    } catch (error) {
+      console.error('Error updating name:', error)
+      showToast(`Failed to update name: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
+    } finally {
+      setSavingName(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      showToast('Please fill in all password fields', 'error')
+      return
+    }
+
+    if (newPassword.length < 6) {
+      showToast('Password must be at least 6 characters', 'error')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      showToast('Passwords do not match', 'error')
+      return
+    }
+
+    setSavingName(true) // Reusing loading state
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (error) throw error
+
+      showToast('Password changed successfully!', 'success')
+      setIsChangingPassword(false)
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (error) {
+      console.error('Error changing password:', error)
+      showToast(`Failed to change password: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
+    } finally {
+      setSavingName(false)
+    }
   }
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/')
+    }
+    
+    // Load user data
+    if (user) {
+      setEmail(user.email || '')
+      setName(user.user_metadata?.full_name || user.email?.split('@')[0] || '')
     }
   }, [user, authLoading, router])
 
@@ -97,6 +177,9 @@ function SettingsContent() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {/* Toast Notifications */}
+      <ToastContainer />
+      
       {/* Header */}
       <DashboardHeader showMenu={true} />
 
@@ -175,28 +258,37 @@ function SettingsContent() {
                   </div>
                   <div className="flex flex-col">
                     <p className="font-['Inter',sans-serif] text-[16px] font-semibold text-[#0d0d0d]">
-                      Samuel Santa
+                      {name || 'User'}
                     </p>
                     <p className="font-['Inter',sans-serif] text-[16px] text-[#666]">
-                      sam@camaral.ai
+                      {email}
                     </p>
                   </div>
                 </div>
 
-                {/* Name Input */}
+                {/* Name Input with Save Button */}
                 <div className="flex flex-col gap-2">
                   <label className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d]">
                     Name
                   </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] outline-none focus:border-[#66e7f5] transition-colors"
-                  />
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="flex-1 bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] outline-none focus:border-[#66e7f5] transition-colors"
+                    />
+                    <button
+                      onClick={handleUpdateName}
+                      disabled={savingName}
+                      className="bg-[#0d0d0d] text-white rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2d2d2d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {savingName ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
                 </div>
 
-                {/* Email Input */}
+                {/* Email Input (disabled) */}
                 <div className="flex flex-col gap-2">
                   <label className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d]">
                     Email
@@ -204,15 +296,79 @@ function SettingsContent() {
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] outline-none focus:border-[#66e7f5] transition-colors"
+                    disabled
+                    className="w-full bg-[#f5f5f5] border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#999] outline-none cursor-not-allowed"
                   />
+                  <p className="font-['Inter',sans-serif] text-[14px] text-[#999]">
+                    Email cannot be changed
+                  </p>
                 </div>
 
-                {/* Change Password Button */}
-                <button className="w-full bg-[#0d0d0d] text-white rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2d2d2d] transition-colors">
-                  Change password
-                </button>
+                {/* Change Password Section */}
+                {!isChangingPassword ? (
+                  <button 
+                    onClick={() => setIsChangingPassword(true)}
+                    className="w-full bg-white border border-[#e5e5e5] text-[#0d0d0d] rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#fafafa] transition-colors"
+                  >
+                    Change password
+                  </button>
+                ) : (
+                  <div className="flex flex-col gap-4 p-6 border border-[#e5e5e5] rounded-[12px]">
+                    <h3 className="font-['Inter',sans-serif] text-[16px] font-semibold text-[#0d0d0d]">
+                      Change Password
+                    </h3>
+
+                    {/* New Password */}
+                    <div className="flex flex-col gap-2">
+                      <label className="font-['Inter',sans-serif] text-[14px] font-medium text-[#0d0d0d]">
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        className="w-full bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] outline-none focus:border-[#66e7f5] transition-colors"
+                      />
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div className="flex flex-col gap-2">
+                      <label className="font-['Inter',sans-serif] text-[14px] font-medium text-[#0d0d0d]">
+                        Confirm New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        className="w-full bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] outline-none focus:border-[#66e7f5] transition-colors"
+                      />
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => {
+                          setIsChangingPassword(false)
+                          setCurrentPassword('')
+                          setNewPassword('')
+                          setConfirmPassword('')
+                        }}
+                        className="flex-1 bg-white border border-[#e5e5e5] text-[#0d0d0d] rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#fafafa] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleChangePassword}
+                        disabled={savingName}
+                        className="flex-1 bg-[#0d0d0d] text-white rounded-[12px] px-6 py-3 font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2d2d2d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {savingName ? 'Saving...' : 'Update Password'}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Preferences Section */}
                 <div className="flex flex-col gap-6 pt-6 border-t border-[#e5e5e5]">
