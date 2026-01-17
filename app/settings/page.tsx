@@ -319,6 +319,7 @@ function SettingsContent() {
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/')
+      return
     }
     
     // Load user data (only on initial load)
@@ -333,20 +334,34 @@ function SettingsContent() {
       
       // Load organization data from organizations table
       const loadOrganization = async () => {
-        const { data: orgData, error: orgError } = await supabase
-          .from('organizations')
-          .select('*')
-          .eq('owner_id', user.id)
-          .single()
-        
-        console.log('🏢 Organization data from DB:', { orgData, orgError })
-        
-        if (orgData && !orgError) {
-          setIsOrganization(true)
-          setOrganizationName(orgData.name)
-          setOriginalOrgName(orgData.name)
-        } else {
-          // No organization record, user is personal account
+        try {
+          const { data: orgData, error: orgError } = await supabase
+            .from('organizations')
+            .select('*')
+            .eq('owner_id', user.id)
+            .single()
+          
+          console.log('🏢 Organization data from DB:', { 
+            orgData, 
+            orgError,
+            errorCode: orgError?.code,
+            errorMessage: orgError?.message
+          })
+          
+          if (orgData && !orgError) {
+            console.log('✅ Found organization:', orgData.name)
+            setIsOrganization(true)
+            setOrganizationName(orgData.name)
+            setOriginalOrgName(orgData.name)
+          } else {
+            // No organization record, user is personal account
+            console.log('❌ No organization found, setting as personal account')
+            setIsOrganization(false)
+            setOrganizationName('Personal Account')
+            setOriginalOrgName('Personal Account')
+          }
+        } catch (err) {
+          console.error('💥 Error loading organization:', err)
           setIsOrganization(false)
           setOrganizationName('Personal Account')
           setOriginalOrgName('Personal Account')
@@ -354,9 +369,9 @@ function SettingsContent() {
       }
       
       loadOrganization()
-      setHasInitialized(true) // Mark as initialized
+      setHasInitialized(true)
     }
-  }, [user, authLoading, router, hasInitialized])
+  }, [user, authLoading, router, hasInitialized, supabase])
 
   // Update activeTab when URL changes
   useEffect(() => {
