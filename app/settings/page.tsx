@@ -166,27 +166,61 @@ function SettingsContent() {
     showToast('Role updated successfully!', 'success')
   }
 
-  const handleConvertToOrganization = () => {
+  const handleConvertToOrganization = async () => {
     console.log('🔍 handleConvertToOrganization called') // Debug log
     if (confirm('Convert your personal account to an organization? You can add team members and manage permissions.')) {
       console.log('✅ User confirmed conversion') // Debug log
-      setIsOrganization(true)
-      setOrganizationName('My Organization')
-      setOriginalOrgName('My Organization')
-      showToast('Account converted to Organization!', 'success')
+      
+      try {
+        // Save to Supabase user metadata
+        const { error } = await supabase.auth.updateUser({
+          data: { 
+            is_organization: true,
+            organization_name: 'My Organization'
+          }
+        })
+
+        if (error) {
+          throw error
+        }
+
+        setIsOrganization(true)
+        setOrganizationName('My Organization')
+        setOriginalOrgName('My Organization')
+        showToast('Account converted to Organization!', 'success')
+      } catch (error) {
+        console.error('Error converting to organization:', error)
+        showToast(`Failed to convert account: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
+      }
     } else {
       console.log('❌ User cancelled conversion') // Debug log
     }
   }
 
-  const handleSaveOrganizationName = () => {
+  const handleSaveOrganizationName = async () => {
     if (!organizationName.trim()) {
       showToast('Organization name cannot be empty', 'error')
       return
     }
 
-    setOriginalOrgName(organizationName)
-    showToast('Organization name updated!', 'success')
+    try {
+      // Save to Supabase user metadata
+      const { error } = await supabase.auth.updateUser({
+        data: { 
+          organization_name: organizationName
+        }
+      })
+
+      if (error) {
+        throw error
+      }
+
+      setOriginalOrgName(organizationName)
+      showToast('Organization name updated!', 'success')
+    } catch (error) {
+      console.error('Error updating organization name:', error)
+      showToast(`Failed to update organization name: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
+    }
   }
 
   const handleUpdateName = async () => {
