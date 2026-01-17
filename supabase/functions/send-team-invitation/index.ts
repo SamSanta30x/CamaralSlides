@@ -76,23 +76,127 @@ serve(async (req) => {
     const siteUrl = Deno.env.get('SITE_URL') || 'http://localhost:3000'
     const invitationLink = `${siteUrl}/auth/accept-invitation?token=${invitationToken}`
 
-    // Send invitation email
-    // Note: You would integrate with a service like Resend, SendGrid, or use Supabase's email service
-    // For now, we'll use Supabase's built-in email functionality
+    // Send invitation email using Resend
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
     
+    if (!resendApiKey) {
+      console.warn('RESEND_API_KEY not configured, skipping email')
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Invitation created (email not sent - RESEND_API_KEY missing)',
+          invitationToken,
+          invitationLink,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
+    // Create HTML email
     const emailHtml = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
-            body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #0d0d0d; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #66e7f5 0%, #4ade80 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0; }
-            .header h1 { color: white; margin: 0; font-size: 28px; }
-            .content { background: white; padding: 40px 30px; border: 1px solid #e5e5e5; border-radius: 0 0 12px 12px; }
-            .button { display: inline-block; background: #0d0d0d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
-            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+            body { 
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+              line-height: 1.6; 
+              color: #0d0d0d;
+              margin: 0;
+              padding: 0;
+              background-color: #f5f5f5;
+            }
+            .container { 
+              max-width: 600px; 
+              margin: 40px auto; 
+              background: white;
+              border-radius: 16px;
+              overflow: hidden;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .header { 
+              background: linear-gradient(135deg, #66e7f5 0%, #4ade80 100%); 
+              padding: 40px 30px; 
+              text-align: center; 
+            }
+            .header h1 { 
+              color: white; 
+              margin: 0; 
+              font-size: 28px;
+              font-weight: 700;
+            }
+            .content { 
+              padding: 40px 30px; 
+            }
+            .content p {
+              margin: 0 0 16px 0;
+              font-size: 16px;
+              color: #0d0d0d;
+            }
+            .highlight {
+              font-weight: 600;
+              color: #0d0d0d;
+            }
+            .role-badge {
+              display: inline-block;
+              background: #e0f2fe;
+              color: #0369a1;
+              padding: 6px 12px;
+              border-radius: 6px;
+              font-size: 14px;
+              font-weight: 500;
+              margin: 8px 0;
+            }
+            .button-container {
+              text-align: center;
+              margin: 32px 0;
+            }
+            .button { 
+              display: inline-block; 
+              background: #0d0d0d; 
+              color: white !important; 
+              padding: 14px 32px; 
+              text-decoration: none; 
+              border-radius: 12px; 
+              font-size: 16px;
+              font-weight: 600;
+            }
+            .button:hover {
+              background: #2d2d2d;
+            }
+            .info-box {
+              background: #f5f5f5;
+              border-radius: 12px;
+              padding: 20px;
+              margin: 24px 0;
+            }
+            .info-box p {
+              margin: 0;
+              font-size: 14px;
+              color: #666;
+            }
+            .link-box {
+              background: #f5f5f5;
+              padding: 12px;
+              border-radius: 8px;
+              margin-top: 12px;
+              word-break: break-all;
+              font-size: 13px;
+              color: #666;
+              font-family: monospace;
+            }
+            .footer { 
+              text-align: center; 
+              padding: 30px;
+              color: #666; 
+              font-size: 14px;
+              border-top: 1px solid #e5e5e5;
+            }
           </style>
         </head>
         <body>
@@ -101,46 +205,68 @@ serve(async (req) => {
               <h1>🎉 You've been invited!</h1>
             </div>
             <div class="content">
-              <p><strong>${inviterName}</strong> has invited you to join <strong>${organizationName}</strong> on Camaral.</p>
+              <p>Hi there,</p>
               
-              <p>As a <strong>${role}</strong>, you'll be able to collaborate with the team and access shared presentations.</p>
+              <p><span class="highlight">${inviterName}</span> has invited you to join <span class="highlight">${organizationName}</span> on Camaral.</p>
               
-              <p style="text-align: center;">
+              <p>You'll join as a <span class="role-badge">${role}</span> and be able to collaborate with the team and access shared presentations.</p>
+              
+              <div class="button-container">
                 <a href="${invitationLink}" class="button">Accept Invitation</a>
-              </p>
+              </div>
               
-              <p style="font-size: 14px; color: #666;">
-                This invitation will expire in 7 days. If you don't want to join this organization, you can safely ignore this email.
-              </p>
+              <div class="info-box">
+                <p><strong>⏰ This invitation expires in 7 days</strong></p>
+                <p style="margin-top: 8px;">If you don't want to join this organization, you can safely ignore this email.</p>
+              </div>
               
-              <p style="font-size: 14px; color: #666;">
-                Or copy and paste this link into your browser:<br>
-                <code style="background: #f5f5f5; padding: 8px; display: block; margin-top: 8px; word-break: break-all;">${invitationLink}</code>
+              <p style="font-size: 14px; color: #666; margin-top: 24px;">
+                Having trouble with the button? Copy and paste this link into your browser:
               </p>
+              <div class="link-box">${invitationLink}</div>
             </div>
             <div class="footer">
               <p>© ${new Date().getFullYear()} Camaral. All rights reserved.</p>
+              <p style="margin-top: 8px; font-size: 12px;">
+                This is an automated message. Please do not reply to this email.
+              </p>
             </div>
           </div>
         </body>
       </html>
     `
 
-    // In production, integrate with an email service
-    // For now, we'll log the invitation
-    console.log('Invitation created:', {
-      email: invitedEmail,
-      token: invitationToken,
-      link: invitationLink,
+    // Send email via Resend API
+    const resendResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Camaral <no-reply@camaral.ai>',
+        to: [invitedEmail],
+        subject: `${inviterName} invited you to join ${organizationName} on Camaral`,
+        html: emailHtml,
+      }),
     })
+
+    const resendData = await resendResponse.json()
+
+    if (!resendResponse.ok) {
+      console.error('Resend API error:', resendData)
+      throw new Error(`Failed to send email: ${resendData.message || 'Unknown error'}`)
+    }
+
+    console.log('Email sent successfully via Resend:', resendData)
 
     // Return success response
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Invitation sent successfully',
+        message: 'Invitation email sent successfully',
         invitationToken,
-        invitationLink, // For testing purposes
+        emailId: resendData.id,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
