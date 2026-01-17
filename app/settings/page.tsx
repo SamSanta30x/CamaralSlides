@@ -33,7 +33,6 @@ function SettingsContent() {
   const [name, setName] = useState('Max')
   const [email, setEmail] = useState('sam@supersonik.ai')
   const [language, setLanguage] = useState('Spanish')
-  const [theme, setTheme] = useState('Light')
   const [organizationName, setOrganizationName] = useState('Camaral Inc.')
   const [inviteEmail, setInviteEmail] = useState('')
   const [teamMembers, setTeamMembers] = useState([
@@ -235,21 +234,6 @@ function SettingsContent() {
                           {language}
                         </span>
                       </div>
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M6 8L10 12L14 8" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Theme */}
-                  <div className="flex flex-col gap-2">
-                    <label className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d]">
-                      Theme
-                    </label>
-                    <div className="relative w-full bg-white border border-[#e5e5e5] rounded-[12px] px-4 py-3 flex items-center justify-between cursor-pointer hover:border-[#66e7f5] transition-colors">
-                      <span className="font-['Inter',sans-serif] text-[16px] text-[#0d0d0d]">
-                        {theme}
-                      </span>
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                         <path d="M6 8L10 12L14 8" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
