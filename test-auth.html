@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Supabase Auth</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabase Auth Test</h1>
+    <div id="result"></div>
+    
+    <script>
+        // Reemplaza con tus valores de .env.local
+        const SUPABASE_URL = 'https://vogxtprdcnmlzvuxmbss.supabase.co'
+        const SUPABASE_ANON_KEY = 'TU_ANON_KEY_AQUI' // Copia de tu .env.local
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        
+        async function testAuth() {
+            const resultDiv = document.getElementById('result')
+            
+            // 1. Check session
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+            
+            if (sessionError) {
+                resultDiv.innerHTML += `<p style="color: red;">❌ Session Error: ${sessionError.message}</p>`
+                return
+            }
+            
+            if (!session) {
+                resultDiv.innerHTML += `<p style="color: orange;">⚠️ No active session. Please log in first.</p>`
+                return
+            }
+            
+            resultDiv.innerHTML += `<p style="color: green;">✅ Session found!</p>`
+            resultDiv.innerHTML += `<p>User ID: ${session.user.id}</p>`
+            resultDiv.innerHTML += `<p>Email: ${session.user.email}</p>`
+            
+            // 2. Test Edge Function call
+            resultDiv.innerHTML += `<p>Testing Edge Function...</p>`
+            
+            const { data, error } = await supabase.functions.invoke('process-pdf', {
+                body: {
+                    presentationId: 'test-123',
+                    pdfPath: 'temp/test/test.pdf'
+                },
+                headers: {
+                    Authorization: `Bearer ${session.access_token}`
+                }
+            })
+            
+            if (error) {
+                resultDiv.innerHTML += `<p style="color: red;">❌ Edge Function Error: ${error.message}</p>`
+                console.error('Full error:', error)
+            } else {
+                resultDiv.innerHTML += `<p style="color: green;">✅ Edge Function responded!</p>`
+                resultDiv.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`
+            }
+        }
+        
+        testAuth()
+    </script>
+</body>
+</html>

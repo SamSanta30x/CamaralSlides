@@ -6,7 +6,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import FileUploadCard from '@/components/FileUploadCard'
 import PendingUploadHandler from '@/components/PendingUploadHandler'
-import UpgradeButton from '@/components/UpgradeButton'
+import DashboardHeader from '@/components/DashboardHeader'
+import SearchInput from '@/components/SearchInput'
+import { useToast } from '@/components/Toast'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { 
   getPresentations, 
@@ -17,11 +19,14 @@ import {
 export default function DashboardContent() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [presentations, setPresentations] = useState<Presentation[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
-  const { user, signOut } = useAuth()
+  const [hoveredPresentation, setHoveredPresentation] = useState<string | null>(null)
+  const [previewIndex, setPreviewIndex] = useState<{ [key: string]: number }>({})
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const { user } = useAuth()
+  const { showToast, ToastContainer } = useToast()
 
   useEffect(() => {
     if (user) {
@@ -33,9 +38,34 @@ export default function DashboardContent() {
     setLoading(true)
     const { data, error } = await getPresentations()
     if (data) {
+      console.log('Presentations loaded:', data)
+      console.log('First presentation slides:', data[0]?.slides)
       setPresentations(data)
     }
     setLoading(false)
+  }
+
+  const handleDuplicate = async (presentationId: string, title: string) => {
+    try {
+      // TODO: Implement duplicate logic
+      showToast(`Duplicating "${title}"...`, 'success')
+      setOpenMenuId(null)
+    } catch (error) {
+      showToast('Failed to duplicate presentation', 'error')
+    }
+  }
+
+  const handleDelete = async (presentationId: string, title: string) => {
+    if (confirm(`Are you sure you want to delete "${title}"?`)) {
+      try {
+        // TODO: Implement delete logic
+        showToast(`Deleted "${title}"`, 'success')
+        setPresentations(presentations.filter(p => p.id !== presentationId))
+        setOpenMenuId(null)
+      } catch (error) {
+        showToast('Failed to delete presentation', 'error')
+      }
+    }
   }
 
   const handleFileUpload = async (file: File) => {
@@ -46,7 +76,15 @@ export default function DashboardContent() {
       const isImage = file.type.startsWith('image/')
       
       if (!isPDF && !isImage) {
-        alert('Please upload a PDF or image file')
+        showToast('Please upload a PDF or image file', 'error')
+        setUploading(false)
+        return
+      }
+
+      // Validate file size (max 50MB)
+      const maxSize = 50 * 1024 * 1024 // 50MB
+      if (file.size > maxSize) {
+        showToast('File is too large. Maximum size is 50MB', 'error')
         setUploading(false)
         return
       }
@@ -59,208 +97,31 @@ export default function DashboardContent() {
       
       if (error) {
         console.error('Error creating presentation:', error)
-        alert('Failed to create presentation: ' + error.message)
+        showToast(`Failed to create presentation: ${error.message}`, 'error')
       } else if (data) {
+        showToast(isPDF ? 'PDF uploaded! Processing pages...' : 'Presentation created successfully!', 'success')
         // Reload presentations and redirect
         await loadPresentations()
         router.push(`/presentation/${data.id}`)
       }
     } catch (error) {
       console.error('Upload error:', error)
-      alert('An error occurred during upload: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      showToast(`An error occurred during upload: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
     } finally {
       setUploading(false)
     }
   }
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
-  }
-
-  // Get user name from email
-  const userName = user?.email?.split('@')[0] || 'User'
-  const displayName = userName.charAt(0).toUpperCase() + userName.slice(1)
-
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
+      {/* Toast Notifications */}
+      <ToastContainer />
+      
       {/* Pending Upload Handler */}
       <PendingUploadHandler />
       
       {/* Header */}
-      <header className="w-full flex items-center justify-between p-4 max-w-[1440px]">
-        {/* Logo */}
-        <Link href="/" className="flex items-center">
-          <div className="flex items-center px-[14px] py-2">
-            <Image 
-              src="/Camaral Logo.svg" 
-              alt="Camaral" 
-              width={90}
-              height={20}
-              priority
-              className="h-[20px] w-auto"
-            />
-          </div>
-        </Link>
-
-        {/* Right side - Upgrade button and Avatar */}
-        <div className="flex items-center gap-[10px]">
-          <UpgradeButton />
-
-          {/* Avatar with dropdown */}
-          <div className="relative">
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="w-[36px] h-[36px] rounded-full border-[1.125px] border-[#fbff00] overflow-hidden"
-            >
-              <img 
-                src="/assets/avatar-demo.png" 
-                alt="User avatar" 
-                className="w-full h-full object-cover"
-              />
-            </button>
-            
-            {/* Dropdown menu - Pixel Perfect */}
-            {isMenuOpen && (
-              <>
-                {/* Backdrop to close menu */}
-                <div 
-                  className="fixed inset-0 z-40"
-                  onClick={() => setIsMenuOpen(false)}
-                />
-                
-                {/* Menu */}
-                <div className="absolute right-0 mt-2 w-[310px] bg-white border border-[#d9d9d9] rounded-[16px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.1)] flex flex-col gap-[10px] px-[10px] py-[16px] z-50">
-                  {/* User Info */}
-                  <div className="flex gap-[10px] h-[36px] items-center">
-                    <div className="w-[36px] h-[36px] rounded-full border-[1.125px] border-[#fbff00] overflow-hidden shrink-0">
-                      <img 
-                        src="/assets/avatar-demo.png" 
-                        alt="User avatar" 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex flex-col px-[10px] text-[12px] leading-[16px] tracking-[-0.1px] text-black">
-                      <p className="font-['Inter',sans-serif] font-medium">
-                        {displayName}
-                      </p>
-                      <p className="font-['Inter',sans-serif] font-normal">
-                        {user?.email}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Upgrade Button */}
-                  <button className="bg-[#66e7f5] rounded-[16px] flex items-center justify-center px-[14px] py-[8px] w-full">
-                    <span className="font-['Inter',sans-serif] text-[14px] leading-[20px] text-black">
-                      Upgrade
-                    </span>
-                  </button>
-
-                  {/* Add Members Button */}
-                  <button className="border border-[#dcdcdc] rounded-[16px] flex items-center justify-center px-[14px] py-[8px] w-full">
-                    <span className="font-['Inter',sans-serif] text-[14px] leading-[20px] text-black">
-                      Add members
-                    </span>
-                  </button>
-
-                  {/* Total Demos Section */}
-                  <div className="flex flex-col">
-                    <div className="flex items-center px-[10px]">
-                      <p className="font-['SF_Pro',sans-serif] font-light text-[12px] leading-[16px] tracking-[-0.1px] text-black">
-                        Total Demos
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center px-[10px]">
-                        <p className="font-['SF_Pro',sans-serif] font-light text-[12px] leading-[16px] tracking-[-0.1px] text-black">
-                          17
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-end">
-                        <p className="font-['SF_Pro',sans-serif] font-light text-[12px] leading-[16px] tracking-[-0.1px] text-black">
-                          Limit 25
-                        </p>
-                      </div>
-                    </div>
-                    {/* Progress Bar */}
-                    <div className="flex flex-col h-[6px] px-[10px] mt-1">
-                      <div className="h-[6px] rounded-[16px] w-full bg-gradient-to-r from-[#66e7f5] from-[67%] to-[#dcdcdc] to-[67%]" />
-                    </div>
-                  </div>
-
-                  {/* Menu Items */}
-                  <div className="flex flex-col w-full gap-[4px]">
-                    {/* Plan & billing */}
-                    <button className="flex gap-[6px] items-center px-[10px] py-[8px] rounded-[10px] hover:bg-[rgba(32,32,32,0.05)] w-full">
-                      <Image 
-                        src="/assets/icon-billing.svg" 
-                        alt="" 
-                        width={12} 
-                        height={12}
-                        className="shrink-0"
-                      />
-                      <p className="flex-1 text-left font-['SF_Pro',sans-serif] font-normal text-[14px] leading-[20px] tracking-[-0.18px] text-[#202020] whitespace-nowrap overflow-hidden text-ellipsis">
-                        Plan & billing
-                      </p>
-                      <div className="bg-[#66e7f5] rounded-[999px] px-[8px] pt-[2px] pb-[3px] shrink-0">
-                        <span className="font-['Inter',sans-serif] font-medium text-[12px] text-black leading-normal">
-                          Premium
-                        </span>
-                      </div>
-                    </button>
-
-                    {/* Settings */}
-                    <button className="flex gap-[6px] items-center px-[10px] py-[8px] rounded-[10px] hover:bg-[rgba(32,32,32,0.05)] w-full">
-                      <Image 
-                        src="/assets/icon-settings.svg" 
-                        alt="" 
-                        width={12} 
-                        height={12}
-                        className="shrink-0"
-                      />
-                      <p className="flex-1 text-left font-['SF_Pro',sans-serif] font-normal text-[14px] leading-[20px] tracking-[-0.18px] text-[#202020]">
-                        Settings
-                      </p>
-                    </button>
-
-                    {/* Help center */}
-                    <button className="flex gap-[6px] items-center px-[10px] py-[8px] rounded-[10px] hover:bg-[rgba(32,32,32,0.05)] w-full">
-                      <Image 
-                        src="/assets/icon-help.svg" 
-                        alt="" 
-                        width={12} 
-                        height={12}
-                        className="shrink-0"
-                      />
-                      <p className="flex-1 text-left font-['SF_Pro',sans-serif] font-normal text-[14px] leading-[20px] tracking-[-0.18px] text-[#202020]">
-                        Help center
-                      </p>
-                    </button>
-
-                    {/* Log out */}
-                    <button 
-                      onClick={handleSignOut}
-                      className="flex gap-[6px] items-center px-[10px] py-[8px] rounded-[10px] hover:bg-[rgba(32,32,32,0.05)] w-full"
-                    >
-                      <Image 
-                        src="/assets/icon-logout.svg" 
-                        alt="" 
-                        width={12} 
-                        height={12}
-                        className="shrink-0"
-                      />
-                      <p className="flex-1 text-left font-['SF_Pro',sans-serif] font-normal text-[14px] leading-[20px] tracking-[-0.18px] text-[#202020]">
-                        Log out
-                      </p>
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <DashboardHeader />
 
       {/* Main Content */}
       <div className="flex flex-col gap-[40px] items-center w-full max-w-[1440px] px-4 py-8">
@@ -283,23 +144,15 @@ export default function DashboardContent() {
             {/* Search and Filters */}
             <div className="flex items-center gap-[6px]">
               {/* Search Input */}
-              <div className="bg-[#f5f5f5] rounded-[16px] p-[10.5px] flex items-center gap-[10px] w-[267px] h-[36px]">
-                <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                  <circle cx="7.5" cy="7.5" r="6" stroke="black" strokeWidth="1.5"/>
-                  <path d="M12 12L15 15" stroke="black" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent flex-1 font-['Inter',sans-serif] text-[14px] leading-[20px] text-black outline-none placeholder:text-black"
-                />
-                <span className="font-['Inter',sans-serif] text-[12px] text-[#999]">⌘K</span>
-              </div>
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search..."
+                width="w-[267px]"
+              />
 
               {/* Filters Button */}
-              <button className="border border-[#e1e1e1] rounded-[999px] px-[14px] py-2 flex items-center gap-2">
+              <button className="border border-[#e1e1e1] rounded-[999px] px-[14px] py-2 flex items-center gap-2 hover:bg-[#f5f5f5] transition-colors">
                 <span className="font-['Inter',sans-serif] text-[14px] leading-[20px] text-black">
                   Filters
                 </span>
@@ -341,17 +194,44 @@ export default function DashboardContent() {
                     : true
                 )
                 .map((presentation, index) => {
-                  // Get first slide as thumbnail
-                  const thumbnail =
-                    presentation.slides && presentation.slides.length > 0
-                      ? presentation.slides[0].image_url
-                      : '/assets/slide-demo.png'
+                  // Get slides for preview
+                  const slides = presentation.slides || []
+                  const currentPreviewIndex = previewIndex[presentation.id] || 0
+                  const thumbnail = slides.length > 0 
+                    ? slides[currentPreviewIndex]?.image_url || slides[0]?.image_url
+                    : '/assets/slide-demo.png'
+                  
+                  const hasMultipleSlides = slides.length > 1
+                  const isHovered = hoveredPresentation === presentation.id
+
+                  const handlePrevSlide = (e: React.MouseEvent) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setPreviewIndex(prev => ({
+                      ...prev,
+                      [presentation.id]: currentPreviewIndex > 0 ? currentPreviewIndex - 1 : slides.length - 1
+                    }))
+                  }
+
+                  const handleNextSlide = (e: React.MouseEvent) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setPreviewIndex(prev => ({
+                      ...prev,
+                      [presentation.id]: currentPreviewIndex < slides.length - 1 ? currentPreviewIndex + 1 : 0
+                    }))
+                  }
 
                   return (
                     <Link
                       key={presentation.id}
                       href={`/presentation/${presentation.id}`}
                       className="flex flex-col gap-[6px] group cursor-pointer"
+                      onMouseEnter={() => setHoveredPresentation(presentation.id)}
+                      onMouseLeave={() => {
+                        setHoveredPresentation(null)
+                        setPreviewIndex(prev => ({ ...prev, [presentation.id]: 0 }))
+                      }}
                     >
                       {/* Thumbnail */}
                       <div className="border border-[#dcdcdc] rounded-[13.703px] overflow-hidden aspect-[16/9] relative group-hover:border-[#1c1c1c] transition-colors">
@@ -359,7 +239,36 @@ export default function DashboardContent() {
                           src={thumbnail}
                           alt={presentation.title}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = '/assets/slide-demo.png'
+                          }}
                         />
+                        
+                        {/* Navigation Arrows (only show on hover if multiple slides) */}
+                        {hasMultipleSlides && isHovered && (
+                          <>
+                            {/* Previous Arrow */}
+                            <button
+                              onClick={handlePrevSlide}
+                              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-all backdrop-blur-sm"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M10 12L6 8L10 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+
+                            {/* Next Arrow */}
+                            <button
+                              onClick={handleNextSlide}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-all backdrop-blur-sm"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M6 4L10 8L6 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+                          </>
+                        )}
                       </div>
 
                       {/* Title and Menu */}
@@ -367,19 +276,87 @@ export default function DashboardContent() {
                         <p className="font-['Inter',sans-serif] text-[12px] leading-[17.786px] tracking-[-0.2371px] text-[#0d0d0d] truncate flex-1">
                           {presentation.title}
                         </p>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault()
-                            // TODO: Add presentation menu (delete, rename, etc)
-                          }}
-                          className="w-[12px] h-[12px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <svg width="4" height="12" viewBox="0 0 4 12" fill="none">
-                            <circle cx="2" cy="2" r="1.5" fill="#0d0d0d" />
-                            <circle cx="2" cy="6" r="1.5" fill="#0d0d0d" />
-                            <circle cx="2" cy="10" r="1.5" fill="#0d0d0d" />
-                          </svg>
-                        </button>
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setOpenMenuId(openMenuId === presentation.id ? null : presentation.id)
+                            }}
+                            className="w-[12px] h-[12px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg width="4" height="12" viewBox="0 0 4 12" fill="none">
+                              <circle cx="2" cy="2" r="1.5" fill="#0d0d0d" />
+                              <circle cx="2" cy="6" r="1.5" fill="#0d0d0d" />
+                              <circle cx="2" cy="10" r="1.5" fill="#0d0d0d" />
+                            </svg>
+                          </button>
+
+                          {/* Dropdown Menu */}
+                          {openMenuId === presentation.id && (
+                            <>
+                              {/* Backdrop to close menu */}
+                              <div 
+                                className="fixed inset-0 z-10" 
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  setOpenMenuId(null)
+                                }}
+                              />
+                              
+                              {/* Menu */}
+                              <div className="absolute right-0 top-full mt-1 w-[160px] bg-white border border-[#e5e5e5] rounded-[12px] overflow-hidden z-20">
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    handleDuplicate(presentation.id, presentation.title)
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#fafafa] transition-colors text-left"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="#0d0d0d" strokeWidth="1.5"/>
+                                    <path d="M11 5V3.5C11 2.67157 10.3284 2 9.5 2H3.5C2.67157 2 2 2.67157 2 3.5V9.5C2 10.3284 2.67157 11 3.5 11H5" stroke="#0d0d0d" strokeWidth="1.5"/>
+                                  </svg>
+                                  <span className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                                    Duplicate
+                                  </span>
+                                </button>
+                                
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    router.push(`/presentation/${presentation.id}`)
+                                    setOpenMenuId(null)
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#fafafa] transition-colors text-left"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M11.5 2L14 4.5M1 15L4 14L13.5 4.5C14.3284 3.67157 14.3284 2.32843 13.5 1.5C12.6716 0.671573 11.3284 0.671573 10.5 1.5L1 11V15Z" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                  <span className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                                    Edit
+                                  </span>
+                                </button>
+
+                                <div className="border-t border-[#e5e5e5]" />
+                                
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    handleDelete(presentation.id, presentation.title)
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#fef2f2] transition-colors text-left"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M3 4H13M5 4V3C5 2.44772 5.44772 2 6 2H10C10.5523 2 11 2.44772 11 3V4M6 7V11M10 7V11M4 4L5 13C5 13.5523 5.44772 14 6 14H10C10.5523 14 11 13.5523 11 13L12 4" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                  <span className="font-['Inter',sans-serif] text-[14px] text-[#ef4444]">
+                                    Delete
+                                  </span>
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </Link>
                   )

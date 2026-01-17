@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { getPresentation, updateSlide, type Presentation, type Slide } from '@/lib/supabase/presentations'
-import UpgradeButton from '@/components/UpgradeButton'
+import DashboardHeader from '@/components/DashboardHeader'
+import DescriptionTextarea from '@/components/DescriptionTextarea'
 import { createClient } from '@/lib/supabase/client'
 
 export default function PresentationPage() {
@@ -20,6 +20,8 @@ export default function PresentationPage() {
   const [showMenu, setShowMenu] = useState(false)
   const [descriptionValue, setDescriptionValue] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [processedSlides, setProcessedSlides] = useState(0)
+  const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const presentationId = params.id as string
 
@@ -56,8 +58,10 @@ export default function PresentationPage() {
       // Check if presentation has no slides (still processing)
       if (!data.slides || data.slides.length === 0) {
         setIsProcessing(true)
+        setProcessedSlides(0)
       } else {
         setIsProcessing(false)
+        setProcessedSlides(data.slides.length)
       }
     }
     setLoading(false)
@@ -87,9 +91,25 @@ export default function PresentationPage() {
             const updatedSlides = [...existingSlides, newSlide].sort(
               (a, b) => a.slide_order - b.slide_order
             )
+            
+            // Update processed count
+            setProcessedSlides(updatedSlides.length)
+            
+            // Set processing flag when slides start arriving
+            setIsProcessing(true)
+            
+            // Clear any existing timeout
+            if (processingTimeoutRef.current) {
+              clearTimeout(processingTimeoutRef.current)
+            }
+            
+            // Set a timeout to turn off processing flag after 3 seconds of no new slides
+            processingTimeoutRef.current = setTimeout(() => {
+              setIsProcessing(false)
+            }, 3000)
+            
             return { ...prev, slides: updatedSlides }
           })
-          setIsProcessing(false)
         }
       )
       .subscribe()
@@ -142,59 +162,8 @@ export default function PresentationPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Top Navigation Bar */}
-      <nav className="w-full px-6 py-3 flex items-center justify-between bg-white">
-        {/* Left - Logo */}
-        <Link href="/" className="flex items-center">
-          <Image 
-            src="/Camaral Logo.svg" 
-            alt="Camaral" 
-            width={90}
-            height={20}
-            priority
-            className="h-[24px] w-auto"
-          />
-        </Link>
-
-        {/* Center - Tabs */}
-        <div className="flex items-center gap-2">
-          <button className="px-4 py-2 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
-            Agent
-          </button>
-          <button className="px-4 py-2 font-['Inter',sans-serif] text-[14px] text-[#666] hover:text-[#0d0d0d]">
-            Content
-          </button>
-          <button className="px-4 py-2 font-['Inter',sans-serif] text-[14px] text-[#666] hover:text-[#0d0d0d]">
-            Analytics
-          </button>
-          <button className="px-4 py-2 font-['Inter',sans-serif] text-[14px] text-[#666] hover:text-[#0d0d0d] flex items-center gap-1">
-            Responses
-            <span className="bg-[#f5f5f5] px-2 py-0.5 rounded-full text-[12px]">12</span>
-          </button>
-        </div>
-
-        {/* Right - Actions */}
-        <div className="flex items-center gap-3">
-          <UpgradeButton />
-          <button className="px-4 py-2 bg-white border border-[#e5e5e5] rounded-[10px] font-['Inter',sans-serif] text-[14px] font-medium text-[#0d0d0d] hover:bg-[#f5f5f5] transition-colors flex items-center gap-2">
-            <Image 
-              src="/assets/share-icon.svg" 
-              alt="" 
-              width={16} 
-              height={16}
-              className="flex-shrink-0"
-            />
-            Share
-          </button>
-          <div className="w-[32px] h-[32px] rounded-full border-[1.125px] border-[#fbff00] overflow-hidden cursor-pointer">
-            <img 
-              src="/assets/avatar-demo.png" 
-              alt="User avatar" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      </nav>
+      {/* Header with Menu and Tabs */}
+      <DashboardHeader showMenu={true} showTabs={true} presentationId={presentationId} activeTab="content" />
 
       {/* Presentation Header - Floating Card */}
       <div className="w-full bg-white py-5">
@@ -210,10 +179,18 @@ export default function PresentationPage() {
               </div>
 
               {/* Title */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 flex items-center gap-3">
                 <h1 className="font-['Inter',sans-serif] text-[16px] font-semibold text-[#0d0d0d] leading-tight truncate">
                   {presentation.title}
                 </h1>
+                {isProcessing && processedSlides > 0 && (
+                  <div className="flex items-center gap-2 bg-[#66e7f5] px-3 py-1 rounded-full">
+                    <div className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-[#0d0d0d] border-t-transparent"></div>
+                    <span className="font-['Inter',sans-serif] text-[12px] font-medium text-[#0d0d0d]">
+                      Processing... ({processedSlides} slides)
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Call to Action Button */}
@@ -243,8 +220,8 @@ export default function PresentationPage() {
         <div className="flex-1 flex flex-col items-center px-8 pb-6">
           {/* Carousel with 3 Slides Visible */}
           <div className="relative w-full max-w-[1200px] mb-6 flex items-center justify-center">
-            {loading || !hasSlides ? (
-              /* Loading/Processing State */
+            {loading ? (
+              /* Initial Loading State */
               <div className="flex items-center justify-center gap-4">
                 <div className="w-[756px] h-[423px] bg-white border border-[#e5e5e5] rounded-[16px] opacity-30"></div>
                 <div className="w-[840px] h-[470px] bg-white border border-[#e5e5e5] rounded-[16px] flex items-center justify-center">
@@ -252,10 +229,29 @@ export default function PresentationPage() {
                     <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#e5e5e5] border-t-[#66e7f5]"></div>
                     <div className="text-center">
                       <p className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d] mb-1">
-                        {loading ? 'Loading...' : 'Processing PDF...'}
+                        Loading...
                       </p>
                       <p className="font-['Inter',sans-serif] text-[14px] text-[#999]">
-                        {loading ? 'Please wait' : 'Converting pages to slides'}
+                        Please wait
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="w-[756px] h-[423px] bg-white border border-[#e5e5e5] rounded-[16px] opacity-30"></div>
+              </div>
+            ) : !hasSlides ? (
+              /* Processing State - Show message but allow UI to render */
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-[756px] h-[423px] bg-white border border-[#e5e5e5] rounded-[16px] opacity-30"></div>
+                <div className="w-[840px] h-[470px] bg-white border border-[#e5e5e5] rounded-[16px] flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#e5e5e5] border-t-[#66e7f5]"></div>
+                    <div className="text-center">
+                      <p className="font-['Inter',sans-serif] text-[16px] font-medium text-[#0d0d0d] mb-1">
+                        Processing PDF...
+                      </p>
+                      <p className="font-['Inter',sans-serif] text-[14px] text-[#999]">
+                        First slide will appear shortly
                       </p>
                     </div>
                   </div>
@@ -272,11 +268,18 @@ export default function PresentationPage() {
                       onClick={handlePrevSlide}
                       className="w-[756px] h-[423px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden opacity-50 hover:opacity-70 transition-all flex-shrink-0"
                     >
-                      <img
-                        src={presentation.slides[currentSlideIndex - 1].image_url}
-                        alt={`Slide ${currentSlideIndex}`}
-                        className="w-full h-full object-contain p-3"
-                      />
+                      {presentation.slides[currentSlideIndex - 1].image_url.endsWith('.pdf') ? (
+                        <iframe
+                          src={`${presentation.slides[currentSlideIndex - 1].image_url}#toolbar=0&navpanes=0&scrollbar=0`}
+                          className="w-full h-full pointer-events-none"
+                        />
+                      ) : (
+                        <img
+                          src={presentation.slides[currentSlideIndex - 1].image_url}
+                          alt={`Slide ${currentSlideIndex}`}
+                          className="w-full h-full object-contain p-3"
+                        />
+                      )}
                     </button>
                   )}
                   {currentSlideIndex === 0 && (
@@ -285,21 +288,29 @@ export default function PresentationPage() {
 
                   {/* Current Slide (Center - 100% size) */}
                   {currentSlide && (
-                    <div className="relative w-[840px] h-[470px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden shadow-lg flex-shrink-0">
+                    <div className="relative w-[840px] h-[472.5px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden flex-shrink-0">
                       {imageLoading && (
                         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white">
-                          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#1c1c1c]"></div>
+                          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#e5e5e5] border-t-[#66e7f5]"></div>
                         </div>
                       )}
-                      <img
-                        src={currentSlide.image_url}
-                        alt={currentSlide.title || `Slide ${currentSlideIndex + 1}`}
-                        className={`w-full h-full object-contain p-4 transition-opacity duration-300 ${
-                          imageLoading ? 'opacity-0' : 'opacity-100'
-                        }`}
-                        onLoad={() => setImageLoading(false)}
-                        onError={() => setImageLoading(false)}
-                      />
+                      {currentSlide.image_url.endsWith('.pdf') ? (
+                        <iframe
+                          src={`${currentSlide.image_url}#toolbar=0&navpanes=0&scrollbar=0`}
+                          className="w-full h-full"
+                          onLoad={() => setImageLoading(false)}
+                        />
+                      ) : (
+                        <img
+                          src={currentSlide.image_url}
+                          alt={currentSlide.title || `Slide ${currentSlideIndex + 1}`}
+                          className={`w-full h-full object-contain p-4 transition-opacity duration-300 ${
+                            imageLoading ? 'opacity-0' : 'opacity-100'
+                          }`}
+                          onLoad={() => setImageLoading(false)}
+                          onError={() => setImageLoading(false)}
+                        />
+                      )}
                     </div>
                   )}
 
@@ -309,11 +320,18 @@ export default function PresentationPage() {
                       onClick={handleNextSlide}
                       className="w-[756px] h-[423px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden opacity-50 hover:opacity-70 transition-all flex-shrink-0"
                     >
-                      <img
-                        src={presentation.slides[currentSlideIndex + 1].image_url}
-                        alt={`Slide ${currentSlideIndex + 2}`}
-                        className="w-full h-full object-contain p-3"
-                      />
+                      {presentation.slides[currentSlideIndex + 1].image_url.endsWith('.pdf') ? (
+                        <iframe
+                          src={`${presentation.slides[currentSlideIndex + 1].image_url}#toolbar=0&navpanes=0&scrollbar=0`}
+                          className="w-full h-full pointer-events-none"
+                        />
+                      ) : (
+                        <img
+                          src={presentation.slides[currentSlideIndex + 1].image_url}
+                          alt={`Slide ${currentSlideIndex + 2}`}
+                          className="w-full h-full object-contain p-3"
+                        />
+                      )}
                     </button>
                   )}
                   {currentSlideIndex === totalSlides - 1 && (
@@ -353,45 +371,10 @@ export default function PresentationPage() {
 
           {/* Description/Prompt Area */}
           <div className="w-full max-w-[840px] mb-6">
-            <div className="bg-white rounded-[12px] border border-[#e5e5e5] h-[160px] flex flex-col relative">
-              {/* Custom Placeholder with Button */}
-              {!descriptionValue && (
-                <div className="absolute top-4 left-4 pointer-events-none flex flex-wrap items-center gap-[5px]">
-                  <span className="font-['Inter',sans-serif] text-[15px] text-[#999]">
-                    Describe what your agent should say here or
-                  </span>
-                  <div className="px-3 py-1.5 bg-transparent border border-[#e5e5e5] rounded-[16px] font-['Inter',sans-serif] text-[13px] text-[#0d0d0d] flex items-center gap-1.5 pointer-events-auto cursor-pointer hover:bg-[#fafafa] transition-colors">
-                    <Image 
-                      src="/assets/sparkles-icon.svg" 
-                      alt="" 
-                      width={12} 
-                      height={12}
-                      className="flex-shrink-0"
-                    />
-                    Generate it with AI
-                  </div>
-                </div>
-              )}
-              
-              <textarea
-                value={descriptionValue}
-                onChange={(e) => setDescriptionValue(e.target.value)}
-                placeholder=""
-                className="flex-1 w-full bg-transparent font-['Inter',sans-serif] text-[15px] text-[#0d0d0d] outline-none resize-none relative z-10 px-4 pt-4 pb-2"
-              />
-              <div className="flex items-center justify-end px-4 pb-3">
-                <button className="px-3 py-1.5 bg-white border border-[#e5e5e5] rounded-[16px] font-['Inter',sans-serif] text-[13px] text-[#0d0d0d] hover:bg-[#fafafa] transition-colors flex items-center gap-2">
-                  <Image 
-                    src="/assets/sparkles-icon.svg" 
-                    alt="" 
-                    width={14} 
-                    height={14}
-                    className="flex-shrink-0"
-                  />
-                  Improve it with AI
-                </button>
-              </div>
-            </div>
+            <DescriptionTextarea 
+              value={descriptionValue}
+              onChange={setDescriptionValue}
+            />
           </div>
 
           {/* Bottom Carousel - Thumbnails */}
@@ -418,11 +401,18 @@ export default function PresentationPage() {
                         : 'border-[#dcdcdc] opacity-60 hover:opacity-100'
                     }`}>
                       <div className="w-full h-full bg-white flex items-center justify-center p-2">
-                        <img
-                          src={slide.image_url}
-                          alt={slide.title || `Slide ${index + 1}`}
-                          className="w-full h-full object-contain"
-                        />
+                        {slide.image_url.endsWith('.pdf') ? (
+                          <iframe
+                            src={`${slide.image_url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                            className="w-full h-full pointer-events-none"
+                          />
+                        ) : (
+                          <img
+                            src={slide.image_url}
+                            alt={slide.title || `Slide ${index + 1}`}
+                            className="w-full h-full object-contain"
+                          />
+                        )}
                       </div>
                     </div>
                   </button>

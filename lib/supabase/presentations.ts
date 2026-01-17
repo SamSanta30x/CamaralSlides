@@ -151,6 +151,15 @@ export async function getPresentations(): Promise<{
       return { data: null, error }
     }
 
+    // Sort slides by order for each presentation
+    if (data) {
+      data.forEach((presentation: Presentation) => {
+        if (presentation.slides) {
+          presentation.slides.sort((a: Slide, b: Slide) => a.slide_order - b.slide_order)
+        }
+      })
+    }
+
     return { data, error: null }
   } catch (error) {
     return {

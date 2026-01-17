@@ -1,8 +1,9 @@
 // Supabase Edge Function to process PDF files
-// Converts PDF pages to PNG images using pdf2pic API
+// Extracts each page as a separate PDF file
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { PDFDocument } from 'https://esm.sh/pdf-lib@1.17.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,6 +22,14 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Edge Function invoked')
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()))
+    
+    // Get the authorization header from the request
+    const authHeader = req.headers.get('Authorization')
+    console.log('Auth header present:', !!authHeader)
+    
+    // Create service role client for operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -37,108 +46,57 @@ serve(async (req) => {
     console.log(`Processing PDF for presentation ${presentationId} at path ${pdfPath}`)
 
     // Download the PDF from storage
+    console.log(`Attempting to download PDF from: slides/${pdfPath}`)
     const { data: pdfData, error: downloadError } = await supabaseClient.storage
       .from('slides')
       .download(pdfPath)
 
     if (downloadError) {
+      console.error('Download error:', downloadError)
       throw new Error(`Failed to download PDF: ${downloadError.message}`)
     }
 
-    console.log('PDF downloaded, converting to images...')
+    if (!pdfData) {
+      throw new Error('PDF data is null')
+    }
 
-    // Convert PDF to base64
+    console.log('PDF downloaded successfully, extracting pages...')
+
+    // Load PDF with pdf-lib
     const arrayBuffer = await pdfData.arrayBuffer()
-    const base64Pdf = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
-
-    // Use pdf.co API (free tier: 300 requests/month)
-    // Alternative: Use CloudConvert API
-    const conversionResponse = await fetch('https://api.pdf.co/v1/pdf/convert/to/png', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': Deno.env.get('PDF_CO_API_KEY') || 'demo', // Use 'demo' for testing
-      },
-      body: JSON.stringify({
-        file: base64Pdf,
-        inline: true,
-        pages: '0-',
-        async: false
-      })
-    })
-
-    if (!conversionResponse.ok) {
-      const errorText = await conversionResponse.text()
-      console.error('PDF conversion failed:', errorText)
-      
-      // Fallback: Use CloudConvert API
-      console.log('Trying CloudConvert as fallback...')
-      const cloudConvertResponse = await fetch('https://api.cloudconvert.com/v2/convert', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('CLOUDCONVERT_API_KEY') || ''}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tasks: {
-            'import-pdf': {
-              operation: 'import/base64',
-              file: base64Pdf,
-              filename: 'document.pdf'
-            },
-            'convert-to-png': {
-              operation: 'convert',
-              input: 'import-pdf',
-              output_format: 'png'
-            },
-            'export-png': {
-              operation: 'export/url',
-              input: 'convert-to-png'
-            }
-          }
-        })
-      })
-
-      if (!cloudConvertResponse.ok) {
-        throw new Error('Both conversion services failed. Please configure API keys.')
-      }
-    }
-
-    const conversionResult = await conversionResponse.json()
+    console.log(`PDF size: ${arrayBuffer.byteLength} bytes`)
     
-    if (!conversionResult.urls || conversionResult.urls.length === 0) {
-      throw new Error('No pages were converted')
-    }
+    const pdfDoc = await PDFDocument.load(arrayBuffer)
+    const pageCount = pdfDoc.getPageCount()
+    
+    console.log(`PDF has ${pageCount} pages`)
 
-    console.log(`Converting ${conversionResult.urls.length} pages...`)
-
-    // Process each page
-    const slides = []
-    for (let i = 0; i < conversionResult.urls.length; i++) {
-      const imageUrl = conversionResult.urls[i]
-      
+    // Process FIRST slide immediately and return response
+    // Then process remaining slides asynchronously
+    
+    const processSlide = async (pageIndex: number) => {
       try {
-        // Download the converted image
-        const imageResponse = await fetch(imageUrl)
-        if (!imageResponse.ok) {
-          console.error(`Failed to download image ${i + 1}`)
-          continue
-        }
+        console.log(`Processing slide ${pageIndex + 1}/${pageCount}...`)
         
-        const imageBlob = await imageResponse.blob()
+        // Create a new PDF with just this page
+        const singlePagePdf = await PDFDocument.create()
+        const [copiedPage] = await singlePagePdf.copyPages(pdfDoc, [pageIndex])
+        singlePagePdf.addPage(copiedPage)
         
-        // Upload to Supabase Storage
-        const fileName = `${presentationId}/slide_${i + 1}.png`
+        const pdfBytes = await singlePagePdf.save()
+        
+        // Upload the single-page PDF
+        const fileName = `${presentationId}/slide_${pageIndex + 1}.pdf`
         const { error: uploadError } = await supabaseClient.storage
           .from('slides')
-          .upload(fileName, imageBlob, {
-            contentType: 'image/png',
+          .upload(fileName, pdfBytes, {
+            contentType: 'application/pdf',
             upsert: true
           })
 
         if (uploadError) {
-          console.error(`Failed to upload slide ${i + 1}:`, uploadError)
-          continue
+          console.error(`Failed to upload slide ${pageIndex + 1}:`, uploadError)
+          return null
         }
 
         // Get public URL
@@ -151,41 +109,65 @@ serve(async (req) => {
           .from('slides')
           .insert({
             presentation_id: presentationId,
-            slide_order: i + 1,
+            slide_order: pageIndex + 1,
             image_url: publicUrl,
-            title: `Slide ${i + 1}`,
+            title: `Slide ${pageIndex + 1}`,
             description: ''
           })
           .select()
           .single()
 
         if (slideError) {
-          console.error(`Failed to create slide record for slide ${i + 1}:`, slideError)
-          continue
+          console.error(`Failed to create slide record for slide ${pageIndex + 1}:`, slideError)
+          return null
         }
 
-        slides.push(slide)
-        console.log(`✓ Processed slide ${i + 1}/${conversionResult.urls.length}`)
+        console.log(`✓ Processed slide ${pageIndex + 1}/${pageCount}`)
+        return slide
       } catch (error) {
-        console.error(`Error processing slide ${i + 1}:`, error)
-        continue
+        console.error(`Error processing slide ${pageIndex + 1}:`, error)
+        return null
       }
     }
 
-    // Clean up temp PDF
-    try {
-      await supabaseClient.storage.from('slides').remove([pdfPath])
-    } catch (error) {
-      console.error('Failed to clean up temp file:', error)
+    // Process FIRST slide immediately
+    console.log('Processing first slide for immediate display...')
+    const firstSlide = await processSlide(0)
+    const slides = firstSlide ? [firstSlide] : []
+
+    // Process remaining slides in background (don't await)
+    if (pageCount > 1) {
+      console.log(`Starting background processing of ${pageCount - 1} remaining slides...`)
+      
+      // Process remaining slides asynchronously - fire and forget
+      void (async () => {
+        for (let i = 1; i < pageCount; i++) {
+          const slide = await processSlide(i)
+          if (slide) {
+            slides.push(slide)
+          }
+          // Small delay between slides
+          await new Promise(resolve => setTimeout(resolve, 300))
+        }
+        console.log(`✓ Background processing complete: ${slides.length} total slides`)
+      })()
     }
 
-    console.log(`✓ Successfully processed ${slides.length} slides`)
+    // Return immediately after first slide is processed
+    // Background processing will continue for remaining slides
+    console.log(`✓ First slide processed, returning response. Background processing ${pageCount - 1} remaining slides...`)
+
+    // Clean up temp PDF in background (don't block response)
+    supabaseClient.storage.from('slides').remove([pdfPath]).catch(error => {
+      console.error('Failed to clean up temp file:', error)
+    })
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         slides,
-        pageCount: slides.length
+        pageCount: pageCount, // Total expected slides
+        processedCount: slides.length // Currently processed (should be 1 on immediate return)
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -196,10 +178,18 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error processing PDF:', error)
     
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('Error name:', error.name)
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.stack : undefined
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -208,15 +198,3 @@ serve(async (req) => {
     )
   }
 })
-
-/* To invoke locally:
-
-  1. Run `supabase start`
-  2. Make an HTTP request:
-
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/process-pdf' \
-    --header 'Authorization: Bearer YOUR_ANON_KEY' \
-    --header 'Content-Type: application/json' \
-    --data '{"presentationId":"123","pdfPath":"temp/file.pdf"}'
-
-*/
