@@ -1,12 +1,28 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth/AuthContext'
 import DashboardHeader from '@/components/DashboardHeader'
 import Image from 'next/image'
 
-export default function SettingsPage() {
+interface TeamMember {
+  id: string
+  name: string
+  email: string
+  role: 'Owner' | 'Admin' | 'Member'
+  avatar: string
+}
+
+interface Invoice {
+  id: string
+  date: string
+  amount: number
+  status: 'Paid' | 'Pending' | 'Failed'
+  invoice: string
+}
+
+function SettingsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
@@ -500,5 +516,20 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#66e7f5] border-t-transparent"></div>
+          <p className="font-['Inter',sans-serif] text-[16px] text-[#0d0d0d]">Loading...</p>
+        </div>
+      </div>
+    }>
+      <SettingsContent />
+    </Suspense>
   )
 }
