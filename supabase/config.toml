@@ -371,11 +371,6 @@ verify_jwt = false
 [functions.send-team-invitation]
 verify_jwt = true
 
-# Environment variables for Edge Functions
-[edge_runtime.env]
-RESEND_API_KEY = "env(RESEND_API_KEY)"
-SITE_URL = "env(SITE_URL)"
-
 [analytics]
 enabled = true
 port = 54327
