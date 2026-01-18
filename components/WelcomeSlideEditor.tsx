@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface WelcomeSlideEditorProps {
   welcomeTitle?: string | null
@@ -28,14 +28,27 @@ export default function WelcomeSlideEditor({
   const [localTitle, setLocalTitle] = useState(welcomeTitle || presentationTitle)
   // Use estimatedMinutes if provided, otherwise default to slideCount
   const [localMinutes, setLocalMinutes] = useState(estimatedMinutes ?? slideCount)
+  
+  // Refs for contentEditable elements
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  const descriptionRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setLocalDescription(description)
+    // Update ref content if it differs
+    if (descriptionRef.current && descriptionRef.current.textContent !== description) {
+      descriptionRef.current.textContent = description
+    }
   }, [description])
 
   useEffect(() => {
     // Update local title when welcomeTitle or presentationTitle changes
-    setLocalTitle(welcomeTitle || presentationTitle)
+    const newTitle = welcomeTitle || presentationTitle
+    setLocalTitle(newTitle)
+    // Update ref content if it differs
+    if (titleRef.current && titleRef.current.textContent !== newTitle) {
+      titleRef.current.textContent = newTitle
+    }
   }, [welcomeTitle, presentationTitle])
 
   useEffect(() => {
@@ -92,6 +105,7 @@ export default function WelcomeSlideEditor({
             </div>
           )}
           <h1 
+            ref={titleRef}
             contentEditable
             suppressContentEditableWarning
             onInput={(e) => {
@@ -113,9 +127,7 @@ export default function WelcomeSlideEditor({
               fontFeatureSettings: "'ss01' on, 'cv01' on",
               minHeight: '26px'
             }}
-          >
-            {localTitle}
-          </h1>
+          />
         </div>
 
         {/* Description - Editable inline with placeholder */}
@@ -133,6 +145,7 @@ export default function WelcomeSlideEditor({
             </div>
           )}
           <div 
+            ref={descriptionRef}
             contentEditable
             suppressContentEditableWarning
             onInput={(e) => {
@@ -153,9 +166,7 @@ export default function WelcomeSlideEditor({
               letterSpacing: '-0.4px',
               minHeight: '26px'
             }}
-          >
-            {localDescription}
-          </div>
+          />
         </div>
 
         {/* Form Preview */}
