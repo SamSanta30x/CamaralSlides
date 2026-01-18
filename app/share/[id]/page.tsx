@@ -35,7 +35,12 @@ export default function SharePresentationPage() {
 
     // Start tracking view
     const initView = async () => {
-      const { data } = await startPresentationView(presentationId)
+      const { data, error } = await startPresentationView(presentationId)
+      if (error) {
+        console.error('Error starting view:', error)
+        // Continue anyway - analytics is not critical for viewing
+        return
+      }
       if (data) {
         setViewId(data.id)
       }
