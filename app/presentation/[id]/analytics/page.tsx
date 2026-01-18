@@ -4,12 +4,15 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth/AuthContext'
 import DashboardHeader from '@/components/DashboardHeader'
+import { getPresentationAnalytics, formatDuration, type PresentationAnalytics } from '@/lib/supabase/analytics'
 
 export default function AnalyticsPage() {
   const router = useRouter()
   const params = useParams()
   const { user, loading: authLoading } = useAuth()
   const [period, setPeriod] = useState('This month')
+  const [analytics, setAnalytics] = useState<PresentationAnalytics | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const presentationId = params.id as string
 
@@ -18,6 +21,32 @@ export default function AnalyticsPage() {
       router.push('/')
     }
   }, [user, authLoading, router])
+
+  useEffect(() => {
+    if (user && presentationId) {
+      loadAnalytics()
+      
+      // Refresh analytics every 10 seconds
+      const interval = setInterval(loadAnalytics, 10000)
+      
+      return () => clearInterval(interval)
+    }
+  }, [user, presentationId])
+
+  const loadAnalytics = async () => {
+    try {
+      const { data, error } = await getPresentationAnalytics(presentationId)
+      if (error) {
+        console.error('Error loading analytics:', error)
+        return
+      }
+      setAnalytics(data)
+    } catch (error) {
+      console.error('Error loading analytics:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (authLoading) {
     return (
@@ -52,8 +81,10 @@ export default function AnalyticsPage() {
           {/* Active Views */}
           <div className="bg-white border border-[#e5e5e5] rounded-[16px] p-6 flex flex-col items-center justify-center gap-2">
             <div className="text-[48px] font-['Inter',sans-serif] font-bold text-[#0d0d0d] leading-none flex items-center gap-2">
-              1
-              <div className="w-2 h-2 bg-[#22c55e] rounded-full"></div>
+              {loading ? '...' : analytics?.active_views || 0}
+              {(analytics?.active_views || 0) > 0 && (
+                <div className="w-2 h-2 bg-[#22c55e] rounded-full animate-pulse"></div>
+              )}
             </div>
             <p className="font-['Inter',sans-serif] text-[14px] text-[#666]">Active views</p>
           </div>
@@ -61,7 +92,7 @@ export default function AnalyticsPage() {
           {/* Total Views */}
           <div className="bg-white border border-[#e5e5e5] rounded-[16px] p-6 flex flex-col items-center justify-center gap-2">
             <div className="text-[48px] font-['Inter',sans-serif] font-bold text-[#0d0d0d] leading-none">
-              874
+              {loading ? '...' : analytics?.total_views || 0}
             </div>
             <p className="font-['Inter',sans-serif] text-[14px] text-[#666]">Total views</p>
           </div>
@@ -69,7 +100,7 @@ export default function AnalyticsPage() {
           {/* Average Duration */}
           <div className="bg-white border border-[#e5e5e5] rounded-[16px] p-6 flex flex-col items-center justify-center gap-2">
             <div className="text-[48px] font-['Inter',sans-serif] font-bold text-[#0d0d0d] leading-none">
-              12:30
+              {loading ? '...' : formatDuration(analytics?.average_duration_seconds || 0)}
             </div>
             <p className="font-['Inter',sans-serif] text-[14px] text-[#666]">Average duration</p>
           </div>
@@ -82,8 +113,10 @@ export default function AnalyticsPage() {
               <div>
                 <p className="font-['Inter',sans-serif] text-[14px] text-[#666] mb-2">Number of calls</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-[32px] font-['Inter',sans-serif] font-bold text-[#0d0d0d]">874</span>
-                  <span className="font-['Inter',sans-serif] text-[14px] text-[#22c55e]">↑ 21%</span>
+                  <span className="text-[32px] font-['Inter',sans-serif] font-bold text-[#0d0d0d]">
+                    {loading ? '...' : analytics?.total_calls || 0}
+                  </span>
+                  {/* <span className="font-['Inter',sans-serif] text-[14px] text-[#22c55e]">↑ 21%</span> */}
                 </div>
               </div>
             </div>
@@ -138,8 +171,10 @@ export default function AnalyticsPage() {
               <div>
                 <p className="font-['Inter',sans-serif] text-[14px] text-[#666] mb-2">Overall success rate</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-[32px] font-['Inter',sans-serif] font-bold text-[#0d0d0d]">874</span>
-                  <span className="font-['Inter',sans-serif] text-[14px] text-[#22c55e]">↑ 21%</span>
+                  <span className="text-[32px] font-['Inter',sans-serif] font-bold text-[#0d0d0d]">
+                    {loading ? '...' : `${analytics?.success_rate?.toFixed(1) || 0}%`}
+                  </span>
+                  {/* <span className="font-['Inter',sans-serif] text-[14px] text-[#22c55e]">↑ 21%</span> */}
                 </div>
               </div>
               
@@ -189,8 +224,10 @@ export default function AnalyticsPage() {
               <div>
                 <p className="font-['Inter',sans-serif] text-[14px] text-[#666] mb-2">Average duration</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-[32px] font-['Inter',sans-serif] font-bold text-[#0d0d0d]">12:31</span>
-                  <span className="font-['Inter',sans-serif] text-[14px] text-[#22c55e]">↑ 21%</span>
+                  <span className="text-[32px] font-['Inter',sans-serif] font-bold text-[#0d0d0d]">
+                    {loading ? '...' : formatDuration(analytics?.average_duration_seconds || 0)}
+                  </span>
+                  {/* <span className="font-['Inter',sans-serif] text-[14px] text-[#22c55e]">↑ 21%</span> */}
                 </div>
               </div>
               

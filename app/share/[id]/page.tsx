@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getPublicPresentation, type Presentation } from '@/lib/supabase/publicPresentations'
+import { startPresentationView, endPresentationView, updateViewActivity } from '@/lib/supabase/analytics'
 
 export default function SharePresentationPage() {
   const params = useParams()
@@ -23,6 +24,32 @@ export default function SharePresentationPage() {
 
   useEffect(() => {
     loadPresentation()
+  }, [presentationId])
+
+  // Track presentation view
+  useEffect(() => {
+    if (!presentationId) return
+
+    // Start tracking view
+    startPresentationView(presentationId)
+
+    // Send heartbeat every 30 seconds to keep view active
+    const heartbeatInterval = setInterval(() => {
+      updateViewActivity(presentationId)
+    }, 30000) // 30 seconds
+
+    // End view on unmount or page close
+    const handleBeforeUnload = () => {
+      endPresentationView(presentationId)
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      clearInterval(heartbeatInterval)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      endPresentationView(presentationId)
+    }
   }, [presentationId])
 
   const loadPresentation = async () => {
