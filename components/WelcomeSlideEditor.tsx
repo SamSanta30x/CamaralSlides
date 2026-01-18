@@ -124,8 +124,19 @@ export default function WelcomeSlideEditor({
   }
 
   return (
-    <div className="w-full h-full bg-white flex items-center justify-center rounded-[16px] border border-[#e5e5e5] p-[40px]">
-      <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full">
+    <div className="w-full h-full bg-white flex flex-col rounded-[16px] border border-[#e5e5e5]">
+      {/* Page Title Badge */}
+      <div className="px-[40px] pt-[24px] pb-[12px]">
+        <div className="inline-flex items-center px-3 py-1.5 bg-[#f5f5f5] border border-[#e5e5e5] rounded-md">
+          <p className="font-['Inter',sans-serif] text-[14px] font-medium text-[#666]">
+            Welcome Page
+          </p>
+        </div>
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center px-[40px] pb-[40px]">
+        <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full">
         {/* Logo Upload */}
         <div className="w-full flex justify-center">
           <input
@@ -388,6 +399,7 @@ export default function WelcomeSlideEditor({
             </span>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

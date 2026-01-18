@@ -93,9 +93,20 @@ export default function EndSlideEditor({
   }
 
   return (
-    <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8">
-      {/* Logo Upload */}
-      <div className="w-full max-w-[600px] flex justify-center mb-6">
+    <div className="w-full h-full bg-white flex flex-col rounded-[16px]">
+      {/* Page Title Badge */}
+      <div className="px-8 pt-[24px] pb-[12px]">
+        <div className="inline-flex items-center px-3 py-1.5 bg-[#f5f5f5] border border-[#e5e5e5] rounded-md">
+          <p className="font-['Inter',sans-serif] text-[14px] font-medium text-[#666]">
+            End Page
+          </p>
+        </div>
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-8 pb-8">
+        {/* Logo Upload */}
+        <div className="w-full max-w-[600px] flex justify-center mb-6">
         <input
           ref={fileInputRef}
           type="file"
@@ -269,6 +280,7 @@ export default function EndSlideEditor({
             </svg>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
