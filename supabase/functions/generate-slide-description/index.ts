@@ -58,20 +58,72 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured')
     }
 
-    // Build the prompt
+    // Check if imageUrl is a PDF or an image
+    const isPDF = imageUrl.toLowerCase().endsWith('.pdf')
+    
     let systemPrompt = `You are a professional presentation narrator. Your job is to describe what a presenter should say when showing this slide. 
-Analyze the slide image carefully and provide a clear, engaging description that a presenter can use.
-Keep it concise but informative (2-3 sentences). Focus on the key points visible in the slide.`
+Provide a clear, engaging description that a presenter can use.
+Keep it concise but informative (2-3 sentences). Focus on the key points.`
 
-    let userPrompt = 'Analyze this slide and provide a description of what the presenter should say.'
+    let userPrompt: string
+    let messages: any[]
 
     if (presentationObjective) {
       systemPrompt += `\n\nPresentation Objective: ${presentationObjective}`
-      userPrompt += ` Keep in mind the presentation's objective: "${presentationObjective}"`
     }
 
-    // Call OpenAI Vision API
-    console.log('🤖 Calling OpenAI Vision API...')
+    if (isPDF) {
+      // For PDFs, we can't use vision API directly
+      // Instead, ask the AI to generate a generic description based on slide number and objective
+      userPrompt = `Generate a professional presenter description for slide ${slideId.split('-')[0]} of a presentation.`
+      if (presentationObjective) {
+        userPrompt += ` The presentation's objective is: "${presentationObjective}".`
+      }
+      userPrompt += ` Create an engaging 2-3 sentence description that a presenter could use to introduce this slide.`
+      
+      messages = [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: userPrompt
+        }
+      ]
+    } else {
+      // For images, use vision API
+      userPrompt = 'Analyze this slide and provide a description of what the presenter should say.'
+      if (presentationObjective) {
+        userPrompt += ` Keep in mind the presentation's objective: "${presentationObjective}"`
+      }
+      
+      messages = [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: userPrompt
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageUrl,
+                detail: 'high'
+              }
+            }
+          ]
+        }
+      ]
+    }
+
+    // Call OpenAI API
+    console.log(`🤖 Calling OpenAI API (${isPDF ? 'text' : 'vision'} mode)...`)
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -80,28 +132,7 @@ Keep it concise but informative (2-3 sentences). Focus on the key points visible
       },
       body: JSON.stringify({
         model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: userPrompt
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: imageUrl,
-                  detail: 'high'
-                }
-              }
-            ]
-          }
-        ],
+        messages,
         max_tokens: 300,
         temperature: 0.7,
       }),
