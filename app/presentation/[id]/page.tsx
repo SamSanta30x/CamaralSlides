@@ -24,10 +24,11 @@ export default function PresentationPage() {
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
-  const [showCTAModal, setShowCTAModal] = useState(false)
+  const [isEditingCTA, setIsEditingCTA] = useState(false)
   const [ctaText, setCtaText] = useState('')
   const [ctaUrl, setCtaUrl] = useState('')
-  const [savingCTA, setSavingCTA] = useState(false)
+  const [showUrlPopup, setShowUrlPopup] = useState(false)
+  const ctaButtonRef = useRef<HTMLDivElement>(null)
 
   const presentationId = params.id as string
 
@@ -222,44 +223,64 @@ export default function PresentationPage() {
     setDragOverIndex(null)
   }
 
-  const handleOpenCTAModal = () => {
-    setShowCTAModal(true)
+  const handleCTAClick = () => {
+    setIsEditingCTA(true)
+    setShowUrlPopup(true)
   }
 
-  const handleCloseCTAModal = () => {
-    setShowCTAModal(false)
-    // Reset to saved values
-    if (presentation) {
-      setCtaText(presentation.cta_text || 'Add call to action')
-      setCtaUrl(presentation.cta_url || '')
+  const handleCTABlur = async () => {
+    if (!presentation || !ctaText.trim()) {
+      // Reset to saved value if empty
+      setCtaText(presentation?.cta_text || 'Add call to action')
+      setIsEditingCTA(false)
+      return
     }
+
+    // Save if text changed
+    if (ctaText !== presentation.cta_text) {
+      try {
+        const { error } = await updatePresentationCTA(presentationId, ctaText, ctaUrl)
+        
+        if (error) {
+          console.error('Error saving CTA:', error)
+        } else {
+          setPresentation({
+            ...presentation,
+            cta_text: ctaText,
+            cta_url: ctaUrl
+          })
+        }
+      } catch (error) {
+        console.error('Error saving CTA:', error)
+      }
+    }
+    setIsEditingCTA(false)
   }
 
-  const handleSaveCTA = async () => {
+  const handleUrlChange = async (newUrl: string) => {
+    setCtaUrl(newUrl)
+    
     if (!presentation) return
 
-    setSavingCTA(true)
     try {
-      const { error } = await updatePresentationCTA(presentationId, ctaText, ctaUrl)
+      const { error } = await updatePresentationCTA(presentationId, ctaText, newUrl)
       
       if (error) {
-        console.error('Error saving CTA:', error)
-        alert('Failed to save call to action')
+        console.error('Error saving CTA URL:', error)
       } else {
-        // Update local state
         setPresentation({
           ...presentation,
           cta_text: ctaText,
-          cta_url: ctaUrl
+          cta_url: newUrl
         })
-        setShowCTAModal(false)
       }
     } catch (error) {
-      console.error('Error saving CTA:', error)
-      alert('Failed to save call to action')
-    } finally {
-      setSavingCTA(false)
+      console.error('Error saving CTA URL:', error)
     }
+  }
+
+  const handleUrlPopupClose = () => {
+    setShowUrlPopup(false)
   }
 
   // Handle keyboard navigation
@@ -324,16 +345,59 @@ export default function PresentationPage() {
                 )}
               </div>
 
-              {/* Call to Action Button */}
-              <button 
-                onClick={handleOpenCTAModal}
-                className="px-5 py-2 bg-[#0d0d0d] rounded-full font-['Inter',sans-serif] text-[13px] font-medium text-white hover:bg-[#2a2a2a] transition-colors flex items-center gap-2 flex-shrink-0"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M7 3V11M3 7H11" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-                {presentation?.cta_text || 'Add call to action'}
-              </button>
+              {/* Call to Action Button - Editable */}
+              <div ref={ctaButtonRef} className="relative flex-shrink-0">
+                <div 
+                  onClick={handleCTAClick}
+                  className="px-5 py-2 bg-[#0d0d0d] rounded-full font-['Inter',sans-serif] text-[13px] font-medium text-white hover:bg-[#2a2a2a] transition-colors flex items-center gap-2 cursor-pointer"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 3V11M3 7H11" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  {isEditingCTA ? (
+                    <input
+                      type="text"
+                      value={ctaText}
+                      onChange={(e) => setCtaText(e.target.value)}
+                      onBlur={handleCTABlur}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.currentTarget.blur()
+                        }
+                      }}
+                      autoFocus
+                      className="bg-transparent outline-none text-white font-['Inter',sans-serif] text-[13px] font-medium w-[150px]"
+                    />
+                  ) : (
+                    <span>{presentation?.cta_text || 'Add call to action'}</span>
+                  )}
+                </div>
+
+                {/* URL Popup - Small 30px height */}
+                {showUrlPopup && (
+                  <>
+                    {/* Backdrop */}
+                    <div 
+                      className="fixed inset-0 z-40"
+                      onClick={handleUrlPopupClose}
+                    />
+                    
+                    {/* Popup */}
+                    <div className="absolute top-[-40px] left-0 bg-white border border-[#e5e5e5] rounded-[8px] shadow-lg z-50 h-[30px] flex items-center px-3 gap-2 min-w-[300px]">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0">
+                        <path d="M5 7L7 5M7 5L5 3M7 5H1M11 1V11" stroke="#666" strokeWidth="1.2" strokeLinecap="round"/>
+                      </svg>
+                      <input
+                        type="url"
+                        value={ctaUrl}
+                        onChange={(e) => handleUrlChange(e.target.value)}
+                        placeholder="https://example.com"
+                        className="flex-1 bg-transparent outline-none font-['Inter',sans-serif] text-[12px] text-[#0d0d0d] placeholder:text-[#999]"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             /* Loading State */
@@ -602,100 +666,6 @@ export default function PresentationPage() {
           />
         </p>
       </div>
-
-      {/* CTA Modal */}
-      {showCTAModal && (
-        <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-50"
-            onClick={handleCloseCTAModal}
-          />
-          
-          {/* Modal */}
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-[16px] p-6 w-[500px] z-50 shadow-xl">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-['Inter',sans-serif] text-[20px] font-semibold text-[#0d0d0d]">
-                Edit Call to Action
-              </h2>
-              <button 
-                onClick={handleCloseCTAModal}
-                className="w-8 h-8 flex items-center justify-center hover:bg-[#f5f5f5] rounded-full transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M12 4L4 12M4 4L12 12" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-
-            {/* Form */}
-            <div className="flex flex-col gap-4">
-              {/* Button Text */}
-              <div className="flex flex-col gap-2">
-                <label className="font-['Inter',sans-serif] text-[14px] font-medium text-[#0d0d0d]">
-                  Button Text
-                </label>
-                <input
-                  type="text"
-                  value={ctaText}
-                  onChange={(e) => setCtaText(e.target.value)}
-                  placeholder="e.g., Book a Demo, Learn More"
-                  className="border border-[#e5e5e5] rounded-[8px] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] outline-none focus:border-[#0d0d0d] transition-colors"
-                />
-              </div>
-
-              {/* URL */}
-              <div className="flex flex-col gap-2">
-                <label className="font-['Inter',sans-serif] text-[14px] font-medium text-[#0d0d0d]">
-                  URL
-                </label>
-                <input
-                  type="url"
-                  value={ctaUrl}
-                  onChange={(e) => setCtaUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="border border-[#e5e5e5] rounded-[8px] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] outline-none focus:border-[#0d0d0d] transition-colors"
-                />
-              </div>
-
-              {/* Preview */}
-              {ctaText && (
-                <div className="flex flex-col gap-2 mt-2">
-                  <label className="font-['Inter',sans-serif] text-[14px] font-medium text-[#0d0d0d]">
-                    Preview
-                  </label>
-                  <div className="bg-[#f5f5f5] rounded-[8px] p-4 flex items-center justify-center">
-                    <button className="px-5 py-2 bg-[#0d0d0d] rounded-full font-['Inter',sans-serif] text-[13px] font-medium text-white flex items-center gap-2">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M7 3V11M3 7H11" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                      </svg>
-                      {ctaText}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex items-center gap-3 mt-4">
-                <button
-                  onClick={handleCloseCTAModal}
-                  className="flex-1 px-4 py-3 border border-[#e5e5e5] rounded-[8px] font-['Inter',sans-serif] text-[14px] font-medium text-[#0d0d0d] hover:bg-[#f5f5f5] transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveCTA}
-                  disabled={savingCTA || !ctaText.trim()}
-                  className="flex-1 px-4 py-3 bg-[#0d0d0d] rounded-[8px] font-['Inter',sans-serif] text-[14px] font-medium text-white hover:bg-[#2a2a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {savingCTA ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   )
 }
