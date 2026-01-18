@@ -170,13 +170,13 @@ export default function WelcomeSlideEditor({
         </div>
 
         {/* Form Preview */}
-        <div className="flex flex-col gap-[12px] w-full opacity-50 pointer-events-none">
+        <div className="flex flex-col gap-[12px] w-full">
           {/* Name Input */}
           <input
             type="text"
             placeholder="Your name"
             disabled
-            className="flex items-center self-stretch flex-shrink-0 bg-white border border-[#e5e5e5] rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999]"
+            className="flex items-center self-stretch flex-shrink-0 bg-white border border-[#e5e5e5] rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] opacity-50"
             style={{
               height: '42px',
               minWidth: '120px'
@@ -188,7 +188,7 @@ export default function WelcomeSlideEditor({
             type="email"
             placeholder="Your email"
             disabled
-            className="flex items-center self-stretch flex-shrink-0 bg-white border border-[#e5e5e5] rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999]"
+            className="flex items-center self-stretch flex-shrink-0 bg-white border border-[#e5e5e5] rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] opacity-50"
             style={{
               height: '42px',
               minWidth: '120px'
@@ -196,14 +196,14 @@ export default function WelcomeSlideEditor({
           />
 
           {/* Add Question Link */}
-          <button disabled className="text-center font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] py-[8px]">
+          <button disabled className="text-center font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] py-[8px] opacity-50">
             + Add a new question
           </button>
 
           {/* Start Call Button */}
           <button
             disabled
-            className="w-full bg-[#0d0d0d] text-white rounded-[999px] px-[20px] py-[14px] font-['Inter',sans-serif] text-[16px] font-medium"
+            className="w-full bg-[#0d0d0d] text-white rounded-[999px] px-[20px] py-[14px] font-['Inter',sans-serif] text-[16px] font-medium opacity-50"
           >
             Start call
           </button>
