@@ -19,15 +19,6 @@ export default function EndSlide({
 
   return (
     <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8 py-12">
-      {/* Logo */}
-      <div className="mb-8">
-        <svg width="120" height="40" viewBox="0 0 120 40" fill="none">
-          <text x="10" y="30" fontFamily="Inter, sans-serif" fontSize="24" fontWeight="700" fill="#0d0d0d">
-            la attio
-          </text>
-        </svg>
-      </div>
-
       {/* Title */}
       <h1 className="font-['Inter',sans-serif] text-[32px] font-semibold text-[#0d0d0d] text-center mb-4 max-w-[600px] leading-[1.2]">
         {displayTitle}

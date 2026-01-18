@@ -62,15 +62,6 @@ export default function EndSlideEditor({
 
   return (
     <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8 py-12">
-      {/* Logo */}
-      <div className="mb-8">
-        <svg width="120" height="40" viewBox="0 0 120 40" fill="none">
-          <text x="10" y="30" fontFamily="Inter, sans-serif" fontSize="24" fontWeight="700" fill="#0d0d0d">
-            la attio
-          </text>
-        </svg>
-      </div>
-
       {/* Title - Editable */}
       <div className="relative w-full max-w-[600px] mb-4">
         <div
