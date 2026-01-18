@@ -46,9 +46,10 @@ export default function PresentationPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/')
+      // Redirect to public share page if not authenticated
+      router.push(`/share/${presentationId}`)
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router, presentationId])
 
   useEffect(() => {
     if (user && presentationId) {
