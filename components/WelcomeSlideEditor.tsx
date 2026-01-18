@@ -30,21 +30,29 @@ export default function WelcomeSlideEditor({
     <div className="w-full h-full bg-white flex items-center justify-center rounded-[16px] border border-[#e5e5e5] p-[40px]">
       <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full">
         {/* Title */}
-        <h1 className="font-['Inter',sans-serif] text-[24px] font-semibold text-[#0d0d0d] text-center tracking-[-0.48px]">
+        <h1 
+          className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center self-stretch"
+          style={{
+            fontWeight: 590,
+            lineHeight: '26px',
+            letterSpacing: '-0.45px',
+            fontFeatureSettings: "'ss01' on, 'cv01' on"
+          }}
+        >
           {presentationTitle}
         </h1>
-
-        {/* Description Label */}
-        <p className="font-['Inter',sans-serif] text-[14px] text-[#666] text-center">
-          Description (optional)
-        </p>
 
         {/* Description - Editable */}
         <textarea
           value={localDescription}
           onChange={(e) => handleDescriptionChange(e.target.value)}
-          placeholder="Enter a description..."
-          className="w-full bg-white border border-[#e5e5e5] rounded-[12px] px-[20px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors resize-none min-h-[60px]"
+          placeholder="Description (optional)"
+          className="w-full self-stretch bg-white border border-[#e5e5e5] rounded-[12px] px-[20px] py-[12px] font-['Inter',sans-serif] text-[16px] text-[#000] placeholder:text-[#999] text-center focus:outline-none focus:border-[#0d0d0d] transition-colors resize-none min-h-[60px]"
+          style={{
+            fontWeight: 400,
+            lineHeight: '26px',
+            letterSpacing: '-0.4px'
+          }}
           rows={2}
         />
 

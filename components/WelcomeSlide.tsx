@@ -32,13 +32,28 @@ export default function WelcomeSlide({
     <div className="w-full h-full bg-white flex items-center justify-center">
       <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full px-[40px]">
         {/* Title */}
-        <h1 className="font-['Inter',sans-serif] text-[24px] font-semibold text-[#0d0d0d] text-center tracking-[-0.48px]">
+        <h1 
+          className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center self-stretch"
+          style={{
+            fontWeight: 590,
+            lineHeight: '26px',
+            letterSpacing: '-0.45px',
+            fontFeatureSettings: "'ss01' on, 'cv01' on"
+          }}
+        >
           {presentationTitle}
         </h1>
 
         {/* Description */}
         {description && (
-          <p className="font-['Inter',sans-serif] text-[14px] text-[#666] text-center">
+          <p 
+            className="font-['Inter',sans-serif] text-[16px] text-[#000] text-center self-stretch"
+            style={{
+              fontWeight: 400,
+              lineHeight: '26px',
+              letterSpacing: '-0.4px'
+            }}
+          >
             {description}
           </p>
         )}
