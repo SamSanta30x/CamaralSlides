@@ -941,7 +941,7 @@ export default function PresentationPage() {
                         <img
                           src={presentation.slides[currentSlideIndex - 1].image_url}
                           alt={`Slide ${currentSlideIndex}`}
-                          className="w-full h-full object-contain p-3"
+                          className="w-full h-full object-cover"
                         />
                       )}
                     </button>
@@ -961,7 +961,7 @@ export default function PresentationPage() {
                         <img
                           src={presentation.slides[totalSlides - 1].image_url}
                           alt={`Slide ${totalSlides}`}
-                          className="w-full h-full object-contain p-3"
+                          className="w-full h-full object-cover"
                         />
                       )}
                     </button>
@@ -1016,7 +1016,7 @@ export default function PresentationPage() {
                         <img
                           src={currentSlide.image_url}
                           alt={currentSlide.title || `Slide ${currentSlideIndex + 1}`}
-                          className={`w-full h-full object-contain p-4 transition-opacity duration-300 ${
+                          className={`w-full h-full object-cover transition-opacity duration-300 ${
                             imageLoading ? 'opacity-0' : 'opacity-100'
                           }`}
                           onLoad={() => setImageLoading(false)}
@@ -1042,7 +1042,7 @@ export default function PresentationPage() {
                         <img
                           src={presentation.slides[0].image_url}
                           alt="Slide 1"
-                          className="w-full h-full object-contain p-3"
+                          className="w-full h-full object-cover"
                         />
                       )}
                     </button>
@@ -1061,7 +1061,7 @@ export default function PresentationPage() {
                         <img
                           src={presentation.slides[currentSlideIndex + 1].image_url}
                           alt={`Slide ${currentSlideIndex + 2}`}
-                          className="w-full h-full object-contain p-3"
+                          className="w-full h-full object-cover"
                         />
                       )}
                     </button>
