@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Empty config for Vercel default deployment
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'vogxtprdcnmlzvuxmbss.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
