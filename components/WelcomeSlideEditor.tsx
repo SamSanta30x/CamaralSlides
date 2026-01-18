@@ -32,6 +32,9 @@ export default function WelcomeSlideEditor({
   // Refs for contentEditable elements
   const titleRef = useRef<HTMLHeadingElement>(null)
   const descriptionRef = useRef<HTMLDivElement>(null)
+  
+  // State for minutes input focus/hover
+  const [minutesInputActive, setMinutesInputActive] = useState(false)
 
   useEffect(() => {
     setLocalDescription(description)
@@ -219,13 +222,19 @@ export default function WelcomeSlideEditor({
             </svg>
             <div className="flex items-center gap-[4px]">
               <span className="font-['Inter',sans-serif] text-[12px]">Takes</span>
-              <div className="relative inline-flex items-center">
+              <div 
+                className="relative inline-flex items-center"
+                onMouseEnter={() => setMinutesInputActive(true)}
+                onMouseLeave={() => setMinutesInputActive(false)}
+              >
                 <input
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
                   value={localMinutes}
                   onChange={(e) => handleMinutesChange(e.target.value)}
+                  onFocus={() => setMinutesInputActive(true)}
+                  onBlur={() => setMinutesInputActive(false)}
                   onKeyDown={(e) => {
                     // Handle arrow up/down
                     if (e.key === 'ArrowUp') {
@@ -249,34 +258,40 @@ export default function WelcomeSlideEditor({
                       e.preventDefault()
                     }
                   }}
-                  className="w-[32px] pr-[14px] text-center bg-transparent border-b border-dashed border-[#0d0d0d] font-['Inter',sans-serif] text-[12px] text-[#0d0d0d] outline-none focus:border-[#0d0d0d] focus:text-[#0d0d0d] transition-colors"
+                  className={`w-[32px] pr-[14px] text-center bg-transparent font-['Inter',sans-serif] text-[12px] text-[#0d0d0d] outline-none transition-colors ${
+                    minutesInputActive 
+                      ? 'border-b border-dashed border-[#0d0d0d]' 
+                      : 'border-b border-transparent'
+                  }`}
                 />
-                {/* Arrow buttons */}
-                <div className="absolute right-0 flex flex-col gap-[1px]">
-                  <button
-                    type="button"
-                    onClick={() => handleMinutesChange(String(localMinutes + 1))}
-                    className="w-[10px] h-[8px] flex items-center justify-center text-[#0d0d0d] hover:text-[#666] transition-colors"
-                  >
-                    <svg width="6" height="4" viewBox="0 0 6 4" fill="none">
-                      <path d="M3 0L6 4H0L3 0Z" fill="currentColor"/>
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (localMinutes > 0) {
-                        handleMinutesChange(String(localMinutes - 1))
-                      }
-                    }}
-                    className="w-[10px] h-[8px] flex items-center justify-center text-[#0d0d0d] hover:text-[#666] transition-colors disabled:opacity-30"
-                    disabled={localMinutes === 0}
-                  >
-                    <svg width="6" height="4" viewBox="0 0 6 4" fill="none">
-                      <path d="M3 4L0 0H6L3 4Z" fill="currentColor"/>
-                    </svg>
-                  </button>
-                </div>
+                {/* Arrow buttons - only show when active */}
+                {minutesInputActive && (
+                  <div className="absolute right-0 flex flex-col gap-[1px]">
+                    <button
+                      type="button"
+                      onClick={() => handleMinutesChange(String(localMinutes + 1))}
+                      className="w-[10px] h-[8px] flex items-center justify-center text-[#0d0d0d] hover:text-[#666] transition-colors"
+                    >
+                      <svg width="6" height="4" viewBox="0 0 6 4" fill="none">
+                        <path d="M3 0L6 4H0L3 0Z" fill="currentColor"/>
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (localMinutes > 0) {
+                          handleMinutesChange(String(localMinutes - 1))
+                        }
+                      }}
+                      className="w-[10px] h-[8px] flex items-center justify-center text-[#0d0d0d] hover:text-[#666] transition-colors disabled:opacity-30"
+                      disabled={localMinutes === 0}
+                    >
+                      <svg width="6" height="4" viewBox="0 0 6 4" fill="none">
+                        <path d="M3 4L0 0H6L3 4Z" fill="currentColor"/>
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
               <span className="font-['Inter',sans-serif] text-[12px]">
                 minute{localMinutes !== 1 ? 's' : ''}
