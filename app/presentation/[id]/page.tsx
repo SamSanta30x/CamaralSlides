@@ -28,7 +28,9 @@ export default function PresentationPage() {
   const [ctaText, setCtaText] = useState('')
   const [ctaUrl, setCtaUrl] = useState('')
   const [showUrlPopup, setShowUrlPopup] = useState(false)
+  const [ctaInputWidth, setCtaInputWidth] = useState<number>(0)
   const ctaButtonRef = useRef<HTMLDivElement>(null)
+  const ctaTextRef = useRef<HTMLSpanElement>(null)
   const urlSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const presentationId = params.id as string
@@ -225,6 +227,10 @@ export default function PresentationPage() {
   }
 
   const handleCTAClick = () => {
+    // Measure current text width before switching to input
+    if (ctaTextRef.current) {
+      setCtaInputWidth(ctaTextRef.current.offsetWidth)
+    }
     setIsEditingCTA(true)
     setShowUrlPopup(true)
   }
@@ -384,11 +390,11 @@ export default function PresentationPage() {
                         }
                       }}
                       autoFocus
-                      style={{ width: `${Math.max(ctaText.length * 8, 120)}px` }}
+                      style={{ width: `${ctaInputWidth}px` }}
                       className="bg-transparent outline-none text-white font-['Inter',sans-serif] text-[13px] font-medium"
                     />
                   ) : (
-                    <span className="whitespace-nowrap">{presentation?.cta_text || 'Add call to action'}</span>
+                    <span ref={ctaTextRef} className="whitespace-nowrap">{presentation?.cta_text || 'Add call to action'}</span>
                   )}
                 </div>
 
