@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { getPresentation, type Presentation } from '@/lib/supabase/presentations'
+import { getPublicPresentation, type Presentation } from '@/lib/supabase/publicPresentations'
 
 export default function SharePresentationPage() {
   const params = useParams()
@@ -25,7 +25,7 @@ export default function SharePresentationPage() {
 
   const loadPresentation = async () => {
     try {
-      const { data, error } = await getPresentation(presentationId)
+      const { data, error } = await getPublicPresentation(presentationId)
       if (error) {
         console.error('Error loading presentation:', error)
         return
