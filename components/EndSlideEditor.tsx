@@ -281,6 +281,7 @@ export default function EndSlideEditor({
           </div>
         </div>
       </div>
+      </div>
       
       {/* Powered by Camaral - Bottom Center */}
       <div className="w-full pb-6 flex items-center justify-center">
@@ -292,7 +293,6 @@ export default function EndSlideEditor({
             className="h-[16px] w-auto opacity-60"
           />
         </p>
-      </div>
       </div>
     </div>
   )
