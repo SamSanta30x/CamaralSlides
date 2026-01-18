@@ -181,9 +181,9 @@ export default function PresentationPage() {
   const handleEndTitleChange = (title: string) => {
     setEndTitleValue(title)
     
-    // Update local presentation state
+    // Update local presentation state (use null for empty strings)
     if (presentation) {
-      setPresentation({ ...presentation, end_title: title })
+      setPresentation({ ...presentation, end_title: title.trim() || null })
     }
     
     // Debounce save
@@ -193,7 +193,7 @@ export default function PresentationPage() {
 
     endTitleTimeoutRef.current = setTimeout(async () => {
       try {
-        const { error } = await updateEndTitle(presentationId, title || null)
+        const { error } = await updateEndTitle(presentationId, title.trim() || null)
         if (error) {
           console.error('Error saving end title:', error)
         }
@@ -207,9 +207,9 @@ export default function PresentationPage() {
   const handleEndDescriptionChange = (description: string) => {
     setEndDescriptionValue(description)
     
-    // Update local presentation state
+    // Update local presentation state (use null for empty strings)
     if (presentation) {
-      setPresentation({ ...presentation, end_description: description })
+      setPresentation({ ...presentation, end_description: description.trim() || null })
     }
     
     // Debounce save
@@ -219,7 +219,7 @@ export default function PresentationPage() {
 
     endDescriptionTimeoutRef.current = setTimeout(async () => {
       try {
-        const { error } = await updateEndDescription(presentationId, description || null)
+        const { error } = await updateEndDescription(presentationId, description.trim() || null)
         if (error) {
           console.error('Error saving end description:', error)
         }
@@ -1082,7 +1082,7 @@ export default function PresentationPage() {
                       )}
                     </button>
                   )}
-                  {currentSlideIndex === totalSlides - 1 && presentation && !presentation.end_title?.trim() && !presentation.end_description?.trim() && (
+                  {currentSlideIndex === totalSlides - 1 && presentation && !presentation.end_title && !presentation.end_description && (
                     /* Show "Add an End page" button on last slide only if no end page exists */
                     <button
                       onClick={handleNextSlide}
@@ -1098,7 +1098,7 @@ export default function PresentationPage() {
                       </span>
                     </button>
                   )}
-                  {currentSlideIndex === totalSlides - 1 && presentation && (presentation.end_title?.trim() || presentation.end_description?.trim()) && (
+                  {currentSlideIndex === totalSlides - 1 && presentation && (presentation.end_title || presentation.end_description) && (
                     /* Show End Page preview on last slide if end page exists */
                     <button
                       onClick={handleNextSlide}
@@ -1284,7 +1284,7 @@ export default function PresentationPage() {
                 })}
 
                 {/* End Page Thumbnail - Show if end page exists */}
-                {presentation && (presentation.end_title?.trim() || presentation.end_description?.trim()) && (
+                {presentation && (presentation.end_title || presentation.end_description) && (
                   <div
                     key="end-slide"
                     ref={(el) => { thumbnailRefs.current[totalSlides] = el }}
