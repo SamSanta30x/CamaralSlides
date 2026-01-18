@@ -4,10 +4,11 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, type Presentation, type Slide } from '@/lib/supabase/presentations'
+import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, updatePresentationObjective, type Presentation, type Slide } from '@/lib/supabase/presentations'
 import { generateSlideDescription } from '@/lib/supabase/edgeFunctions'
 import DashboardHeader from '@/components/DashboardHeader'
 import DescriptionTextarea from '@/components/DescriptionTextarea'
+import WelcomeSlideEditor from '@/components/WelcomeSlideEditor'
 import { createClient } from '@/lib/supabase/client'
 
 export default function PresentationPage() {
@@ -16,8 +17,10 @@ export default function PresentationPage() {
   const { user, loading: authLoading } = useAuth()
   const [presentation, setPresentation] = useState<Presentation | null>(null)
   const [loading, setLoading] = useState(true)
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(-1) // Start at -1 for welcome slide
   const [imageLoading, setImageLoading] = useState(true)
+  const [welcomeDescription, setWelcomeDescription] = useState('')
+  const welcomeDescriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [showMenu, setShowMenu] = useState(false)
   const [descriptionValue, setDescriptionValue] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
@@ -75,8 +78,30 @@ export default function PresentationPage() {
       setCtaUrl(presentation.cta_url || '')
       setTitleValue(presentation.title)
       setPresentationObjective(presentation.objective || '')
+      setWelcomeDescription(presentation.objective || '')
     }
   }, [presentation])
+
+  // Handle welcome slide description changes
+  const handleWelcomeDescriptionChange = (description: string) => {
+    setWelcomeDescription(description)
+    
+    // Debounce save
+    if (welcomeDescriptionTimeoutRef.current) {
+      clearTimeout(welcomeDescriptionTimeoutRef.current)
+    }
+
+    welcomeDescriptionTimeoutRef.current = setTimeout(async () => {
+      try {
+        const { error } = await updatePresentationObjective(presentationId, description)
+        if (error) {
+          console.error('Error saving welcome description:', error)
+        }
+      } catch (error) {
+        console.error('Error saving welcome description:', error)
+      }
+    }, 500)
+  }
 
   const loadPresentation = async () => {
     setLoading(true)
@@ -178,7 +203,7 @@ export default function PresentationPage() {
   }
 
   const handlePrevSlide = () => {
-    if (currentSlideIndex > 0) {
+    if (currentSlideIndex > -1) {
       setCurrentSlideIndex(currentSlideIndex - 1)
     }
   }
@@ -557,9 +582,10 @@ export default function PresentationPage() {
     )
   }
 
-  const currentSlide = presentation?.slides?.[currentSlideIndex]
+  const currentSlide = currentSlideIndex >= 0 ? presentation?.slides?.[currentSlideIndex] : null
   const totalSlides = presentation?.slides?.length || 0
   const hasSlides = totalSlides > 0
+  const isWelcomeSlide = currentSlideIndex === -1
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -736,6 +762,21 @@ export default function PresentationPage() {
                 {/* Carousel Container */}
                 <div className="flex items-center justify-center gap-4 relative">
                   {/* Previous Slide (Left - 90% size) */}
+                  {currentSlideIndex === 0 && presentation && (
+                    /* Show Welcome Slide as previous when on first real slide */
+                    <button
+                      onClick={handlePrevSlide}
+                      className="w-[756px] h-[423px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden opacity-50 hover:opacity-70 transition-all flex-shrink-0"
+                    >
+                      <div className="w-full h-full scale-[0.8] origin-center">
+                        <WelcomeSlideEditor
+                          presentationTitle={presentation.title}
+                          description={welcomeDescription}
+                          onDescriptionChange={handleWelcomeDescriptionChange}
+                        />
+                      </div>
+                    </button>
+                  )}
                   {currentSlideIndex > 0 && presentation?.slides?.[currentSlideIndex - 1] && (
                     <button
                       onClick={handlePrevSlide}
@@ -755,12 +796,22 @@ export default function PresentationPage() {
                       )}
                     </button>
                   )}
-                  {currentSlideIndex === 0 && (
+                  {currentSlideIndex < 0 && (
                     <div className="w-[756px] h-[423px]"></div>
                   )}
 
                   {/* Current Slide (Center - 100% size) */}
-                  {currentSlide && (
+                  {isWelcomeSlide && presentation ? (
+                    /* Welcome Slide */
+                    <div className="relative w-[840px] h-[472.5px] flex-shrink-0">
+                      <WelcomeSlideEditor
+                        presentationTitle={presentation.title}
+                        description={welcomeDescription}
+                        onDescriptionChange={handleWelcomeDescriptionChange}
+                      />
+                    </div>
+                  ) : currentSlide ? (
+                    /* Regular Slide */
                     <div className="relative w-[840px] h-[472.5px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden flex-shrink-0">
                       {imageLoading && (
                         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white">
@@ -785,10 +836,30 @@ export default function PresentationPage() {
                         />
                       )}
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Next Slide (Right - 90% size) */}
-                  {currentSlideIndex < totalSlides - 1 && presentation?.slides?.[currentSlideIndex + 1] && (
+                  {currentSlideIndex === -1 && presentation?.slides?.[0] && (
+                    /* Show first real slide as next when on welcome slide */
+                    <button
+                      onClick={handleNextSlide}
+                      className="w-[756px] h-[423px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden opacity-50 hover:opacity-70 transition-all flex-shrink-0"
+                    >
+                      {presentation.slides[0].image_url.endsWith('.pdf') ? (
+                        <iframe
+                          src={`${presentation.slides[0].image_url}#toolbar=0&navpanes=0&scrollbar=0`}
+                          className="w-full h-full pointer-events-none"
+                        />
+                      ) : (
+                        <img
+                          src={presentation.slides[0].image_url}
+                          alt="Slide 1"
+                          className="w-full h-full object-contain p-3"
+                        />
+                      )}
+                    </button>
+                  )}
+                  {currentSlideIndex >= 0 && currentSlideIndex < totalSlides - 1 && presentation?.slides?.[currentSlideIndex + 1] && (
                     <button
                       onClick={handleNextSlide}
                       className="w-[756px] h-[423px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden opacity-50 hover:opacity-70 transition-all flex-shrink-0"
@@ -813,12 +884,12 @@ export default function PresentationPage() {
                 </div>
 
                 {/* Navigation Arrows */}
-                {totalSlides > 1 && (
+                {(totalSlides > 0 || isWelcomeSlide) && (
                   <>
                     {/* Previous Arrow */}
                     <button
                       onClick={handlePrevSlide}
-                      disabled={currentSlideIndex === 0}
+                      disabled={currentSlideIndex === -1}
                       className="absolute left-4 top-1/2 -translate-y-1/2 w-[56px] h-[56px] bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5f5f5] transition-all disabled:opacity-30 disabled:cursor-not-allowed z-10"
                     >
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -842,16 +913,18 @@ export default function PresentationPage() {
             )}
           </div>
 
-          {/* Description/Prompt Area */}
-          <div className="w-full max-w-[840px] mb-6">
-            <DescriptionTextarea 
-              value={descriptionValue}
-              onChange={setDescriptionValue}
-              onGenerateAI={handleGenerateDescription}
-              onImproveAI={handleImproveDescription}
-              isGenerating={isGeneratingDescription}
-            />
-          </div>
+          {/* Description/Prompt Area - Only show for regular slides */}
+          {!isWelcomeSlide && (
+            <div className="w-full max-w-[840px] mb-6">
+              <DescriptionTextarea 
+                value={descriptionValue}
+                onChange={setDescriptionValue}
+                onGenerateAI={handleGenerateDescription}
+                onImproveAI={handleImproveDescription}
+                isGenerating={isGeneratingDescription}
+              />
+            </div>
+          )}
 
           {/* Bottom Carousel - Thumbnails */}
           <div className="w-full max-w-[840px] flex justify-center">
@@ -865,6 +938,29 @@ export default function PresentationPage() {
               </div>
             ) : (
               <div className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-hide justify-center">
+                {/* Welcome Slide Thumbnail */}
+                {presentation && (
+                  <div
+                    key="welcome-slide"
+                    onClick={() => setCurrentSlideIndex(-1)}
+                    className="flex-shrink-0 relative cursor-pointer transition-all"
+                  >
+                    <div className={`relative w-[156px] h-[88px] rounded-[13.703px] border-[1.713px] overflow-hidden transition-all ${
+                      currentSlideIndex === -1
+                        ? 'border-[#0d0d0d]'
+                        : 'border-[#dcdcdc] opacity-60 hover:opacity-100'
+                    }`}>
+                      <div className="w-full h-full bg-[#f5f5f5] flex items-center justify-center p-2 scale-[0.6] origin-center">
+                        <WelcomeSlideEditor
+                          presentationTitle={presentation.title}
+                          description={welcomeDescription}
+                          onDescriptionChange={handleWelcomeDescriptionChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Render actual slides */}
                 {presentation?.slides?.map((slide, index) => (
                   <div
