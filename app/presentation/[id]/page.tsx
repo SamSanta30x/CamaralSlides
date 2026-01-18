@@ -1179,7 +1179,7 @@ export default function PresentationPage() {
             ) : (
               <div 
                 ref={carouselRef} 
-                className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-hide"
+                className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-hide justify-center"
               >
                 {/* Welcome Slide Thumbnail */}
                 {presentation && (
@@ -1194,17 +1194,13 @@ export default function PresentationPage() {
                         ? 'border-[#0d0d0d]'
                         : 'border-[#dcdcdc] opacity-60 hover:opacity-100'
                     }`}>
-                      <div className="w-full h-full bg-[#f5f5f5] flex items-center justify-center scale-[0.6] origin-center">
-                        <WelcomeSlideEditor
-                          welcomeTitle={presentation.welcome_title}
-                          presentationTitle={presentation.title}
-                          description={welcomeDescription}
-                          slideCount={presentation.slides?.length || 0}
-                          estimatedMinutes={presentation.estimated_minutes ?? undefined}
-                          onDescriptionChange={handleWelcomeDescriptionChange}
-                          onTitleChange={handleWelcomeTitleChange}
-                          onEstimatedMinutesChange={handleEstimatedMinutesChange}
-                        />
+                      <div className="w-full h-full bg-white flex flex-col items-center justify-center gap-1 p-2">
+                        <div className="w-8 h-8 rounded-full bg-[#66e7f5] flex items-center justify-center">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                        <span className="text-[8px] font-['Inter',sans-serif] font-medium text-[#666] text-center">Welcome</span>
                       </div>
                     </div>
                   </div>
@@ -1302,16 +1298,14 @@ export default function PresentationPage() {
                         ? 'border-[#0d0d0d]'
                         : 'border-[#dcdcdc] opacity-60 hover:opacity-100'
                     }`}>
-                      <div className="w-full h-full bg-[#f5f5f5] flex items-center justify-center scale-[0.5] origin-center">
-                        <EndSlideEditor
-                          endTitle={presentation.end_title ?? undefined}
-                          presentationTitle={presentation.title}
-                          description={endDescriptionValue}
-                          ctaText={ctaText === 'Add call to action' ? 'Start for free' : ctaText}
-                          ctaUrl={ctaUrl || 'https://camaral.ai'}
-                          onTitleChange={handleEndTitleChange}
-                          onDescriptionChange={handleEndDescriptionChange}
-                        />
+                      <div className="w-full h-full bg-white flex flex-col items-center justify-center gap-1 p-2">
+                        <div className="w-8 h-8 rounded-full bg-[#0d0d0d] flex items-center justify-center">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 11l3 3L22 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                        <span className="text-[8px] font-['Inter',sans-serif] font-medium text-[#666] text-center">End Page</span>
                       </div>
 
                       {/* Delete button */}
