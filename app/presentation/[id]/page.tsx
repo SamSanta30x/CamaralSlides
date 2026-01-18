@@ -1491,15 +1491,6 @@ export default function PresentationPage() {
                     ))}
                   </>
                 )}
-
-                {/* Add New Slide Button */}
-                {!isProcessing && (
-                  <button className="flex-shrink-0 w-[105px] h-[59px] bg-[#fafafa] border-[1.713px] border-[#dcdcdc] rounded-[16px] flex items-center justify-center hover:bg-[#f0f0f0] transition-all">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 6V18M6 12H18" stroke="#999999" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  </button>
-                )}
               </div>
             )}
           </div>
