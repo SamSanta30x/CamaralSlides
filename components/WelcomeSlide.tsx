@@ -8,6 +8,7 @@ interface WelcomeSlideProps {
   description?: string
   slideCount?: number // Number of slides in the presentation
   estimatedMinutes?: number // Estimated duration in minutes (display only)
+  showAddQuestion?: boolean // Show "Add a new question" button (only in editor)
   onStartCall: (name: string, email: string) => void
 }
 
@@ -17,6 +18,7 @@ export default function WelcomeSlide({
   description,
   slideCount = 0,
   estimatedMinutes,
+  showAddQuestion = false,
   onStartCall 
 }: WelcomeSlideProps) {
   // Use welcomeTitle if available, otherwise use presentationTitle
@@ -168,10 +170,12 @@ export default function WelcomeSlide({
             </div>
           )}
 
-          {/* Add Question Link */}
-          <button className="text-center font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] hover:text-[#666] transition-colors py-[8px]">
-            + Add a new question
-          </button>
+          {/* Add Question Link - Only show in editor */}
+          {showAddQuestion && (
+            <button className="text-center font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] hover:text-[#666] transition-colors py-[8px]">
+              + Add a new question
+            </button>
+          )}
 
           {/* Start Call Button */}
           <button
