@@ -152,7 +152,9 @@ export interface GenerateDescriptionResponse {
 export async function generateSlideDescription(
   slideId: string,
   imageUrl: string,
-  presentationObjective?: string
+  presentationObjective?: string,
+  mode: 'generate' | 'improve' = 'generate',
+  currentDescription?: string
 ): Promise<GenerateDescriptionResponse> {
   try {
     const supabase = createClient()
@@ -169,9 +171,12 @@ export async function generateSlideDescription(
       }
     }
 
-    console.log('Generating description for slide:', slideId)
+    console.log(`${mode === 'improve' ? '✨' : '🤖'} ${mode === 'improve' ? 'Improving' : 'Generating'} description for slide:`, slideId)
     console.log('Image URL:', imageUrl)
     console.log('Presentation objective:', presentationObjective)
+    if (mode === 'improve') {
+      console.log('Current description:', currentDescription)
+    }
 
     // Call Edge Function to generate description
     const { data, error } = await supabase.functions.invoke('generate-slide-description', {
@@ -179,6 +184,8 @@ export async function generateSlideDescription(
         slideId,
         imageUrl,
         presentationObjective,
+        mode,
+        currentDescription,
       },
     })
 

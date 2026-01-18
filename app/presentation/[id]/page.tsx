@@ -381,8 +381,45 @@ export default function PresentationPage() {
   }
 
   const handleImproveDescription = async () => {
-    // TODO: Implement improve functionality
-    alert('Improve functionality coming soon!')
+    if (!presentation?.slides || !presentation.slides[currentSlideIndex]) return
+    if (!descriptionValue.trim()) {
+      alert('Please enter a description first')
+      return
+    }
+
+    const currentSlide = presentation.slides[currentSlideIndex]
+    
+    setIsGeneratingDescription(true)
+    try {
+      const result = await generateSlideDescription(
+        currentSlide.id,
+        currentSlide.image_url,
+        presentationObjective || undefined,
+        'improve',
+        descriptionValue
+      )
+
+      if (result.success && result.description) {
+        setDescriptionValue(result.description)
+        // Update local state
+        const updatedSlides = [...presentation.slides]
+        updatedSlides[currentSlideIndex] = {
+          ...currentSlide,
+          description: result.description
+        }
+        setPresentation({
+          ...presentation,
+          slides: updatedSlides
+        })
+      } else {
+        alert(`Failed to improve description: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error improving description:', error)
+      alert('Failed to improve description')
+    } finally {
+      setIsGeneratingDescription(false)
+    }
   }
 
   // Handle keyboard navigation

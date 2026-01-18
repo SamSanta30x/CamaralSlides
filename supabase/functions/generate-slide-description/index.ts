@@ -11,6 +11,8 @@ interface GenerateDescriptionRequest {
   slideId: string
   imageUrl: string
   presentationObjective?: string
+  mode?: 'generate' | 'improve'
+  currentDescription?: string
 }
 
 serve(async (req) => {
@@ -44,12 +46,16 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { slideId, imageUrl, presentationObjective }: GenerateDescriptionRequest = await req.json()
-    console.log('📦 Request body:', { slideId, imageUrl, presentationObjective })
+    const { slideId, imageUrl, presentationObjective, mode = 'generate', currentDescription }: GenerateDescriptionRequest = await req.json()
+    console.log('📦 Request body:', { slideId, imageUrl, presentationObjective, mode, currentDescription })
 
     // Validate input
     if (!slideId || !imageUrl) {
       throw new Error('Missing required fields: slideId and imageUrl')
+    }
+
+    if (mode === 'improve' && !currentDescription) {
+      throw new Error('Current description is required for improve mode')
     }
 
     // Get OpenAI API key
@@ -61,26 +67,27 @@ serve(async (req) => {
     // Check if imageUrl is a PDF or an image
     const isPDF = imageUrl.toLowerCase().endsWith('.pdf')
     
-    let systemPrompt = `You are a professional presentation narrator. Your job is to describe what a presenter should say when showing this slide. 
-Provide a clear, engaging description that a presenter can use.
-Keep it concise but informative (2-3 sentences). Focus on the key points.`
-
+    let systemPrompt: string
     let userPrompt: string
     let messages: any[]
 
-    if (presentationObjective) {
-      systemPrompt += `\n\nPresentation Objective: ${presentationObjective}`
-    }
+    if (mode === 'improve') {
+      // Improve mode: enhance existing description
+      systemPrompt = `You are a professional presentation coach. Your job is to improve and enhance presentation descriptions.
+Make them more engaging, clear, and professional while maintaining the core message.
+Keep it concise (2-3 sentences) but impactful.`
 
-    if (isPDF) {
-      // For PDFs, we can't use vision API directly
-      // Instead, ask the AI to generate a generic description based on slide number and objective
-      userPrompt = `Generate a professional presenter description for slide ${slideId.split('-')[0]} of a presentation.`
       if (presentationObjective) {
-        userPrompt += ` The presentation's objective is: "${presentationObjective}".`
+        systemPrompt += `\n\nPresentation Objective: ${presentationObjective}`
       }
-      userPrompt += ` Create an engaging 2-3 sentence description that a presenter could use to introduce this slide.`
+
+      userPrompt = `Improve this presentation description:\n\n"${currentDescription}"\n\n`
+      userPrompt += `Make it more engaging, professional, and clear. Keep the same length (2-3 sentences) but enhance the impact.`
       
+      if (presentationObjective) {
+        userPrompt += ` Ensure it aligns with the presentation objective: "${presentationObjective}".`
+      }
+
       messages = [
         {
           role: 'system',
@@ -92,38 +99,68 @@ Keep it concise but informative (2-3 sentences). Focus on the key points.`
         }
       ]
     } else {
-      // For images, use vision API
-      userPrompt = 'Analyze this slide and provide a description of what the presenter should say.'
+      // Generate mode: create new description
+      systemPrompt = `You are a professional presentation narrator. Your job is to describe what a presenter should say when showing this slide. 
+Provide a clear, engaging description that a presenter can use.
+Keep it concise but informative (2-3 sentences). Focus on the key points.`
+
       if (presentationObjective) {
-        userPrompt += ` Keep in mind the presentation's objective: "${presentationObjective}"`
+        systemPrompt += `\n\nPresentation Objective: ${presentationObjective}`
       }
-      
-      messages = [
-        {
-          role: 'system',
-          content: systemPrompt
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: userPrompt
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: imageUrl,
-                detail: 'high'
-              }
-            }
-          ]
+
+      if (isPDF) {
+        // For PDFs, we can't use vision API directly
+        // Instead, ask the AI to generate a generic description based on slide number and objective
+        userPrompt = `Generate a professional presenter description for slide ${slideId.split('-')[0]} of a presentation.`
+        if (presentationObjective) {
+          userPrompt += ` The presentation's objective is: "${presentationObjective}".`
         }
-      ]
+        userPrompt += ` Create an engaging 2-3 sentence description that a presenter could use to introduce this slide.`
+        
+        messages = [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ]
+      } else {
+        // For images, use vision API
+        userPrompt = 'Analyze this slide and provide a description of what the presenter should say.'
+        if (presentationObjective) {
+          userPrompt += ` Keep in mind the presentation's objective: "${presentationObjective}"`
+        }
+        
+        messages = [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: userPrompt
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: imageUrl,
+                  detail: 'high'
+                }
+              }
+            ]
+          }
+        ]
+      }
     }
 
     // Call OpenAI API
-    console.log(`🤖 Calling OpenAI API (${isPDF ? 'text' : 'vision'} mode)...`)
+    console.log(`🤖 Calling OpenAI API (${mode} mode, ${mode === 'generate' && isPDF ? 'text' : mode === 'improve' ? 'text' : 'vision'})...`)
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {

@@ -82,7 +82,7 @@ export default function DescriptionTextarea({
                 height={14}
                 className="flex-shrink-0"
               />
-              Improve it with AI
+              Improve with AI
             </>
           )}
         </button>
