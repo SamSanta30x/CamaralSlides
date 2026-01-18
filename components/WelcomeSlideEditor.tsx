@@ -6,18 +6,25 @@ interface WelcomeSlideEditorProps {
   presentationTitle: string
   description?: string
   onDescriptionChange?: (description: string) => void
+  onTitleChange?: (title: string) => void
 }
 
 export default function WelcomeSlideEditor({ 
   presentationTitle, 
   description = '',
-  onDescriptionChange
+  onDescriptionChange,
+  onTitleChange
 }: WelcomeSlideEditorProps) {
   const [localDescription, setLocalDescription] = useState(description)
+  const [localTitle, setLocalTitle] = useState(presentationTitle)
 
   useEffect(() => {
     setLocalDescription(description)
   }, [description])
+
+  useEffect(() => {
+    setLocalTitle(presentationTitle)
+  }, [presentationTitle])
 
   const handleDescriptionChange = (value: string) => {
     setLocalDescription(value)
@@ -26,21 +33,53 @@ export default function WelcomeSlideEditor({
     }
   }
 
+  const handleTitleChange = (value: string) => {
+    setLocalTitle(value)
+    if (onTitleChange) {
+      onTitleChange(value)
+    }
+  }
+
   return (
     <div className="w-full h-full bg-white flex items-center justify-center rounded-[16px] border border-[#e5e5e5] p-[40px]">
       <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full">
-        {/* Title - Shows presentation title (not editable here, edited in header) */}
-        <h1 
-          className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center self-stretch"
-          style={{
-            fontWeight: 590,
-            lineHeight: '26px',
-            letterSpacing: '-0.45px',
-            fontFeatureSettings: "'ss01' on, 'cv01' on"
-          }}
-        >
-          {presentationTitle}
-        </h1>
+        {/* Title - Editable inline with placeholder */}
+        <div className="relative self-stretch" style={{ minHeight: '26px' }}>
+          {!localTitle && (
+            <div 
+              className="absolute inset-0 font-['Inter',sans-serif] text-[18px] text-[#999] text-center pointer-events-none"
+              style={{
+                fontWeight: 590,
+                lineHeight: '26px',
+                letterSpacing: '-0.45px',
+                fontFeatureSettings: "'ss01' on, 'cv01' on"
+              }}
+            >
+              Presentation Title
+            </div>
+          )}
+          <h1 
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={(e) => handleTitleChange(e.currentTarget.textContent || '')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                e.currentTarget.blur()
+              }
+            }}
+            className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center self-stretch outline-none cursor-text hover:text-[#666] transition-colors"
+            style={{
+              fontWeight: 590,
+              lineHeight: '26px',
+              letterSpacing: '-0.45px',
+              fontFeatureSettings: "'ss01' on, 'cv01' on",
+              minHeight: '26px'
+            }}
+          >
+            {localTitle}
+          </h1>
+        </div>
 
         {/* Description - Editable inline with placeholder */}
         <div className="relative self-stretch" style={{ minHeight: '26px' }}>

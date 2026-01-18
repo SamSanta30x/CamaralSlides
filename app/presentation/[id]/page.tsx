@@ -103,6 +103,32 @@ export default function PresentationPage() {
     }, 500)
   }
 
+  // Handle welcome slide title changes (same as header title)
+  const handleWelcomeTitleChange = (title: string) => {
+    setTitleValue(title)
+    
+    // Update local presentation state
+    if (presentation) {
+      setPresentation({ ...presentation, title })
+    }
+    
+    // Debounce save
+    if (titleSaveTimeoutRef.current) {
+      clearTimeout(titleSaveTimeoutRef.current)
+    }
+
+    titleSaveTimeoutRef.current = setTimeout(async () => {
+      try {
+        const { error } = await updatePresentationTitle(presentationId, title)
+        if (error) {
+          console.error('Error saving title:', error)
+        }
+      } catch (error) {
+        console.error('Error saving title:', error)
+      }
+    }, 500)
+  }
+
   const loadPresentation = async () => {
     setLoading(true)
     const { data, error } = await getPresentation(presentationId)
@@ -773,6 +799,7 @@ export default function PresentationPage() {
                           presentationTitle={presentation.title}
                           description={welcomeDescription}
                           onDescriptionChange={handleWelcomeDescriptionChange}
+                          onTitleChange={handleWelcomeTitleChange}
                         />
                       </div>
                     </button>
@@ -808,6 +835,7 @@ export default function PresentationPage() {
                         presentationTitle={presentation.title}
                         description={welcomeDescription}
                         onDescriptionChange={handleWelcomeDescriptionChange}
+                        onTitleChange={handleWelcomeTitleChange}
                       />
                     </div>
                   ) : currentSlide ? (
@@ -955,6 +983,7 @@ export default function PresentationPage() {
                           presentationTitle={presentation.title}
                           description={welcomeDescription}
                           onDescriptionChange={handleWelcomeDescriptionChange}
+                          onTitleChange={handleWelcomeTitleChange}
                         />
                       </div>
                     </div>
