@@ -18,7 +18,7 @@ export default function EndSlide({
   const displayTitle = endTitle || `Say bye! Recall information with @${presentationTitle}`
 
   return (
-    <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8 py-12">
+    <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8">
       {/* Title */}
       <h1 
         className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center mb-4 max-w-[600px]"

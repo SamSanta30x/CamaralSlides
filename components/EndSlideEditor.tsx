@@ -61,7 +61,7 @@ export default function EndSlideEditor({
   }
 
   return (
-    <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8 py-12">
+    <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8">
       {/* Title - Editable */}
       <div className="relative w-full max-w-[600px] mb-4" style={{ minHeight: '26px' }}>
         {!localTitle && !isTitleFocused && (
