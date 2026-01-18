@@ -943,8 +943,11 @@ export default function PresentationPage() {
               <>
                 {/* Carousel Container */}
                 <div className="flex items-center justify-center gap-4 relative overflow-x-hidden">
-                  {/* Previous Slide (Left - 90% size) */}
-                  {currentSlideIndex === 0 && presentation && (
+                  {/* Previous Slide Space (Left) */}
+                  {currentSlideIndex === -1 ? (
+                    /* No previous slide for Welcome */
+                    <div className="w-[756px] h-[423px] flex-shrink-0"></div>
+                  ) : currentSlideIndex === 0 && presentation ? (
                     /* Show Welcome Slide as previous when on first real slide */
                     <button
                       onClick={handlePrevSlide}
@@ -963,8 +966,7 @@ export default function PresentationPage() {
                         />
                       </div>
                     </button>
-                  )}
-                  {currentSlideIndex > 0 && currentSlideIndex < totalSlides && presentation?.slides?.[currentSlideIndex - 1] && (
+                  ) : currentSlideIndex > 0 && currentSlideIndex < totalSlides && presentation?.slides?.[currentSlideIndex - 1] ? (
                     <button
                       onClick={handlePrevSlide}
                       className="w-[756px] h-[423px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden opacity-50 hover:opacity-70 transition-all flex-shrink-0"
@@ -982,8 +984,7 @@ export default function PresentationPage() {
                         />
                       )}
                     </button>
-                  )}
-                  {currentSlideIndex === totalSlides && presentation?.slides?.[totalSlides - 1] && (
+                  ) : currentSlideIndex === totalSlides && presentation?.slides?.[totalSlides - 1] ? (
                     /* Show last slide as previous when on end page */
                     <button
                       onClick={handlePrevSlide}
@@ -1002,9 +1003,8 @@ export default function PresentationPage() {
                         />
                       )}
                     </button>
-                  )}
-                  {currentSlideIndex < 0 && (
-                    <div className="w-[756px] h-[423px]"></div>
+                  ) : (
+                    <div className="w-[756px] h-[423px] flex-shrink-0"></div>
                   )}
 
                   {/* Current Slide (Center - 100% size) */}
@@ -1151,36 +1151,38 @@ export default function PresentationPage() {
                       </div>
                     </button>
                   )}
-                  {currentSlideIndex === totalSlides && presentation && (
-                    /* Show last slide as previous when on end page */
-                    <div className="w-[756px] h-[423px]"></div>
-                  )}
+                  {currentSlideIndex === totalSlides ? (
+                    /* No next slide for End Page */
+                    <div className="w-[756px] h-[423px] flex-shrink-0"></div>
+                  ) : null}
                 </div>
 
                 {/* Navigation Arrows */}
                 {(totalSlides > 0 || isWelcomeSlide) && (
                   <>
-                    {/* Previous Arrow */}
-                    <button
-                      onClick={handlePrevSlide}
-                      disabled={currentSlideIndex === -1}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-[56px] h-[56px] bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5f5f5] transition-all disabled:opacity-30 disabled:cursor-not-allowed z-10"
-                    >
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M15 18L9 12L15 6" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
+                    {/* Previous Arrow - Only show if not on Welcome slide */}
+                    {currentSlideIndex > -1 && (
+                      <button
+                        onClick={handlePrevSlide}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-[56px] h-[56px] bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5f5f5] transition-all z-10"
+                      >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path d="M15 18L9 12L15 6" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    )}
 
-                    {/* Next Arrow */}
-                    <button
-                      onClick={handleNextSlide}
-                      disabled={currentSlideIndex === totalSlides}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-[56px] h-[56px] bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5f5f5] transition-all disabled:opacity-30 disabled:cursor-not-allowed z-10"
-                    >
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 18L15 12L9 6" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
+                    {/* Next Arrow - Only show if not on End page */}
+                    {currentSlideIndex < totalSlides && (
+                      <button
+                        onClick={handleNextSlide}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-[56px] h-[56px] bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5f5f5] transition-all z-10"
+                      >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path d="M9 18L15 12L9 6" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    )}
                   </>
                 )}
               </>
