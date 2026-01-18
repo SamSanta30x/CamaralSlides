@@ -677,6 +677,29 @@ export default function PresentationPage() {
     setIsEditingCTA(false)
   }
 
+  const handleCtaTextChange = async (newText: string) => {
+    setCtaText(newText)
+    
+    // Save immediately to database
+    if (!presentation) return
+
+    try {
+      const { error } = await updatePresentationCTA(presentationId, newText, ctaUrl)
+      
+      if (error) {
+        console.error('Error saving CTA text:', error)
+      } else {
+        setPresentation({
+          ...presentation,
+          cta_text: newText,
+          cta_url: ctaUrl
+        })
+      }
+    } catch (error) {
+      console.error('Error saving CTA text:', error)
+    }
+  }
+
   const handleUrlChange = (newUrl: string) => {
     setCtaUrl(newUrl)
     
@@ -1087,7 +1110,7 @@ export default function PresentationPage() {
                           logoUrl={logoUrl}
                           onTitleChange={handleEndTitleChange}
                           onDescriptionChange={handleEndDescriptionChange}
-                          onCtaTextChange={setCtaText}
+                          onCtaTextChange={handleCtaTextChange}
                           onCtaUrlChange={handleUrlChange}
                           onLogoUpload={handleLogoUpload}
                         />
@@ -1201,7 +1224,7 @@ export default function PresentationPage() {
                           ctaUrl={ctaUrl || 'https://camaral.ai'}
                           onTitleChange={handleEndTitleChange}
                           onDescriptionChange={handleEndDescriptionChange}
-                          onCtaTextChange={setCtaText}
+                          onCtaTextChange={handleCtaTextChange}
                           onCtaUrlChange={handleUrlChange}
                         />
                       </div>
