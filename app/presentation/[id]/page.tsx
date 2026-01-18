@@ -25,6 +25,7 @@ export default function PresentationPage() {
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const [isEditingCTA, setIsEditingCTA] = useState(false)
   const [ctaText, setCtaText] = useState('')
   const [ctaUrl, setCtaUrl] = useState('')
@@ -183,6 +184,7 @@ export default function PresentationPage() {
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index)
+    setIsDragging(true)
     e.dataTransfer.effectAllowed = 'move'
   }
 
@@ -257,6 +259,8 @@ export default function PresentationPage() {
   const handleDragEnd = () => {
     setDraggedIndex(null)
     setDragOverIndex(null)
+    // Delay clearing isDragging to prevent click from firing
+    setTimeout(() => setIsDragging(false), 100)
   }
 
   const handleCTAClick = () => {
@@ -864,7 +868,11 @@ export default function PresentationPage() {
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, index)}
                     onDragEnd={handleDragEnd}
-                    onClick={() => setCurrentSlideIndex(index)}
+                    onClick={() => {
+                      if (!isDragging) {
+                        setCurrentSlideIndex(index)
+                      }
+                    }}
                     className={`flex-shrink-0 relative cursor-move transition-all ${
                       draggedIndex === index ? 'opacity-50 scale-95' : ''
                     } ${
