@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
 import { uploadAndProcessPDF } from '@/lib/supabase/edgeFunctions'
-import { convertPDFToImages, isPDFFile } from '@/lib/utils/pdfToImages'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
@@ -131,9 +130,14 @@ export async function createPresentation(
     // Check if it's a PDF - convert to PNG images first
     let filesToUpload = files
     
-    if (files.length === 1 && isPDFFile(files[0])) {
+    // Dynamic import to avoid SSR issues with pdf.js
+    const isPDF = files.length === 1 && (files[0].type === 'application/pdf' || files[0].name.toLowerCase().endsWith('.pdf'))
+    
+    if (isPDF) {
       console.log('📄 PDF detected, converting to PNG images...')
       try {
+        // Dynamic import only when needed (client-side only)
+        const { convertPDFToImages } = await import('@/lib/utils/pdfToImages')
         const { images } = await convertPDFToImages(files[0], 2)
         console.log(`✅ Converted PDF to ${images.length} PNG images`)
         filesToUpload = images
