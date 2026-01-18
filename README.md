@@ -84,3 +84,4 @@ export default async function ServerComponent() {
 - [Documentación de Next.js](https://nextjs.org/docs)
 - [Documentación de Supabase](https://supabase.com/docs)
 - [Guía de Supabase con Next.js](https://supabase.com/docs/guides/getting-started/quickstarts/nextjs)
+# Build 1768777702
