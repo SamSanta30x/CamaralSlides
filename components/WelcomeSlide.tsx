@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 
 interface WelcomeSlideProps {
   presentationTitle: string
@@ -30,33 +29,22 @@ export default function WelcomeSlide({
   }
 
   return (
-    <div className="w-full h-full bg-[#f5f5f5] flex items-center justify-center">
-      <div className="flex flex-col items-center gap-[40px] max-w-[600px] w-full px-[40px]">
-        {/* Logo */}
-        <div className="flex items-center justify-center">
-          <Image
-            src="/Camaral Logo.svg"
-            alt="Logo"
-            width={120}
-            height={40}
-            className="object-contain"
-          />
-        </div>
-
+    <div className="w-full h-full bg-white flex items-center justify-center">
+      <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full px-[40px]">
         {/* Title */}
-        <h1 className="font-['Inter',sans-serif] text-[32px] font-semibold text-[#0d0d0d] text-center tracking-[-0.64px]">
+        <h1 className="font-['Inter',sans-serif] text-[24px] font-semibold text-[#0d0d0d] text-center tracking-[-0.48px]">
           {presentationTitle}
         </h1>
 
         {/* Description */}
         {description && (
-          <p className="font-['Inter',sans-serif] text-[16px] text-[#666] text-center tracking-[-0.32px]">
+          <p className="font-['Inter',sans-serif] text-[14px] text-[#666] text-center">
             {description}
           </p>
         )}
 
         {/* Form */}
-        <div className="flex flex-col gap-[16px] w-full">
+        <div className="flex flex-col gap-[12px] w-full">
           {/* Name Input */}
           <input
             type="text"
@@ -64,7 +52,7 @@ export default function WelcomeSlide({
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full bg-white border border-[#e5e5e5] rounded-[12px] px-[20px] py-[14px] font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors"
+            className="w-full bg-white border border-[#e5e5e5] rounded-[999px] px-[20px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors"
           />
 
           {/* Email Input */}
@@ -74,11 +62,11 @@ export default function WelcomeSlide({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full bg-white border border-[#e5e5e5] rounded-[12px] px-[20px] py-[14px] font-['Inter',sans-serif] text-[16px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors"
+            className="w-full bg-white border border-[#e5e5e5] rounded-[999px] px-[20px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors"
           />
 
           {/* Add Question Link */}
-          <button className="text-center font-['Inter',sans-serif] text-[14px] text-[#666] hover:text-[#0d0d0d] transition-colors">
+          <button className="text-center font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] hover:text-[#666] transition-colors py-[8px]">
             + Add a new question
           </button>
 
@@ -86,21 +74,21 @@ export default function WelcomeSlide({
           <button
             onClick={handleStartCall}
             disabled={!name.trim() || !email.trim()}
-            className="w-full bg-[#0d0d0d] text-white rounded-[12px] px-[20px] py-[14px] font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2e2e2e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#0d0d0d] text-white rounded-[999px] px-[20px] py-[14px] font-['Inter',sans-serif] text-[16px] font-medium hover:bg-[#2e2e2e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Start call
           </button>
 
           {/* Helper Text */}
-          <div className="flex items-center justify-center gap-[8px] text-[#999]">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M8 4V8L10.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          <div className="flex items-center justify-center gap-[8px] text-[#999] py-[4px]">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
+              <path d="M7 3.5V7L9 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
             <span className="font-['Inter',sans-serif] text-[12px]">
               Takes X minutes
             </span>
-            <span className="font-['Inter',sans-serif] text-[12px] mx-[8px]">•</span>
+            <span className="font-['Inter',sans-serif] text-[12px] mx-[4px]">•</span>
             <span className="font-['Inter',sans-serif] text-[12px]">
               press Enter ↵ to start
             </span>
