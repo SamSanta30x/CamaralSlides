@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { getPresentation, updateSlide, updatePresentationCTA, type Presentation, type Slide } from '@/lib/supabase/presentations'
+import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, type Presentation, type Slide } from '@/lib/supabase/presentations'
 import DashboardHeader from '@/components/DashboardHeader'
 import DescriptionTextarea from '@/components/DescriptionTextarea'
 import { createClient } from '@/lib/supabase/client'
@@ -32,6 +32,9 @@ export default function PresentationPage() {
   const ctaButtonRef = useRef<HTMLDivElement>(null)
   const ctaTextRef = useRef<HTMLSpanElement>(null)
   const urlSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [titleValue, setTitleValue] = useState('')
+  const titleSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const presentationId = params.id as string
 
@@ -57,6 +60,7 @@ export default function PresentationPage() {
     if (presentation) {
       setCtaText(presentation.cta_text || 'Add call to action')
       setCtaUrl(presentation.cta_url || '')
+      setTitleValue(presentation.title)
     }
   }, [presentation])
 
@@ -298,6 +302,43 @@ export default function PresentationPage() {
     setShowUrlPopup(false)
   }
 
+  const handleTitleChange = (newTitle: string) => {
+    setTitleValue(newTitle)
+    
+    // Clear existing timeout
+    if (titleSaveTimeoutRef.current) {
+      clearTimeout(titleSaveTimeoutRef.current)
+    }
+
+    // Debounce save for 500ms
+    titleSaveTimeoutRef.current = setTimeout(async () => {
+      if (!presentation || !newTitle.trim()) return
+
+      try {
+        const { error } = await updatePresentationTitle(presentationId, newTitle.trim())
+        
+        if (error) {
+          console.error('Error saving title:', error)
+        } else {
+          setPresentation({
+            ...presentation,
+            title: newTitle.trim()
+          })
+        }
+      } catch (error) {
+        console.error('Error saving title:', error)
+      }
+    }, 500)
+  }
+
+  const handleTitleBlur = () => {
+    setIsEditingTitle(false)
+    // If empty, restore original title
+    if (!titleValue.trim() && presentation) {
+      setTitleValue(presentation.title)
+    }
+  }
+
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -312,11 +353,14 @@ export default function PresentationPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentSlideIndex, presentation])
 
-  // Cleanup URL save timeout on unmount
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (urlSaveTimeoutRef.current) {
         clearTimeout(urlSaveTimeoutRef.current)
+      }
+      if (titleSaveTimeoutRef.current) {
+        clearTimeout(titleSaveTimeoutRef.current)
       }
     }
   }, [])
@@ -354,11 +398,30 @@ export default function PresentationPage() {
                 </svg>
               </div>
 
-              {/* Title */}
+              {/* Title - Editable */}
               <div className="flex-1 min-w-0 flex items-center gap-3">
-                <h1 className="font-['Inter',sans-serif] text-[16px] font-semibold text-[#0d0d0d] leading-tight truncate">
-                  {presentation.title}
-                </h1>
+                {isEditingTitle ? (
+                  <input
+                    type="text"
+                    value={titleValue}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    onBlur={handleTitleBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.currentTarget.blur()
+                      }
+                    }}
+                    autoFocus
+                    className="font-['Inter',sans-serif] text-[16px] font-semibold text-[#0d0d0d] leading-tight bg-transparent border-b border-[#0d0d0d] outline-none flex-1 min-w-0"
+                  />
+                ) : (
+                  <h1 
+                    onClick={() => setIsEditingTitle(true)}
+                    className="font-['Inter',sans-serif] text-[16px] font-semibold text-[#0d0d0d] leading-tight truncate cursor-text hover:text-[#666] transition-colors"
+                  >
+                    {presentation.title}
+                  </h1>
+                )}
                 {isProcessing && processedSlides > 0 && (
                   <div className="flex items-center gap-2 bg-[#66e7f5] px-3 py-1 rounded-full">
                     <div className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-[#0d0d0d] border-t-transparent"></div>

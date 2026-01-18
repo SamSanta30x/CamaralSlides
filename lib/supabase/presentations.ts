@@ -241,6 +241,36 @@ export async function updateSlide(
 }
 
 /**
+ * Update presentation title
+ */
+export async function updatePresentationTitle(
+  id: string,
+  title: string
+): Promise<{ data: Presentation | null; error: Error | null }> {
+  try {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('presentations')
+      .update({ title })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+/**
  * Update presentation call to action
  */
 export async function updatePresentationCTA(
