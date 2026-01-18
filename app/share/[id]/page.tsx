@@ -182,7 +182,7 @@ export default function SharePresentationPage() {
       )}
 
       {/* Main Slide Container */}
-      <div className={`flex flex-col items-center justify-center flex-1 w-full ${isFullscreen ? 'p-0' : 'px-[40px]'}`}
+      <div className={`flex flex-col items-center justify-center flex-1 w-full ${isFullscreen ? 'p-0' : 'px-[40px]'}`}>
         <div 
           className={`flex items-start justify-center w-full h-full relative ${isFullscreen ? 'max-w-none' : 'max-w-[1200px]'}`}
           onMouseEnter={() => setShowFullscreenButton(true)}
