@@ -39,6 +39,7 @@ export default function PresentationPage() {
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
   const [presentationObjective, setPresentationObjective] = useState('')
   const [expectedSlideCount, setExpectedSlideCount] = useState<number | null>(null)
+  const [totalSlidesExpected, setTotalSlidesExpected] = useState<number>(0)
 
   const presentationId = params.id as string
 
@@ -81,12 +82,26 @@ export default function PresentationPage() {
 
     if (data) {
       setPresentation(data)
+      
+      // Check if this is a fresh upload with expected count
+      const expectedCount = (data as any)._expectedSlideCount
+      if (expectedCount && expectedCount > 1) {
+        setTotalSlidesExpected(expectedCount)
+        setIsProcessing(true)
+        console.log(`📊 Expecting ${expectedCount} slides total, currently have ${data.slides?.length || 0}`)
+      }
+      
       // Check if presentation has no slides (still processing)
       if (!data.slides || data.slides.length === 0) {
         setIsProcessing(true)
         setProcessedSlides(0)
       } else {
-        setIsProcessing(false)
+        // If we have some slides but expecting more, keep processing
+        if (totalSlidesExpected > 0 && data.slides.length < totalSlidesExpected) {
+          setIsProcessing(true)
+        } else {
+          setIsProcessing(false)
+        }
         setProcessedSlides(data.slides.length)
       }
     }
@@ -121,8 +136,16 @@ export default function PresentationPage() {
             // Update processed count
             setProcessedSlides(updatedSlides.length)
             
-            // Set processing flag when slides start arriving
-            setIsProcessing(true)
+            // Check if we've reached the expected total
+            setTotalSlidesExpected((expectedTotal) => {
+              if (expectedTotal > 0 && updatedSlides.length >= expectedTotal) {
+                console.log(`✅ All ${expectedTotal} slides loaded!`)
+                setIsProcessing(false)
+              } else {
+                setIsProcessing(true)
+              }
+              return expectedTotal
+            })
             
             // Clear any existing timeout
             if (processingTimeoutRef.current) {
@@ -130,6 +153,7 @@ export default function PresentationPage() {
             }
             
             // Set a timeout to turn off processing flag after 3 seconds of no new slides
+            // (fallback in case we don't know the expected count)
             processingTimeoutRef.current = setTimeout(() => {
               setIsProcessing(false)
             }, 3000)
@@ -823,11 +847,28 @@ export default function PresentationPage() {
                 ))}
 
                 {/* Loading placeholders for slides being processed */}
-                {isProcessing && presentation?.slides && (
+                {isProcessing && presentation?.slides && totalSlidesExpected > 0 && (
+                  <>
+                    {[...Array(Math.max(0, totalSlidesExpected - presentation.slides.length))].map((_, i) => (
+                      <div
+                        key={`loading-${i}`}
+                        className="flex-shrink-0 w-[156px] h-[88px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-dashed border-[#dcdcdc] flex flex-col items-center justify-center gap-2"
+                      >
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#e5e5e5] border-t-[#66e7f5]"></div>
+                        <span className="text-[10px] text-[#999] font-['Inter',sans-serif]">
+                          Loading...
+                        </span>
+                      </div>
+                    ))}
+                  </>
+                )}
+                
+                {/* Fallback: Show 3 placeholders if we don't know the expected count */}
+                {isProcessing && presentation?.slides && totalSlidesExpected === 0 && (
                   <>
                     {[...Array(3)].map((_, i) => (
                       <div
-                        key={`loading-${i}`}
+                        key={`loading-fallback-${i}`}
                         className="flex-shrink-0 w-[156px] h-[88px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-dashed border-[#dcdcdc] flex flex-col items-center justify-center gap-2"
                       >
                         <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#e5e5e5] border-t-[#66e7f5]"></div>

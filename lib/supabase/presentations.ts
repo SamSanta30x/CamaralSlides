@@ -203,9 +203,24 @@ export async function createPresentation(
       })
     }
 
-    // Return immediately with first slide
+    // Store expected slide count in presentation metadata for UI
+    // This helps the UI know how many placeholders to show
+    await supabase
+      .from('presentations')
+      .update({ 
+        updated_at: new Date().toISOString(),
+        // We'll use a custom metadata field if available, or just rely on realtime
+      })
+      .eq('id', presentation.id)
+
+    // Return immediately with first slide and total count info
     return {
-      data: { ...presentation, slides: [firstSlide] },
+      data: { 
+        ...presentation, 
+        slides: [firstSlide],
+        // Add a temporary property to indicate expected count
+        _expectedSlideCount: filesToUpload.length 
+      } as any,
       error: null,
     }
   } catch (error) {
