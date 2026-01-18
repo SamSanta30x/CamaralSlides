@@ -75,13 +75,8 @@ export default function PresentationPage() {
   }, [user, presentationId])
 
   useEffect(() => {
-    // Only set loading for regular slides (not Welcome or End)
-    const totalSlides = presentation?.slides?.length || 0
-    const isRegularSlide = currentSlideIndex >= 0 && currentSlideIndex < totalSlides
-    if (isRegularSlide) {
-      setImageLoading(true)
-    }
-  }, [currentSlideIndex, presentation?.slides?.length])
+    setImageLoading(true)
+  }, [currentSlideIndex])
 
   // Update description when slide changes or presentation data updates
   useEffect(() => {
@@ -1379,6 +1374,21 @@ export default function PresentationPage() {
         </div>
       </div>
 
+      {/* Bottom Bar - Powered by (only on Welcome and End pages) */}
+      {(isWelcomeSlide || isEndSlide) && (
+        <div className="w-full bg-white py-3 flex items-center justify-center">
+          <p className="font-['Inter',sans-serif] text-[12px] text-[#999] flex items-center gap-2">
+            Powered by
+            <Image 
+              src="/Camaral Logo.svg" 
+              alt="Camaral" 
+              width={70}
+              height={16}
+              className="h-[16px] w-auto"
+            />
+          </p>
+        </div>
+      )}
 
       {/* Dragged Slide Portal - Renders outside carousel */}
       {isDragging && draggedIndex !== null && dragCurrentPos && draggedSlideRect && presentation?.slides?.[draggedIndex] && (

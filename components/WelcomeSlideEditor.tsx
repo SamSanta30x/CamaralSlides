@@ -199,9 +199,9 @@ export default function WelcomeSlideEditor({
           />
 
           {/* Add Question Link */}
-          <button disabled className="text-center font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] py-[8px] opacity-50">
+          <div className="text-center font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] py-[8px] opacity-50 pointer-events-none">
             + Add a new question
-          </button>
+          </div>
 
           {/* Start Call Button */}
           <button
