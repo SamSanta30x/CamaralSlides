@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import { uploadAndProcessPDF } from '@/lib/supabase/edgeFunctions'
+import { convertPDFToImages, isPDFFile } from '@/lib/utils/pdfToImages'
 
 export interface Slide {
   id: string
@@ -57,30 +58,32 @@ export async function createPresentation(
       return { data: null, error: presentationError }
     }
 
-    // Check if it's a PDF
-    const isPDF = files.length === 1 && files[0].type === 'application/pdf'
-
-    if (isPDF) {
-      // Start Edge Function processing in background (don't wait)
-      console.log('Starting PDF processing in background...')
-      uploadAndProcessPDF(presentation.id, files[0]).catch(error => {
-        console.error('Background PDF processing failed:', error)
-      })
-
-      // Return immediately with empty presentation
-      // Slides will be added progressively by the Edge Function
-      return {
-        data: { ...presentation, slides: [] },
-        error: null,
+    // Check if it's a PDF - convert to PNG images first
+    let filesToUpload = files
+    
+    if (files.length === 1 && isPDFFile(files[0])) {
+      console.log('📄 PDF detected, converting to PNG images...')
+      try {
+        const { images } = await convertPDFToImages(files[0], 2)
+        console.log(`✅ Converted PDF to ${images.length} PNG images`)
+        filesToUpload = images
+      } catch (error) {
+        console.error('❌ Failed to convert PDF to images:', error)
+        return {
+          data: null,
+          error: new Error('Failed to convert PDF to images. Please try again.'),
+        }
       }
     }
 
-    // For images, upload directly
+    // Upload all images (either original images or converted from PDF)
     const slides: Slide[] = []
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
+    for (let i = 0; i < filesToUpload.length; i++) {
+      const file = filesToUpload[i]
       const fileExt = file.name.split('.').pop()
-      const fileName = `${presentation.id}/${i + 1}.${fileExt}`
+      const fileName = `${presentation.id}/slide_${i + 1}.${fileExt}`
+
+      console.log(`⬆️ Uploading slide ${i + 1}/${filesToUpload.length}...`)
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage
@@ -116,6 +119,8 @@ export async function createPresentation(
       if (!slideError && slide) {
         slides.push(slide)
       }
+      
+      console.log(`✅ Slide ${i + 1} uploaded successfully`)
     }
 
     return {
