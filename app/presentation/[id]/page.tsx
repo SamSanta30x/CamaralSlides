@@ -1200,8 +1200,19 @@ export default function PresentationPage() {
                 isGenerating={isGeneratingDescription}
               />
             ) : (
-              /* Empty space to keep carousel position consistent */
-              <div className="h-[200px]"></div>
+              /* Powered by Camaral for Welcome/End pages */
+              <div className="flex flex-col items-center justify-start pt-6">
+                <p className="font-['Inter',sans-serif] text-[12px] text-[#999] flex items-center gap-2">
+                  Powered by
+                  <Image 
+                    src="/Camaral Logo.svg" 
+                    alt="Camaral" 
+                    width={70}
+                    height={16}
+                    className="opacity-60"
+                  />
+                </p>
+              </div>
             )}
           </div>
 
@@ -1413,21 +1424,6 @@ export default function PresentationPage() {
         </div>
       </div>
 
-      {/* Bottom Bar - Powered by (only on Welcome and End pages) */}
-      {(isWelcomeSlide || isEndSlide) && (
-        <div className="w-full bg-white py-3 flex items-center justify-center">
-          <p className="font-['Inter',sans-serif] text-[12px] text-[#999] flex items-center gap-2">
-            Powered by
-            <Image 
-              src="/Camaral Logo.svg" 
-              alt="Camaral" 
-              width={70}
-              height={16}
-              className="h-[16px] w-auto"
-            />
-          </p>
-        </div>
-      )}
 
       {/* Dragged Slide Portal - Renders outside carousel */}
       {isDragging && draggedIndex !== null && dragCurrentPos && draggedSlideRect && presentation?.slides?.[draggedIndex] && (
