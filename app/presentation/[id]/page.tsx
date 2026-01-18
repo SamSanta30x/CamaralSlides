@@ -1231,7 +1231,7 @@ export default function PresentationPage() {
                         ? 'border-[#66e7f5] border-[3px]'
                         : ''
                     }`}>
-                      <div className="w-full h-full bg-white flex items-center justify-center p-2">
+                      <div className="w-full h-full bg-white flex items-center justify-center p-1">
                         {slide.image_url.endsWith('.pdf') ? (
                           <iframe
                             src={`${slide.image_url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
@@ -1395,7 +1395,7 @@ export default function PresentationPage() {
         >
           <div className="relative w-full h-full scale-110 opacity-90 shadow-2xl">
             <div className="relative w-[105px] h-[59px] rounded-[13.703px] border-[1.713px] border-[#0d0d0d] overflow-hidden">
-              <div className="w-full h-full bg-white flex items-center justify-center p-2">
+              <div className="w-full h-full bg-white flex items-center justify-center p-1">
                 {presentation.slides[draggedIndex].image_url.endsWith('.pdf') ? (
                   <iframe
                     src={`${presentation.slides[draggedIndex].image_url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
