@@ -216,27 +216,65 @@ export default function WelcomeSlideEditor({
             </svg>
             <div className="flex items-center gap-[4px]">
               <span className="font-['Inter',sans-serif] text-[12px]">Takes</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={localMinutes}
-                onChange={(e) => handleMinutesChange(e.target.value)}
-                onKeyDown={(e) => {
-                  // Only allow numbers, backspace, delete, arrow keys
-                  if (
-                    !/[0-9]/.test(e.key) &&
-                    e.key !== 'Backspace' &&
-                    e.key !== 'Delete' &&
-                    e.key !== 'ArrowLeft' &&
-                    e.key !== 'ArrowRight' &&
-                    e.key !== 'Tab'
-                  ) {
-                    e.preventDefault()
-                  }
-                }}
-                className="w-[32px] text-center bg-transparent border-b border-dashed border-[#999] font-['Inter',sans-serif] text-[12px] text-[#999] outline-none focus:border-[#0d0d0d] focus:text-[#0d0d0d] transition-colors"
-              />
+              <div className="relative inline-flex items-center">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={localMinutes}
+                  onChange={(e) => handleMinutesChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Handle arrow up/down
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault()
+                      handleMinutesChange(String(localMinutes + 1))
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault()
+                      if (localMinutes > 0) {
+                        handleMinutesChange(String(localMinutes - 1))
+                      }
+                    }
+                    // Only allow numbers, backspace, delete, arrow keys
+                    else if (
+                      !/[0-9]/.test(e.key) &&
+                      e.key !== 'Backspace' &&
+                      e.key !== 'Delete' &&
+                      e.key !== 'ArrowLeft' &&
+                      e.key !== 'ArrowRight' &&
+                      e.key !== 'Tab'
+                    ) {
+                      e.preventDefault()
+                    }
+                  }}
+                  className="w-[32px] pr-[14px] text-center bg-transparent border-b border-dashed border-[#999] font-['Inter',sans-serif] text-[12px] text-[#999] outline-none focus:border-[#0d0d0d] focus:text-[#0d0d0d] transition-colors"
+                />
+                {/* Arrow buttons */}
+                <div className="absolute right-0 flex flex-col gap-[1px]">
+                  <button
+                    type="button"
+                    onClick={() => handleMinutesChange(String(localMinutes + 1))}
+                    className="w-[10px] h-[8px] flex items-center justify-center text-[#999] hover:text-[#0d0d0d] transition-colors"
+                  >
+                    <svg width="6" height="4" viewBox="0 0 6 4" fill="none">
+                      <path d="M3 0L6 4H0L3 0Z" fill="currentColor"/>
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (localMinutes > 0) {
+                        handleMinutesChange(String(localMinutes - 1))
+                      }
+                    }}
+                    className="w-[10px] h-[8px] flex items-center justify-center text-[#999] hover:text-[#0d0d0d] transition-colors disabled:opacity-30"
+                    disabled={localMinutes === 0}
+                  >
+                    <svg width="6" height="4" viewBox="0 0 6 4" fill="none">
+                      <path d="M3 4L0 0H6L3 4Z" fill="currentColor"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
               <span className="font-['Inter',sans-serif] text-[12px]">
                 minute{localMinutes !== 1 ? 's' : ''}
               </span>
