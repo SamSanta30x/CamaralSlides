@@ -93,16 +93,7 @@ export default function EndSlideEditor({
   }
 
   return (
-    <div className="w-full h-full bg-white flex flex-col rounded-[16px]">
-      {/* Page Title */}
-      <div className="w-full px-8 pt-[24px] pb-[12px]">
-        <p className="font-['Inter',sans-serif] text-[16px] font-medium text-[#666] text-center">
-          End Page
-        </p>
-      </div>
-      
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8 pb-8">
+    <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8">
       {/* Logo Upload */}
       <div className="w-full max-w-[600px] flex justify-center mb-6">
         <input
@@ -278,7 +269,6 @@ export default function EndSlideEditor({
             </svg>
           </div>
         </div>
-      </div>
       </div>
     </div>
   )

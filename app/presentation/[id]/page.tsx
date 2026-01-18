@@ -1046,38 +1046,48 @@ export default function PresentationPage() {
                   {/* Current Slide (Center - 100% size) */}
                   {isWelcomeSlide && presentation ? (
                     /* Welcome Slide */
-                    <div className={`relative w-[840px] h-[550px] flex-shrink-0 transition-all duration-300 ${
-                      slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
-                    }`}>
-                      <WelcomeSlideEditor
-                        welcomeTitle={presentation.welcome_title}
-                        presentationTitle={presentation.title}
-                        description={welcomeDescription}
-                        slideCount={presentation.slides?.length || 0}
-                        estimatedMinutes={presentation.estimated_minutes ?? undefined}
-                        logoUrl={logoUrl}
-                        onDescriptionChange={handleWelcomeDescriptionChange}
-                        onTitleChange={handleWelcomeTitleChange}
-                        onEstimatedMinutesChange={handleEstimatedMinutesChange}
-                        onLogoUpload={handleLogoUpload}
-                      />
+                    <div className="flex flex-col gap-3 flex-shrink-0">
+                      <p className="font-['Inter',sans-serif] text-[16px] font-medium text-[#666] text-left">
+                        Welcome Page
+                      </p>
+                      <div className={`relative w-[840px] h-[650px] transition-all duration-300 ${
+                        slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
+                      }`}>
+                        <WelcomeSlideEditor
+                          welcomeTitle={presentation.welcome_title}
+                          presentationTitle={presentation.title}
+                          description={welcomeDescription}
+                          slideCount={presentation.slides?.length || 0}
+                          estimatedMinutes={presentation.estimated_minutes ?? undefined}
+                          logoUrl={logoUrl}
+                          onDescriptionChange={handleWelcomeDescriptionChange}
+                          onTitleChange={handleWelcomeTitleChange}
+                          onEstimatedMinutesChange={handleEstimatedMinutesChange}
+                          onLogoUpload={handleLogoUpload}
+                        />
+                      </div>
                     </div>
                   ) : isEndSlide && presentation ? (
                     /* End Slide */
-                    <div className={`relative w-[840px] h-[550px] bg-white rounded-[16px] border border-[#dcdcdc] overflow-hidden flex-shrink-0 transition-all duration-300 ${
-                      slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
-                    }`}>
-                      <EndSlideEditor
-                        endTitle={presentation.end_title ?? undefined}
-                        presentationTitle={presentation.title}
-                        description={endDescriptionValue}
-                        ctaText={ctaText === 'Add call to action' ? 'Start for free' : ctaText}
-                        ctaUrl={ctaUrl || 'https://camaral.ai'}
-                        logoUrl={logoUrl}
-                        onTitleChange={handleEndTitleChange}
-                        onDescriptionChange={handleEndDescriptionChange}
-                        onLogoUpload={handleLogoUpload}
-                      />
+                    <div className="flex flex-col gap-3 flex-shrink-0">
+                      <p className="font-['Inter',sans-serif] text-[16px] font-medium text-[#666] text-left">
+                        End Page
+                      </p>
+                      <div className={`relative w-[840px] h-[650px] bg-white rounded-[16px] border border-[#dcdcdc] overflow-hidden transition-all duration-300 ${
+                        slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
+                      }`}>
+                        <EndSlideEditor
+                          endTitle={presentation.end_title ?? undefined}
+                          presentationTitle={presentation.title}
+                          description={endDescriptionValue}
+                          ctaText={ctaText === 'Add call to action' ? 'Start for free' : ctaText}
+                          ctaUrl={ctaUrl || 'https://camaral.ai'}
+                          logoUrl={logoUrl}
+                          onTitleChange={handleEndTitleChange}
+                          onDescriptionChange={handleEndDescriptionChange}
+                          onLogoUpload={handleLogoUpload}
+                        />
+                      </div>
                     </div>
                   ) : currentSlide ? (
                     /* Regular Slide */
