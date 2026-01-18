@@ -212,7 +212,7 @@ export default function WelcomeSlideEditor({
           </button>
 
           {/* Helper Text */}
-          <div className="flex items-center justify-center gap-[8px] text-[#999] py-[4px]">
+          <div className="flex items-center justify-center gap-[8px] text-[#0d0d0d] py-[4px]">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
               <path d="M7 3.5V7L9 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
@@ -249,14 +249,14 @@ export default function WelcomeSlideEditor({
                       e.preventDefault()
                     }
                   }}
-                  className="w-[32px] pr-[14px] text-center bg-transparent border-b border-dashed border-[#999] font-['Inter',sans-serif] text-[12px] text-[#999] outline-none focus:border-[#0d0d0d] focus:text-[#0d0d0d] transition-colors"
+                  className="w-[32px] pr-[14px] text-center bg-transparent border-b border-dashed border-[#0d0d0d] font-['Inter',sans-serif] text-[12px] text-[#0d0d0d] outline-none focus:border-[#0d0d0d] focus:text-[#0d0d0d] transition-colors"
                 />
                 {/* Arrow buttons */}
                 <div className="absolute right-0 flex flex-col gap-[1px]">
                   <button
                     type="button"
                     onClick={() => handleMinutesChange(String(localMinutes + 1))}
-                    className="w-[10px] h-[8px] flex items-center justify-center text-[#999] hover:text-[#0d0d0d] transition-colors"
+                    className="w-[10px] h-[8px] flex items-center justify-center text-[#0d0d0d] hover:text-[#666] transition-colors"
                   >
                     <svg width="6" height="4" viewBox="0 0 6 4" fill="none">
                       <path d="M3 0L6 4H0L3 0Z" fill="currentColor"/>
@@ -269,7 +269,7 @@ export default function WelcomeSlideEditor({
                         handleMinutesChange(String(localMinutes - 1))
                       }
                     }}
-                    className="w-[10px] h-[8px] flex items-center justify-center text-[#999] hover:text-[#0d0d0d] transition-colors disabled:opacity-30"
+                    className="w-[10px] h-[8px] flex items-center justify-center text-[#0d0d0d] hover:text-[#666] transition-colors disabled:opacity-30"
                     disabled={localMinutes === 0}
                   >
                     <svg width="6" height="4" viewBox="0 0 6 4" fill="none">
