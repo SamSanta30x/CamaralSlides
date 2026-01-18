@@ -1108,7 +1108,7 @@ export default function PresentationPage() {
                     </div>
                   ) : isEndSlide && presentation ? (
                     /* End Slide */
-                    <div className="relative w-[840px] h-[472.5px] flex-shrink-0">
+                    <div className="relative w-[840px] h-[472.5px] bg-white rounded-[16px] border border-[#dcdcdc] overflow-hidden flex-shrink-0">
                       <EndSlideEditor
                         endTitle={presentation.end_title ?? undefined}
                         presentationTitle={presentation.title}
