@@ -1,6 +1,6 @@
-# CamaralSlides
+# Camaral Slides
 
-Este es un proyecto de Next.js con integración de Supabase.
+AI-powered presentation platform with Next.js and Supabase.
 
 ## Comenzando
 
