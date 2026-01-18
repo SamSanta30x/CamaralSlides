@@ -6,6 +6,7 @@ interface EndSlideProps {
   description?: string
   ctaText?: string
   ctaUrl?: string
+  logoUrl?: string | null
 }
 
 export default function EndSlide({
@@ -13,12 +14,24 @@ export default function EndSlide({
   presentationTitle,
   description,
   ctaText = 'Start for free',
-  ctaUrl = 'https://camaral.ai'
+  ctaUrl = 'https://camaral.ai',
+  logoUrl
 }: EndSlideProps) {
   const displayTitle = endTitle || `Say bye! Recall information with @${presentationTitle}`
 
   return (
     <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8">
+      {/* Logo */}
+      {logoUrl && (
+        <div className="w-full flex justify-center mb-6">
+          <img 
+            src={logoUrl} 
+            alt="Logo" 
+            className="h-[80px] w-auto object-contain"
+          />
+        </div>
+      )}
+      
       {/* Title */}
       <h1 
         className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center mb-4 max-w-[600px]"

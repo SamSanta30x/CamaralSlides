@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { getPublicPresentation, type Presentation } from '@/lib/supabase/publicPresentations'
 import { startPresentationView, endPresentationView, updateViewActivity, updateViewDetails } from '@/lib/supabase/analytics'
 import WelcomeSlide from '@/components/WelcomeSlide'
+import EndSlide from '@/components/EndSlide'
 
 export default function SharePresentationPage() {
   const params = useParams()
@@ -82,7 +83,10 @@ export default function SharePresentationPage() {
     }
   }
 
-  const currentSlide = currentSlideIndex >= 0 ? presentation?.slides?.[currentSlideIndex] : null
+  const totalSlides = presentation?.slides?.length || 0
+  const currentSlide = currentSlideIndex >= 0 && currentSlideIndex < totalSlides ? presentation?.slides?.[currentSlideIndex] : null
+  const isEndSlide = currentSlideIndex === totalSlides
+  const hasEndPage = presentation?.end_title || presentation?.end_description
 
   // Handle start call from welcome slide
   const handleStartCall = async (name: string, email: string) => {
@@ -104,10 +108,12 @@ export default function SharePresentationPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (showWelcomeSlide) return // Disable navigation on welcome slide
       
+      const maxIndex = hasEndPage ? totalSlides : totalSlides - 1
+      
       if (e.key === 'ArrowRight' && presentation?.slides) {
-        setCurrentSlideIndex((prev) => Math.min(prev + 1, presentation.slides!.length - 1))
+        setCurrentSlideIndex((prev) => Math.min(prev + 1, maxIndex))
       } else if (e.key === 'ArrowLeft') {
-        setCurrentSlideIndex((prev) => Math.max(prev, 0))
+        setCurrentSlideIndex((prev) => Math.max(prev - 1, 0))
       } else if (e.key === 'Escape' && isFullscreen) {
         exitFullscreen()
       } else if (e.key === 'f' || e.key === 'F') {
@@ -116,7 +122,7 @@ export default function SharePresentationPage() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [presentation, isFullscreen, showWelcomeSlide])
+  }, [presentation, isFullscreen, showWelcomeSlide, hasEndPage, totalSlides])
 
   // Fullscreen functions
   const toggleFullscreen = () => {
@@ -229,7 +235,7 @@ export default function SharePresentationPage() {
         </div>
       )}
 
-      {/* Main Content - Welcome Slide or Presentation Slides */}
+      {/* Main Content - Welcome Slide, End Slide, or Presentation Slides */}
       <div className={`flex flex-col items-center justify-center flex-1 w-full ${isFullscreen ? 'p-0' : 'px-[40px]'}`}>
         {showWelcomeSlide ? (
           /* Welcome Slide */
@@ -240,7 +246,20 @@ export default function SharePresentationPage() {
               description={presentation.objective || undefined}
               slideCount={presentation.slides?.length || 0}
               estimatedMinutes={presentation.estimated_minutes ?? undefined}
+              logoUrl={presentation.logo_url}
               onStartCall={handleStartCall}
+            />
+          </div>
+        ) : isEndSlide && hasEndPage ? (
+          /* End Slide */
+          <div className="w-full h-full flex items-center justify-center">
+            <EndSlide
+              endTitle={presentation.end_title ?? undefined}
+              presentationTitle={presentation.title}
+              description={presentation.end_description ?? undefined}
+              ctaText={presentation.cta_text || 'Start for free'}
+              ctaUrl={presentation.cta_url || 'https://camaral.ai'}
+              logoUrl={presentation.logo_url}
             />
           </div>
         ) : (

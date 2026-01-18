@@ -9,6 +9,7 @@ interface WelcomeSlideProps {
   slideCount?: number // Number of slides in the presentation
   estimatedMinutes?: number // Estimated duration in minutes (display only)
   showAddQuestion?: boolean // Show "Add a new question" button (only in editor)
+  logoUrl?: string | null // Logo URL to display
   onStartCall: (name: string, email: string) => void
 }
 
@@ -19,6 +20,7 @@ export default function WelcomeSlide({
   slideCount = 0,
   estimatedMinutes,
   showAddQuestion = false,
+  logoUrl,
   onStartCall 
 }: WelcomeSlideProps) {
   // Use welcomeTitle if available, otherwise use presentationTitle
@@ -92,6 +94,17 @@ export default function WelcomeSlide({
   return (
     <div className="w-full h-full bg-white flex items-center justify-center">
       <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full px-[40px]">
+        {/* Logo */}
+        {logoUrl && (
+          <div className="w-full flex justify-center mb-2">
+            <img 
+              src={logoUrl} 
+              alt="Logo" 
+              className="h-[80px] w-auto object-contain"
+            />
+          </div>
+        )}
+        
         {/* Title */}
         <h1 
           className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center self-stretch"

@@ -32,6 +32,8 @@ export interface Presentation {
   // End Slide fields
   end_title: string | null
   end_description: string | null
+  // Logo
+  logo_url: string | null
 }
 
 /**
