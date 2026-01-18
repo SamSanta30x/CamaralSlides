@@ -418,14 +418,19 @@ export default function PresentationPage() {
     if (carouselRef.current && thumbnailRefs.current[currentSlideIndex]) {
       const thumbnail = thumbnailRefs.current[currentSlideIndex]
       if (thumbnail) {
+        // For the first few slides (including Welcome), scroll to start
+        // For later slides, center them
+        const totalSlides = presentation?.slides?.length || 0
+        const isEarlySlide = currentSlideIndex <= 1 // Welcome (-1), Slide 1 (0), Slide 2 (1)
+        
         thumbnail.scrollIntoView({
           behavior: 'smooth',
           block: 'nearest',
-          inline: 'center'
+          inline: isEarlySlide ? 'start' : 'center'
         })
       }
     }
-  }, [currentSlideIndex])
+  }, [currentSlideIndex, presentation?.slides?.length])
 
   const changeSlideWithAnimation = (newIndex: number) => {
     if (newIndex === currentSlideIndex) return
