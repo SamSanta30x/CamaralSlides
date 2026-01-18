@@ -368,39 +368,102 @@ export default function PresentationPage() {
     }
   }
 
-  const handleGenerateDescription = async () => {
-    if (!presentation?.slides || !presentation.slides[currentSlideIndex]) return
+  const handleGenerateDescription = async (mode: 'single' | 'all' = 'single') => {
+    if (!presentation?.slides) return
 
-    const currentSlide = presentation.slides[currentSlideIndex]
-    
-    setIsGeneratingDescription(true)
-    try {
-      const result = await generateSlideDescription(
-        currentSlide.id,
-        currentSlide.image_url,
-        presentationObjective || undefined
-      )
+    if (mode === 'all') {
+      // Check if any slides already have descriptions
+      const slidesWithDescriptions = presentation.slides.filter(s => s.description && s.description.trim() !== '')
+      
+      if (slidesWithDescriptions.length > 0) {
+        const confirmed = confirm(
+          `${slidesWithDescriptions.length} slide(s) already have descriptions. Do you want to regenerate all descriptions? This will overwrite existing ones.`
+        )
+        if (!confirmed) return
+      }
 
-      if (result.success && result.description) {
-        setDescriptionValue(result.description)
-        // Update local state
-        const updatedSlides = [...presentation.slides]
-        updatedSlides[currentSlideIndex] = {
-          ...currentSlide,
-          description: result.description
-        }
+      // Generate descriptions for all slides
+      setIsGeneratingDescription(true)
+      try {
+        console.log(`🚀 Generating descriptions for all ${presentation.slides.length} slides...`)
+        
+        const results = await Promise.all(
+          presentation.slides.map(async (slide, index) => {
+            try {
+              console.log(`📝 Generating description for slide ${index + 1}/${presentation.slides!.length}...`)
+              const result = await generateSlideDescription(
+                slide.id,
+                slide.image_url,
+                presentationObjective || undefined
+              )
+              
+              if (result.success && result.description) {
+                console.log(`✅ Slide ${index + 1} description generated`)
+                return { ...slide, description: result.description }
+              } else {
+                console.error(`❌ Failed to generate description for slide ${index + 1}:`, result.error)
+                return slide
+              }
+            } catch (error) {
+              console.error(`❌ Error generating description for slide ${index + 1}:`, error)
+              return slide
+            }
+          })
+        )
+
+        // Update all slides
         setPresentation({
           ...presentation,
-          slides: updatedSlides
+          slides: results
         })
-      } else {
-        alert(`Failed to generate description: ${result.error}`)
+
+        // Update current slide description
+        if (results[currentSlideIndex]) {
+          setDescriptionValue(results[currentSlideIndex].description || '')
+        }
+
+        console.log('✅ All descriptions generated successfully')
+      } catch (error) {
+        console.error('Error generating all descriptions:', error)
+        alert('Failed to generate descriptions for all slides')
+      } finally {
+        setIsGeneratingDescription(false)
       }
-    } catch (error) {
-      console.error('Error generating description:', error)
-      alert('Failed to generate description')
-    } finally {
-      setIsGeneratingDescription(false)
+    } else {
+      // Generate description for current slide only
+      if (!presentation.slides[currentSlideIndex]) return
+
+      const currentSlide = presentation.slides[currentSlideIndex]
+      
+      setIsGeneratingDescription(true)
+      try {
+        const result = await generateSlideDescription(
+          currentSlide.id,
+          currentSlide.image_url,
+          presentationObjective || undefined
+        )
+
+        if (result.success && result.description) {
+          setDescriptionValue(result.description)
+          // Update local state
+          const updatedSlides = [...presentation.slides]
+          updatedSlides[currentSlideIndex] = {
+            ...currentSlide,
+            description: result.description
+          }
+          setPresentation({
+            ...presentation,
+            slides: updatedSlides
+          })
+        } else {
+          alert(`Failed to generate description: ${result.error}`)
+        }
+      } catch (error) {
+        console.error('Error generating description:', error)
+        alert('Failed to generate description')
+      } finally {
+        setIsGeneratingDescription(false)
+      }
     }
   }
 
