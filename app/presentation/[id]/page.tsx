@@ -399,7 +399,7 @@ export default function PresentationPage() {
                 </div>
 
                 {/* URL Popup - Small 30px height */}
-                {showUrlPopup && (
+                {showUrlPopup && ctaButtonRef.current && (
                   <>
                     {/* Backdrop */}
                     <div 
@@ -408,7 +408,10 @@ export default function PresentationPage() {
                     />
                     
                     {/* Popup */}
-                    <div className="absolute top-[-40px] left-0 bg-white border border-[#e5e5e5] rounded-[8px] shadow-lg z-50 h-[30px] flex items-center px-3 gap-2 min-w-[300px]">
+                    <div 
+                      className="absolute top-[-40px] left-0 bg-white border border-[#e5e5e5] rounded-[8px] shadow-lg z-50 h-[30px] flex items-center px-3 gap-2"
+                      style={{ width: `${ctaButtonRef.current.offsetWidth}px` }}
+                    >
                       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="flex-shrink-0">
                         <path d="M5 7L7 5M7 5L5 3M7 5H1M11 1V11" stroke="#666" strokeWidth="1.2" strokeLinecap="round"/>
                       </svg>
