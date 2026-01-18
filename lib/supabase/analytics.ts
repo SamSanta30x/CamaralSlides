@@ -76,6 +76,12 @@ export async function startPresentationView(
     // Get user agent
     const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : null
 
+    console.log('📊 Starting presentation view:', {
+      presentationId,
+      sessionId,
+      userAgent: userAgent?.substring(0, 50)
+    })
+
     const { data, error } = await supabase
       .from('presentation_views')
       .insert({
@@ -88,9 +94,17 @@ export async function startPresentationView(
       .single()
 
     if (error) {
-      console.error('Error starting presentation view:', error)
+      console.error('❌ Error starting presentation view:', {
+        error,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
       return { data: null, error }
     }
+
+    console.log('✅ Presentation view started:', data.id)
 
     // Store view ID in sessionStorage for this tab
     if (typeof window !== 'undefined') {
@@ -99,6 +113,7 @@ export async function startPresentationView(
 
     return { data, error: null }
   } catch (error) {
+    console.error('❌ Exception starting presentation view:', error)
     return {
       data: null,
       error: error instanceof Error ? error : new Error('Unknown error'),
