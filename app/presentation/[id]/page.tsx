@@ -32,7 +32,8 @@ export default function PresentationPage() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null)
-  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [dragCurrentPos, setDragCurrentPos] = useState<{ x: number; y: number } | null>(null)
+  const [draggedSlideRect, setDraggedSlideRect] = useState<DOMRect | null>(null)
   const dragThreshold = 5 // Minimum pixels to move before starting drag
   const [isEditingCTA, setIsEditingCTA] = useState(false)
   const [ctaText, setCtaText] = useState('')
@@ -296,12 +297,17 @@ export default function PresentationPage() {
     // Prevent drag on right click
     if (e.button !== 0) return
     
+    const target = e.currentTarget as HTMLElement
+    const rect = target.getBoundingClientRect()
+    
     setDragStartPos({ x: e.clientX, y: e.clientY })
+    setDragCurrentPos({ x: e.clientX, y: e.clientY })
+    setDraggedSlideRect(rect)
     setDraggedIndex(index)
     e.preventDefault()
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleGlobalMouseMove = (e: MouseEvent) => {
     if (draggedIndex === null || !dragStartPos) return
 
     const deltaX = e.clientX - dragStartPos.x
@@ -313,14 +319,15 @@ export default function PresentationPage() {
       setIsDragging(true)
     }
 
-    if (isDragging) {
-      setDragOffset({ x: deltaX, y: deltaY })
+    if (isDragging || distance > dragThreshold) {
+      setDragCurrentPos({ x: e.clientX, y: e.clientY })
 
       // Detect which thumbnail we're hovering over
       const thumbnails = Object.entries(thumbnailRefs.current)
         .filter(([key]) => parseInt(key) >= 0) // Only actual slides, not welcome
         .map(([key, el]) => ({ index: parseInt(key), el }))
 
+      let foundTarget = false
       for (const { index, el } of thumbnails) {
         if (el && index !== draggedIndex) {
           const rect = el.getBoundingClientRect()
@@ -331,22 +338,26 @@ export default function PresentationPage() {
             e.clientY <= rect.bottom
           ) {
             setDragOverIndex(index)
-            return
+            foundTarget = true
+            break
           }
         }
       }
-      setDragOverIndex(null)
+      if (!foundTarget) {
+        setDragOverIndex(null)
+      }
     }
   }
 
-  const handleMouseUp = async () => {
+  const handleGlobalMouseUp = async () => {
     if (!isDragging || draggedIndex === null || dragOverIndex === null || draggedIndex === dragOverIndex || !presentation?.slides) {
       // Reset state
       setDraggedIndex(null)
       setDragOverIndex(null)
       setIsDragging(false)
       setDragStartPos(null)
-      setDragOffset({ x: 0, y: 0 })
+      setDragCurrentPos(null)
+      setDraggedSlideRect(null)
       return
     }
 
@@ -400,17 +411,21 @@ export default function PresentationPage() {
     setDragOverIndex(null)
     setIsDragging(false)
     setDragStartPos(null)
-    setDragOffset({ x: 0, y: 0 })
+    setDragCurrentPos(null)
+    setDraggedSlideRect(null)
   }
 
-  // Add global mouse up listener to handle drag end anywhere
+  // Add global mouse listeners to handle drag anywhere on screen
   useEffect(() => {
-    if (isDragging) {
-      const handleGlobalMouseUp = () => handleMouseUp()
+    if (draggedIndex !== null) {
+      window.addEventListener('mousemove', handleGlobalMouseMove)
       window.addEventListener('mouseup', handleGlobalMouseUp)
-      return () => window.removeEventListener('mouseup', handleGlobalMouseUp)
+      return () => {
+        window.removeEventListener('mousemove', handleGlobalMouseMove)
+        window.removeEventListener('mouseup', handleGlobalMouseUp)
+      }
     }
-  }, [isDragging, draggedIndex, dragOverIndex, presentation, currentSlideIndex])
+  }, [draggedIndex, dragStartPos, isDragging, dragOverIndex, presentation, currentSlideIndex])
 
   const handleCTAClick = () => {
     // Measure current text width before switching to input
@@ -1066,9 +1081,7 @@ export default function PresentationPage() {
             ) : (
               <div 
                 ref={carouselRef} 
-                className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-hide relative"
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
+                className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-hide"
               >
                 {/* Welcome Slide Thumbnail */}
                 {presentation && (
@@ -1101,7 +1114,7 @@ export default function PresentationPage() {
 
                 {/* Render actual slides */}
                 {presentation?.slides?.map((slide, index) => {
-                  const isBeingDragged = draggedIndex === index
+                  const isBeingDragged = draggedIndex === index && isDragging
                   const isDropTarget = dragOverIndex === index && draggedIndex !== null && draggedIndex !== index
                   
                   return (
@@ -1114,14 +1127,9 @@ export default function PresentationPage() {
                         setCurrentSlideIndex(index)
                       }
                     }}
-                    style={isBeingDragged && isDragging ? {
-                      transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
-                      zIndex: 1000,
-                      cursor: 'grabbing'
-                    } : {}}
                     className={`flex-shrink-0 relative select-none transition-all duration-200 ${
-                      isBeingDragged && isDragging 
-                        ? 'opacity-80 scale-110 shadow-2xl' 
+                      isBeingDragged 
+                        ? 'opacity-30' 
                         : 'cursor-grab hover:scale-105'
                     } ${
                       isDropTarget
@@ -1152,15 +1160,6 @@ export default function PresentationPage() {
                           />
                         )}
                       </div>
-                      
-                      {/* Drag indicator */}
-                      {isBeingDragged && isDragging && (
-                        <div className="absolute inset-0 bg-[#66e7f5] bg-opacity-20 flex items-center justify-center pointer-events-none">
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <path d="M9 5H15M9 12H15M9 19H15" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round"/>
-                          </svg>
-                        </div>
-                      )}
                       
                       {/* Drop target indicator */}
                       {isDropTarget && (
@@ -1232,6 +1231,49 @@ export default function PresentationPage() {
           />
         </p>
       </div>
+
+      {/* Dragged Slide Portal - Renders outside carousel */}
+      {isDragging && draggedIndex !== null && dragCurrentPos && draggedSlideRect && presentation?.slides?.[draggedIndex] && (
+        <div
+          style={{
+            position: 'fixed',
+            left: dragCurrentPos.x - (draggedSlideRect.width / 2),
+            top: dragCurrentPos.y - (draggedSlideRect.height / 2),
+            width: draggedSlideRect.width,
+            height: draggedSlideRect.height,
+            zIndex: 9999,
+            pointerEvents: 'none',
+            cursor: 'grabbing'
+          }}
+          className="transition-none"
+        >
+          <div className="relative w-full h-full scale-110 opacity-90 shadow-2xl">
+            <div className="relative w-[156px] h-[88px] rounded-[13.703px] border-[1.713px] border-[#0d0d0d] overflow-hidden">
+              <div className="w-full h-full bg-white flex items-center justify-center p-2">
+                {presentation.slides[draggedIndex].image_url.endsWith('.pdf') ? (
+                  <iframe
+                    src={`${presentation.slides[draggedIndex].image_url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                    className="w-full h-full pointer-events-none"
+                  />
+                ) : (
+                  <img
+                    src={presentation.slides[draggedIndex].image_url}
+                    alt={presentation.slides[draggedIndex].title || `Slide ${draggedIndex + 1}`}
+                    className="w-full h-full object-contain"
+                  />
+                )}
+              </div>
+              
+              {/* Drag indicator */}
+              <div className="absolute inset-0 bg-[#66e7f5] bg-opacity-20 flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 5H15M9 12H15M9 19H15" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
