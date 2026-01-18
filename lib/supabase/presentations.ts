@@ -1,6 +1,76 @@
 import { createClient } from '@/lib/supabase/client'
 import { uploadAndProcessPDF } from '@/lib/supabase/edgeFunctions'
 import { convertPDFToImages, isPDFFile } from '@/lib/utils/pdfToImages'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+/**
+ * Upload remaining slides in background
+ */
+async function uploadRemainingSlides(
+  presentationId: string,
+  files: File[],
+  supabase: SupabaseClient
+): Promise<void> {
+  console.log(`🔄 Starting background upload of ${files.length} remaining slides...`)
+
+  // Upload all slides in parallel
+  const uploadPromises = files.map(async (file, index) => {
+    const slideNumber = index + 2 // +2 because first slide is already uploaded
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${presentationId}/slide_${slideNumber}.${fileExt}`
+
+    try {
+      console.log(`⬆️ Uploading slide ${slideNumber}...`)
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('slides')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+        })
+
+      if (uploadError) {
+        console.error(`Failed to upload slide ${slideNumber}:`, uploadError)
+        return null
+      }
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('slides').getPublicUrl(fileName)
+
+      // Create slide record
+      const { data: slide, error: slideError } = await supabase
+        .from('slides')
+        .insert({
+          presentation_id: presentationId,
+          image_url: publicUrl,
+          title: `Slide ${slideNumber}`,
+          description: null,
+          slide_order: slideNumber,
+        })
+        .select()
+        .single()
+
+      if (slideError) {
+        console.error(`Failed to create slide ${slideNumber} record:`, slideError)
+        return null
+      }
+
+      console.log(`✅ Slide ${slideNumber} uploaded successfully`)
+      return slide
+    } catch (error) {
+      console.error(`Error uploading slide ${slideNumber}:`, error)
+      return null
+    }
+  })
+
+  // Wait for all uploads to complete
+  const results = await Promise.all(uploadPromises)
+  const successCount = results.filter(r => r !== null).length
+  console.log(`✅ Background upload complete: ${successCount}/${files.length} slides uploaded`)
+}
 
 export interface Slide {
   id: string
@@ -76,55 +146,66 @@ export async function createPresentation(
       }
     }
 
-    // Upload all images (either original images or converted from PDF)
-    const slides: Slide[] = []
-    for (let i = 0; i < filesToUpload.length; i++) {
-      const file = filesToUpload[i]
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${presentation.id}/slide_${i + 1}.${fileExt}`
+    // Upload FIRST slide immediately and wait for it
+    const firstFile = filesToUpload[0]
+    const firstFileExt = firstFile.name.split('.').pop()
+    const firstFileName = `${presentation.id}/slide_1.${firstFileExt}`
 
-      console.log(`⬆️ Uploading slide ${i + 1}/${filesToUpload.length}...`)
+    console.log('⚡ Uploading first slide immediately...')
 
-      // Upload to storage
-      const { error: uploadError } = await supabase.storage
-        .from('slides')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false,
-        })
+    const { error: firstUploadError } = await supabase.storage
+      .from('slides')
+      .upload(firstFileName, firstFile, {
+        cacheControl: '3600',
+        upsert: false,
+      })
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError)
-        continue
+    if (firstUploadError) {
+      console.error('Failed to upload first slide:', firstUploadError)
+      return {
+        data: null,
+        error: new Error('Failed to upload first slide'),
       }
-
-      // Get public URL
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('slides').getPublicUrl(fileName)
-
-      // Create slide record
-      const { data: slide, error: slideError } = await supabase
-        .from('slides')
-        .insert({
-          presentation_id: presentation.id,
-          image_url: publicUrl,
-          title: `Slide ${i + 1}`,
-          description: null,
-          slide_order: i + 1,
-        })
-        .select()
-        .single()
-
-      if (!slideError && slide) {
-        slides.push(slide)
-      }
-      
-      console.log(`✅ Slide ${i + 1} uploaded successfully`)
     }
 
+    // Get public URL for first slide
+    const {
+      data: { publicUrl: firstPublicUrl },
+    } = supabase.storage.from('slides').getPublicUrl(firstFileName)
+
+    // Create first slide record
+    const { data: firstSlide, error: firstSlideError } = await supabase
+      .from('slides')
+      .insert({
+        presentation_id: presentation.id,
+        image_url: firstPublicUrl,
+        title: 'Slide 1',
+        description: null,
+        slide_order: 1,
+      })
+      .select()
+      .single()
+
+    if (firstSlideError) {
+      console.error('Failed to create first slide record:', firstSlideError)
+      return {
+        data: null,
+        error: new Error('Failed to create first slide'),
+      }
+    }
+
+    console.log('✅ First slide uploaded, processing remaining slides in background...')
+
+    // Upload remaining slides in background (don't await)
+    if (filesToUpload.length > 1) {
+      uploadRemainingSlides(presentation.id, filesToUpload.slice(1), supabase).catch(error => {
+        console.error('Background upload error:', error)
+      })
+    }
+
+    // Return immediately with first slide
     return {
-      data: { ...presentation, slides },
+      data: { ...presentation, slides: [firstSlide] },
       error: null,
     }
   } catch (error) {

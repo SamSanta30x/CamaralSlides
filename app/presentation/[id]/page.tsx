@@ -38,6 +38,7 @@ export default function PresentationPage() {
   const titleSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
   const [presentationObjective, setPresentationObjective] = useState('')
+  const [expectedSlideCount, setExpectedSlideCount] = useState<number | null>(null)
 
   const presentationId = params.id as string
 
@@ -719,7 +720,7 @@ export default function PresentationPage() {
 
           {/* Bottom Carousel - Thumbnails */}
           <div className="w-full max-w-[840px] flex justify-center">
-            {loading || !hasSlides ? (
+            {loading ? (
               <div className="flex gap-[12px] overflow-x-auto pb-2 justify-center">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="flex-shrink-0 w-[156px] h-[88px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-[#dcdcdc] flex items-center justify-center">
@@ -729,6 +730,7 @@ export default function PresentationPage() {
               </div>
             ) : (
               <div className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-hide justify-center">
+                {/* Render actual slides */}
                 {presentation?.slides?.map((slide, index) => (
                   <div
                     key={slide.id}
@@ -783,12 +785,31 @@ export default function PresentationPage() {
                   </div>
                 ))}
 
+                {/* Loading placeholders for slides being processed */}
+                {isProcessing && presentation?.slides && (
+                  <>
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={`loading-${i}`}
+                        className="flex-shrink-0 w-[156px] h-[88px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-dashed border-[#dcdcdc] flex flex-col items-center justify-center gap-2"
+                      >
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#e5e5e5] border-t-[#66e7f5]"></div>
+                        <span className="text-[10px] text-[#999] font-['Inter',sans-serif]">
+                          Loading...
+                        </span>
+                      </div>
+                    ))}
+                  </>
+                )}
+
                 {/* Add New Slide Button */}
-                <button className="flex-shrink-0 w-[156px] h-[88px] bg-[#fafafa] border-[1.713px] border-[#dcdcdc] rounded-[13.703px] flex items-center justify-center hover:bg-[#f0f0f0] transition-all">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 6V18M6 12H18" stroke="#999999" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                </button>
+                {!isProcessing && (
+                  <button className="flex-shrink-0 w-[156px] h-[88px] bg-[#fafafa] border-[1.713px] border-[#dcdcdc] rounded-[13.703px] flex items-center justify-center hover:bg-[#f0f0f0] transition-all">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 6V18M6 12H18" stroke="#999999" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                )}
               </div>
             )}
           </div>
