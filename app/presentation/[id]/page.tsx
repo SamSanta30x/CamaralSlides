@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, updatePresentationObjective, updateEndTitle, updateEndDescription, type Presentation, type Slide } from '@/lib/supabase/presentations'
+import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, updatePresentationObjective, updateEndTitle, updateEndDescription, deleteSlide, deleteEndPage, type Presentation, type Slide } from '@/lib/supabase/presentations'
 import { generateSlideDescription } from '@/lib/supabase/edgeFunctions'
 import DashboardHeader from '@/components/DashboardHeader'
 import DescriptionTextarea from '@/components/DescriptionTextarea'
@@ -55,6 +55,7 @@ export default function PresentationPage() {
   const [endDescriptionValue, setEndDescriptionValue] = useState('')
   const endTitleTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const endDescriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [hoveredThumbnail, setHoveredThumbnail] = useState<number | null>(null)
 
   const presentationId = params.id as string
 
@@ -225,6 +226,77 @@ export default function PresentationPage() {
         console.error('Error saving end description:', error)
       }
     }, 500)
+  }
+
+  // Handle slide deletion
+  const handleDeleteSlide = async (slideId: string, slideIndex: number) => {
+    if (!confirm('Are you sure you want to delete this slide?')) {
+      return
+    }
+
+    try {
+      const { error } = await deleteSlide(slideId)
+      if (error) {
+        console.error('Error deleting slide:', error)
+        alert('Failed to delete slide. Please try again.')
+        return
+      }
+
+      // Update local state
+      if (presentation?.slides) {
+        const updatedSlides = presentation.slides.filter((_, i) => i !== slideIndex)
+        setPresentation({
+          ...presentation,
+          slides: updatedSlides.map((slide, index) => ({
+            ...slide,
+            slide_order: index + 1
+          }))
+        })
+
+        // Adjust current slide index if needed
+        if (currentSlideIndex >= updatedSlides.length) {
+          setCurrentSlideIndex(Math.max(-1, updatedSlides.length - 1))
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting slide:', error)
+      alert('Failed to delete slide. Please try again.')
+    }
+  }
+
+  // Handle end page deletion
+  const handleDeleteEndPage = async () => {
+    if (!confirm('Are you sure you want to delete the End Page?')) {
+      return
+    }
+
+    try {
+      const { error } = await deleteEndPage(presentationId)
+      if (error) {
+        console.error('Error deleting end page:', error)
+        alert('Failed to delete end page. Please try again.')
+        return
+      }
+
+      // Update local state
+      if (presentation) {
+        setPresentation({
+          ...presentation,
+          end_title: null,
+          end_description: null
+        })
+        setEndTitleValue('')
+        setEndDescriptionValue('')
+
+        // Navigate back to last slide if on end page
+        if (currentSlideIndex === totalSlides) {
+          setCurrentSlideIndex(totalSlides - 1)
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting end page:', error)
+      alert('Failed to delete end page. Please try again.')
+    }
   }
 
   const loadPresentation = async () => {
@@ -1228,12 +1300,15 @@ export default function PresentationPage() {
                 {presentation?.slides?.map((slide, index) => {
                   const isBeingDragged = draggedIndex === index && isDragging
                   const isDropTarget = dragOverIndex === index && draggedIndex !== null && draggedIndex !== index
+                  const isHovered = hoveredThumbnail === index
                   
                   return (
                   <div
                     key={slide.id}
                     ref={(el) => { thumbnailRefs.current[index] = el }}
                     onMouseDown={(e) => handleMouseDown(e, index)}
+                    onMouseEnter={() => setHoveredThumbnail(index)}
+                    onMouseLeave={() => setHoveredThumbnail(null)}
                     onClick={() => {
                       if (!isDragging) {
                         setCurrentSlideIndex(index)
@@ -1273,6 +1348,22 @@ export default function PresentationPage() {
                         )}
                       </div>
                       
+                      {/* Delete button */}
+                      {isHovered && !isDragging && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteSlide(slide.id, index)
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          className="absolute top-2 right-2 w-6 h-6 bg-[#ff4444] hover:bg-[#ff0000] rounded-full flex items-center justify-center transition-colors z-10 shadow-lg"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path d="M9 3L3 9M3 3L9 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                      )}
+                      
                       {/* Drop target indicator */}
                       {isDropTarget && (
                         <div className="absolute inset-0 border-2 border-dashed border-[#66e7f5] rounded-[13.703px] pointer-events-none"></div>
@@ -1281,6 +1372,51 @@ export default function PresentationPage() {
                   </div>
                   )
                 })}
+
+                {/* End Page Thumbnail - Show if end page exists */}
+                {presentation && (presentation.end_title || presentation.end_description) && (
+                  <div
+                    key="end-slide"
+                    ref={(el) => { thumbnailRefs.current[totalSlides] = el }}
+                    onMouseEnter={() => setHoveredThumbnail(totalSlides)}
+                    onMouseLeave={() => setHoveredThumbnail(null)}
+                    onClick={() => setCurrentSlideIndex(totalSlides)}
+                    className="flex-shrink-0 relative cursor-pointer transition-all select-none"
+                  >
+                    <div className={`relative w-[156px] h-[88px] rounded-[13.703px] border-[1.713px] overflow-hidden transition-all ${
+                      currentSlideIndex === totalSlides
+                        ? 'border-[#0d0d0d]'
+                        : 'border-[#dcdcdc] opacity-60 hover:opacity-100'
+                    }`}>
+                      <div className="w-full h-full bg-[#f5f5f5] flex items-center justify-center p-2 scale-[0.5] origin-center">
+                        <EndSlideEditor
+                          endTitle={presentation.end_title ?? undefined}
+                          presentationTitle={presentation.title}
+                          description={endDescriptionValue}
+                          ctaText={ctaText === 'Add call to action' ? 'Start for free' : ctaText}
+                          ctaUrl={ctaUrl || 'https://camaral.ai'}
+                          onTitleChange={handleEndTitleChange}
+                          onDescriptionChange={handleEndDescriptionChange}
+                        />
+                      </div>
+
+                      {/* Delete button */}
+                      {hoveredThumbnail === totalSlides && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteEndPage()
+                          }}
+                          className="absolute top-2 right-2 w-6 h-6 bg-[#ff4444] hover:bg-[#ff0000] rounded-full flex items-center justify-center transition-colors z-10 shadow-lg"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path d="M9 3L3 9M3 3L9 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Loading placeholders for slides being processed */}
                 {isProcessing && presentation?.slides && totalSlidesExpected > 0 && (

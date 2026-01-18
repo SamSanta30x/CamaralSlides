@@ -620,3 +620,117 @@ export async function deletePresentation(
     }
   }
 }
+
+/**
+ * Delete a slide from a presentation
+ */
+export async function deleteSlide(
+  slideId: string
+): Promise<{ error: Error | null }> {
+  try {
+    const supabase = createClient()
+
+    // Get slide info first to delete from storage
+    const { data: slide, error: fetchError } = await supabase
+      .from('slides')
+      .select('image_url, presentation_id')
+      .eq('id', slideId)
+      .single()
+
+    if (fetchError) {
+      return { error: fetchError }
+    }
+
+    // Extract file path from URL
+    const url = new URL(slide.image_url)
+    const pathParts = url.pathname.split('/slides/')
+    if (pathParts.length > 1) {
+      const filePath = pathParts[1]
+      
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('slides')
+        .remove([filePath])
+
+      if (storageError) {
+        console.error('Error deleting from storage:', storageError)
+        // Continue anyway, we still want to delete the DB record
+      }
+    }
+
+    // Delete from database
+    const { error: deleteError } = await supabase
+      .from('slides')
+      .delete()
+      .eq('id', slideId)
+
+    if (deleteError) {
+      return { error: deleteError }
+    }
+
+    // Reorder remaining slides
+    const { data: remainingSlides, error: slidesError } = await supabase
+      .from('slides')
+      .select('id, slide_order')
+      .eq('presentation_id', slide.presentation_id)
+      .order('slide_order', { ascending: true })
+
+    if (slidesError) {
+      console.error('Error fetching remaining slides:', slidesError)
+      return { error: null } // Slide deleted, but reordering failed
+    }
+
+    // Update slide_order for remaining slides
+    if (remainingSlides && remainingSlides.length > 0) {
+      const updates = remainingSlides.map((s, index) => ({
+        id: s.id,
+        slide_order: index + 1
+      }))
+
+      await Promise.all(
+        updates.map(({ id, slide_order }) =>
+          supabase
+            .from('slides')
+            .update({ slide_order })
+            .eq('id', id)
+        )
+      )
+    }
+
+    return { error: null }
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+/**
+ * Delete end page from presentation
+ */
+export async function deleteEndPage(
+  presentationId: string
+): Promise<{ error: Error | null }> {
+  try {
+    const supabase = createClient()
+
+    const { error } = await supabase
+      .from('presentations')
+      .update({ 
+        end_title: null, 
+        end_description: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', presentationId)
+
+    if (error) {
+      return { error }
+    }
+
+    return { error: null }
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
