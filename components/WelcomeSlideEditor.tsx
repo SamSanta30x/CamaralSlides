@@ -3,28 +3,32 @@
 import { useState, useEffect } from 'react'
 
 interface WelcomeSlideEditorProps {
-  presentationTitle: string
+  welcomeTitle?: string | null
+  presentationTitle: string // Used as fallback if welcomeTitle is empty
   description?: string
   onDescriptionChange?: (description: string) => void
   onTitleChange?: (title: string) => void
 }
 
 export default function WelcomeSlideEditor({ 
+  welcomeTitle,
   presentationTitle, 
   description = '',
   onDescriptionChange,
   onTitleChange
 }: WelcomeSlideEditorProps) {
   const [localDescription, setLocalDescription] = useState(description)
-  const [localTitle, setLocalTitle] = useState(presentationTitle)
+  // Use welcomeTitle if available, otherwise use presentationTitle as default
+  const [localTitle, setLocalTitle] = useState(welcomeTitle || presentationTitle)
 
   useEffect(() => {
     setLocalDescription(description)
   }, [description])
 
   useEffect(() => {
-    setLocalTitle(presentationTitle)
-  }, [presentationTitle])
+    // Update local title when welcomeTitle or presentationTitle changes
+    setLocalTitle(welcomeTitle || presentationTitle)
+  }, [welcomeTitle, presentationTitle])
 
   const handleDescriptionChange = (value: string) => {
     setLocalDescription(value)
@@ -45,7 +49,7 @@ export default function WelcomeSlideEditor({
       <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full">
         {/* Title - Editable inline with placeholder */}
         <div className="relative self-stretch" style={{ minHeight: '26px' }}>
-          {!localTitle && (
+          {!localTitle?.trim() && (
             <div 
               className="absolute inset-0 font-['Inter',sans-serif] text-[18px] text-[#999] text-center pointer-events-none"
               style={{
@@ -61,6 +65,10 @@ export default function WelcomeSlideEditor({
           <h1 
             contentEditable
             suppressContentEditableWarning
+            onInput={(e) => {
+              const text = e.currentTarget.textContent || ''
+              setLocalTitle(text)
+            }}
             onBlur={(e) => handleTitleChange(e.currentTarget.textContent || '')}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -83,7 +91,7 @@ export default function WelcomeSlideEditor({
 
         {/* Description - Editable inline with placeholder */}
         <div className="relative self-stretch" style={{ minHeight: '26px' }}>
-          {!localDescription && (
+          {!localDescription?.trim() && (
             <div 
               className="absolute inset-0 font-['Inter',sans-serif] text-[16px] text-[#999] text-center pointer-events-none"
               style={{
@@ -98,6 +106,10 @@ export default function WelcomeSlideEditor({
           <div 
             contentEditable
             suppressContentEditableWarning
+            onInput={(e) => {
+              const text = e.currentTarget.textContent || ''
+              setLocalDescription(text)
+            }}
             onBlur={(e) => handleDescriptionChange(e.currentTarget.textContent || '')}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {

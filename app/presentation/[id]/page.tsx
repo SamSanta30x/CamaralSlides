@@ -103,28 +103,27 @@ export default function PresentationPage() {
     }, 500)
   }
 
-  // Handle welcome slide title changes (same as header title)
+  // Handle welcome slide title changes (independent from presentation title)
   const handleWelcomeTitleChange = (title: string) => {
-    setTitleValue(title)
-    
-    // Update local presentation state
+    // Update local presentation state with welcome_title
     if (presentation) {
-      setPresentation({ ...presentation, title })
+      setPresentation({ ...presentation, welcome_title: title })
     }
     
     // Debounce save
-    if (titleSaveTimeoutRef.current) {
-      clearTimeout(titleSaveTimeoutRef.current)
+    if (welcomeDescriptionTimeoutRef.current) {
+      clearTimeout(welcomeDescriptionTimeoutRef.current)
     }
 
-    titleSaveTimeoutRef.current = setTimeout(async () => {
+    welcomeDescriptionTimeoutRef.current = setTimeout(async () => {
       try {
-        const { error } = await updatePresentationTitle(presentationId, title)
+        const { updateWelcomeTitle } = await import('@/lib/supabase/presentations')
+        const { error } = await updateWelcomeTitle(presentationId, title)
         if (error) {
-          console.error('Error saving title:', error)
+          console.error('Error saving welcome title:', error)
         }
       } catch (error) {
-        console.error('Error saving title:', error)
+        console.error('Error saving welcome title:', error)
       }
     }, 500)
   }
@@ -796,6 +795,7 @@ export default function PresentationPage() {
                     >
                       <div className="w-full h-full scale-[0.8] origin-center">
                         <WelcomeSlideEditor
+                          welcomeTitle={presentation.welcome_title}
                           presentationTitle={presentation.title}
                           description={welcomeDescription}
                           onDescriptionChange={handleWelcomeDescriptionChange}
@@ -832,6 +832,7 @@ export default function PresentationPage() {
                     /* Welcome Slide */
                     <div className="relative w-[840px] h-[472.5px] flex-shrink-0">
                       <WelcomeSlideEditor
+                        welcomeTitle={presentation.welcome_title}
                         presentationTitle={presentation.title}
                         description={welcomeDescription}
                         onDescriptionChange={handleWelcomeDescriptionChange}
@@ -980,6 +981,7 @@ export default function PresentationPage() {
                     }`}>
                       <div className="w-full h-full bg-[#f5f5f5] flex items-center justify-center p-2 scale-[0.6] origin-center">
                         <WelcomeSlideEditor
+                          welcomeTitle={presentation.welcome_title}
                           presentationTitle={presentation.title}
                           description={welcomeDescription}
                           onDescriptionChange={handleWelcomeDescriptionChange}

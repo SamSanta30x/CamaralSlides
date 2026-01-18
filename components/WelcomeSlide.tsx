@@ -3,16 +3,20 @@
 import { useState } from 'react'
 
 interface WelcomeSlideProps {
-  presentationTitle: string
+  welcomeTitle?: string | null
+  presentationTitle: string // Used as fallback if welcomeTitle is empty
   description?: string
   onStartCall: (name: string, email: string) => void
 }
 
 export default function WelcomeSlide({ 
+  welcomeTitle,
   presentationTitle, 
   description,
   onStartCall 
 }: WelcomeSlideProps) {
+  // Use welcomeTitle if available, otherwise use presentationTitle
+  const displayTitle = welcomeTitle || presentationTitle
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
 
@@ -34,15 +38,15 @@ export default function WelcomeSlide({
         {/* Title */}
         <h1 
           className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center self-stretch"
-          style={{
-            fontWeight: 590,
-            lineHeight: '26px',
-            letterSpacing: '-0.45px',
-            fontFeatureSettings: "'ss01' on, 'cv01' on"
-          }}
-        >
-          {presentationTitle}
-        </h1>
+            style={{
+              fontWeight: 590,
+              lineHeight: '26px',
+              letterSpacing: '-0.45px',
+              fontFeatureSettings: "'ss01' on, 'cv01' on"
+            }}
+          >
+            {displayTitle}
+          </h1>
 
         {/* Description - Only show if exists */}
         {description && (

@@ -229,6 +229,7 @@ export default function SharePresentationPage() {
           /* Welcome Slide */
           <div className="w-full h-full flex items-center justify-center">
             <WelcomeSlide
+              welcomeTitle={presentation.welcome_title}
               presentationTitle={presentation.title}
               description={presentation.objective || undefined}
               onStartCall={handleStartCall}

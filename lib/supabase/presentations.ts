@@ -93,6 +93,7 @@ export interface Presentation {
   agent_language: string | null
   agent_first_message: string | null
   agent_description: string | null
+  welcome_title: string | null
   created_at: string
   updated_at: string
   slides?: Slide[]
@@ -394,6 +395,33 @@ export async function updatePresentationObjective(
     const { data, error } = await supabase
       .from('presentations')
       .update({ objective })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+export async function updateWelcomeTitle(
+  id: string,
+  welcomeTitle: string
+): Promise<{ data: Presentation | null; error: Error | null }> {
+  try {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('presentations')
+      .update({ welcome_title: welcomeTitle })
       .eq('id', id)
       .select()
       .single()
