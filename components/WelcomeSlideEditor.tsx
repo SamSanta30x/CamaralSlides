@@ -161,12 +161,12 @@ export default function WelcomeSlideEditor({
               </button>
             </div>
           ) : (
-            <button
+            <div
               onClick={() => fileInputRef.current?.click()}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`w-[200px] h-[80px] border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 transition-all ${
+              className={`w-[200px] h-[80px] border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
                 isDragging 
                   ? 'border-[#66e7f5] bg-[#f9feff]' 
                   : 'border-[#dcdcdc] hover:border-[#66e7f5] hover:bg-[#fafafa]'
@@ -185,7 +185,7 @@ export default function WelcomeSlideEditor({
                   Recommended: 400x100px
                 </p>
               </div>
-            </button>
+            </div>
           )}
         </div>
 
