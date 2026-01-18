@@ -60,8 +60,14 @@ export default function PresentationPage() {
 
   useEffect(() => {
     setImageLoading(true)
-    setDescriptionValue(presentation?.slides?.[currentSlideIndex]?.description || '')
-  }, [currentSlideIndex, presentation])
+  }, [currentSlideIndex])
+
+  // Update description when slide changes or presentation data updates
+  useEffect(() => {
+    if (presentation?.slides?.[currentSlideIndex]) {
+      setDescriptionValue(presentation.slides[currentSlideIndex].description || '')
+    }
+  }, [currentSlideIndex, presentation?.slides])
 
   useEffect(() => {
     if (presentation) {
