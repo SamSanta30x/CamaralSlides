@@ -5,13 +5,14 @@ import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getPublicPresentation, type Presentation } from '@/lib/supabase/publicPresentations'
-import { startPresentationView, endPresentationView, updateViewActivity } from '@/lib/supabase/analytics'
+import { startPresentationView, endPresentationView, updateViewActivity, updateViewDetails } from '@/lib/supabase/analytics'
+import WelcomeSlide from '@/components/WelcomeSlide'
 
 export default function SharePresentationPage() {
   const params = useParams()
   const [presentation, setPresentation] = useState<Presentation | null>(null)
   const [loading, setLoading] = useState(true)
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(-1) // Start at -1 for welcome slide
   const [imageLoading, setImageLoading] = useState(true)
   const [isMicOn, setIsMicOn] = useState(true)
   const [isVideoOn, setIsVideoOn] = useState(false)
@@ -19,6 +20,8 @@ export default function SharePresentationPage() {
   const [isScreenShareOn, setIsScreenShareOn] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showFullscreenButton, setShowFullscreenButton] = useState(false)
+  const [showWelcomeSlide, setShowWelcomeSlide] = useState(true)
+  const [viewId, setViewId] = useState<string | null>(null)
 
   const presentationId = params.id as string
 
@@ -31,7 +34,14 @@ export default function SharePresentationPage() {
     if (!presentationId) return
 
     // Start tracking view
-    startPresentationView(presentationId)
+    const initView = async () => {
+      const { data } = await startPresentationView(presentationId)
+      if (data) {
+        setViewId(data.id)
+      }
+    }
+    
+    initView()
 
     // Send heartbeat every 30 seconds to keep view active
     const heartbeatInterval = setInterval(() => {
@@ -67,15 +77,32 @@ export default function SharePresentationPage() {
     }
   }
 
-  const currentSlide = presentation?.slides?.[currentSlideIndex]
+  const currentSlide = currentSlideIndex >= 0 ? presentation?.slides?.[currentSlideIndex] : null
+
+  // Handle start call from welcome slide
+  const handleStartCall = async (name: string, email: string) => {
+    // Save viewer info to database
+    if (viewId) {
+      await updateViewDetails(viewId, {
+        viewer_name: name,
+        viewer_email: email
+      })
+    }
+    
+    // Hide welcome slide and show first actual slide
+    setShowWelcomeSlide(false)
+    setCurrentSlideIndex(0)
+  }
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (showWelcomeSlide) return // Disable navigation on welcome slide
+      
       if (e.key === 'ArrowRight' && presentation?.slides) {
         setCurrentSlideIndex((prev) => Math.min(prev + 1, presentation.slides!.length - 1))
       } else if (e.key === 'ArrowLeft') {
-        setCurrentSlideIndex((prev) => Math.max(prev - 1, 0))
+        setCurrentSlideIndex((prev) => Math.max(prev, 0))
       } else if (e.key === 'Escape' && isFullscreen) {
         exitFullscreen()
       } else if (e.key === 'f' || e.key === 'F') {
@@ -84,7 +111,7 @@ export default function SharePresentationPage() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [presentation, isFullscreen])
+  }, [presentation, isFullscreen, showWelcomeSlide])
 
   // Fullscreen functions
   const toggleFullscreen = () => {
@@ -196,67 +223,79 @@ export default function SharePresentationPage() {
         </div>
       )}
 
-      {/* Main Slide Container */}
+      {/* Main Content - Welcome Slide or Presentation Slides */}
       <div className={`flex flex-col items-center justify-center flex-1 w-full ${isFullscreen ? 'p-0' : 'px-[40px]'}`}>
-        <div 
-          className={`flex items-start justify-center w-full h-full relative ${isFullscreen ? 'max-w-none' : 'max-w-[1200px]'}`}
-          onMouseEnter={() => setShowFullscreenButton(true)}
-          onMouseLeave={() => setShowFullscreenButton(false)}
-        >
-          <div className={`w-full h-full relative overflow-hidden bg-[#0d0d0d] ${
-            isFullscreen 
-              ? 'border-0 rounded-none max-h-none' 
-              : 'border-[0.956px] border-[#0d0d0d] border-solid rounded-[15.289px] max-h-[calc(100vh-200px)]'
-          }`}>
-            {imageLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[#0d0d0d]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-              </div>
-            )}
-            {currentSlide && (
-              <Image
-                src={currentSlide.image_url}
-                alt={currentSlide.title || `Slide ${currentSlideIndex + 1}`}
-                fill
-                className="object-contain"
-                onLoad={() => setImageLoading(false)}
-                onLoadStart={() => setImageLoading(true)}
-                priority
-              />
-            )}
-            
-            {/* Fullscreen Button - Shows on hover */}
-            {showFullscreenButton && (
-              <button
-                onClick={toggleFullscreen}
-                className="absolute top-4 right-4 bg-[rgba(0,0,0,0.6)] hover:bg-[rgba(0,0,0,0.8)] text-white p-2 rounded-lg transition-all z-10"
-                title={isFullscreen ? "Exit Fullscreen (ESC)" : "Fullscreen (F)"}
-              >
-                {isFullscreen ? (
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M7 2V6C7 6.55228 6.55228 7 6 7H2M13 2V6C13 6.55228 13.4477 7 14 7H18M13 18V14C13 13.4477 13.4477 13 14 13H18M7 18V14C7 13.4477 6.55228 13 6 13H2"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path
-                      d="M2 7V3C2 2.44772 2.44772 2 3 2H7M13 2H17C17.5523 2 18 2.44772 18 3V7M18 13V17C18 17.5523 17.5523 18 17 18H13M7 18H3C2.44772 18 2 17.5523 2 17V13"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </button>
-            )}
+        {showWelcomeSlide ? (
+          /* Welcome Slide */
+          <div className="w-full h-full flex items-center justify-center">
+            <WelcomeSlide
+              presentationTitle={presentation.title}
+              description={presentation.objective || undefined}
+              onStartCall={handleStartCall}
+            />
           </div>
-        </div>
+        ) : (
+          /* Regular Slides */
+          <div 
+            className={`flex items-start justify-center w-full h-full relative ${isFullscreen ? 'max-w-none' : 'max-w-[1200px]'}`}
+            onMouseEnter={() => setShowFullscreenButton(true)}
+            onMouseLeave={() => setShowFullscreenButton(false)}
+          >
+            <div className={`w-full h-full relative overflow-hidden bg-[#0d0d0d] ${
+              isFullscreen 
+                ? 'border-0 rounded-none max-h-none' 
+                : 'border-[0.956px] border-[#0d0d0d] border-solid rounded-[15.289px] max-h-[calc(100vh-200px)]'
+            }`}>
+              {imageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#0d0d0d]">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                </div>
+              )}
+              {currentSlide && (
+                <Image
+                  src={currentSlide.image_url}
+                  alt={currentSlide.title || `Slide ${currentSlideIndex + 1}`}
+                  fill
+                  className="object-contain"
+                  onLoad={() => setImageLoading(false)}
+                  onLoadStart={() => setImageLoading(true)}
+                  priority
+                />
+              )}
+              
+              {/* Fullscreen Button - Shows on hover */}
+              {showFullscreenButton && (
+                <button
+                  onClick={toggleFullscreen}
+                  className="absolute top-4 right-4 bg-[rgba(0,0,0,0.6)] hover:bg-[rgba(0,0,0,0.8)] text-white p-2 rounded-lg transition-all z-10"
+                  title={isFullscreen ? "Exit Fullscreen (ESC)" : "Fullscreen (F)"}
+                >
+                  {isFullscreen ? (
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M7 2V6C7 6.55228 6.55228 7 6 7H2M13 2V6C13 6.55228 13.4477 7 14 7H18M13 18V14C13 13.4477 13.4477 13 14 13H18M7 18V14C7 13.4477 6.55228 13 6 13H2"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path
+                        d="M2 7V3C2 2.44772 2.44772 2 3 2H7M13 2H17C17.5523 2 18 2.44772 18 3V7M18 13V17C18 17.5523 17.5523 18 17 18H13M7 18H3C2.44772 18 2 17.5523 2 17V13"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Toolbar */}
