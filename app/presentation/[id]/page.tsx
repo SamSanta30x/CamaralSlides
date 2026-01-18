@@ -21,6 +21,8 @@ export default function PresentationPage() {
   const [imageLoading, setImageLoading] = useState(true)
   const [welcomeDescription, setWelcomeDescription] = useState('')
   const welcomeDescriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const thumbnailRefs = useRef<{ [key: number]: HTMLDivElement | null }>({})
   const [showMenu, setShowMenu] = useState(false)
   const [descriptionValue, setDescriptionValue] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
@@ -261,6 +263,20 @@ export default function PresentationPage() {
     }
   }
 
+  // Auto-scroll carousel to current slide
+  useEffect(() => {
+    if (carouselRef.current && thumbnailRefs.current[currentSlideIndex]) {
+      const thumbnail = thumbnailRefs.current[currentSlideIndex]
+      if (thumbnail) {
+        thumbnail.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        })
+      }
+    }
+  }, [currentSlideIndex])
+
   const handlePrevSlide = () => {
     if (currentSlideIndex > -1) {
       setCurrentSlideIndex(currentSlideIndex - 1)
@@ -348,10 +364,12 @@ export default function PresentationPage() {
   }
 
   const handleDragEnd = () => {
-    setDraggedIndex(null)
-    setDragOverIndex(null)
-    // Delay clearing isDragging to prevent click from firing
-    setTimeout(() => setIsDragging(false), 100)
+    // Delay clearing all drag state to ensure drop completes first
+    setTimeout(() => {
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+      setIsDragging(false)
+    }, 150)
   }
 
   const handleCTAClick = () => {
@@ -1006,11 +1024,12 @@ export default function PresentationPage() {
                 ))}
               </div>
             ) : (
-              <div className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-hide justify-center">
+              <div ref={carouselRef} className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-hide">
                 {/* Welcome Slide Thumbnail */}
                 {presentation && (
                   <div
                     key="welcome-slide"
+                    ref={(el) => { thumbnailRefs.current[-1] = el }}
                     onClick={() => setCurrentSlideIndex(-1)}
                     className="flex-shrink-0 relative cursor-pointer transition-all"
                   >
@@ -1039,6 +1058,7 @@ export default function PresentationPage() {
                 {presentation?.slides?.map((slide, index) => (
                   <div
                     key={slide.id}
+                    ref={(el) => { thumbnailRefs.current[index] = el }}
                     draggable
                     onDragStart={(e) => handleDragStart(e, index)}
                     onDragOver={(e) => handleDragOver(e, index)}
