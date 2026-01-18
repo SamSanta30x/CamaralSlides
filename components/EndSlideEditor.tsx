@@ -281,6 +281,18 @@ export default function EndSlideEditor({
           </div>
         </div>
       </div>
+      
+      {/* Powered by Camaral - Bottom Center */}
+      <div className="w-full pb-6 flex items-center justify-center">
+        <p className="font-['Inter',sans-serif] text-[12px] text-[#999] flex items-center gap-2">
+          Powered by
+          <img 
+            src="/Camaral Logo.svg" 
+            alt="Camaral" 
+            className="h-[16px] w-auto opacity-60"
+          />
+        </p>
+      </div>
       </div>
     </div>
   )

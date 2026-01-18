@@ -1048,7 +1048,7 @@ export default function PresentationPage() {
                     /* Welcome Slide */
                     <div className="flex flex-col gap-3 flex-shrink-0">
                       
-                      <div className={`relative w-[840px] h-[550px] transition-all duration-300 ${
+                      <div className={`relative w-[840px] h-[650px] transition-all duration-300 ${
                         slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
                       }`}>
                         <WelcomeSlideEditor
@@ -1246,23 +1246,8 @@ export default function PresentationPage() {
                 isGenerating={isGeneratingDescription}
               />
             ) : (
-              /* Powered by Camaral for Welcome/End pages - with spacing to keep carousel at same position */
-              <div className="flex flex-col items-center justify-between h-full min-h-[82px]">
-                <div className="pt-6">
-                  <p className="font-['Inter',sans-serif] text-[12px] text-[#999] flex items-center gap-2">
-                    Powered by
-                    <Image 
-                      src="/Camaral Logo.svg" 
-                      alt="Camaral" 
-                      width={70}
-                      height={16}
-                      className="opacity-60"
-                    />
-                  </p>
-                </div>
-                {/* Spacer to push carousel down */}
-                <div className="flex-1"></div>
-              </div>
+              /* Empty space for Welcome/End pages to keep carousel at same position */
+              <div className="h-[160px]"></div>
             )}
           </div>
 
