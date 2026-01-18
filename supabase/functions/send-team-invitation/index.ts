@@ -280,7 +280,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Camaral <no-reply@camaral.ai>',
+        from: 'Camaral <onboarding@resend.dev>', // Using Resend's test domain
         to: [invitedEmail],
         subject: `${inviterName} invited you to join ${organizationName} on Camaral`,
         html: emailHtml,
