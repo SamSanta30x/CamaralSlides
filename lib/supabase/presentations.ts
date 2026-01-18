@@ -88,6 +88,11 @@ export interface Presentation {
   objective: string | null
   cta_text: string | null
   cta_url: string | null
+  agent_name: string | null
+  agent_voice: string | null
+  agent_language: string | null
+  agent_first_message: string | null
+  agent_description: string | null
   created_at: string
   updated_at: string
   slides?: Slide[]
@@ -423,6 +428,42 @@ export async function updatePresentationCTA(
         cta_text: ctaText,
         cta_url: ctaUrl
       })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+/**
+ * Update agent configuration for a presentation
+ */
+export async function updateAgentConfig(
+  id: string,
+  config: {
+    agent_name?: string
+    agent_voice?: string
+    agent_language?: string
+    agent_first_message?: string
+    agent_description?: string
+  }
+): Promise<{ data: Presentation | null; error: Error | null }> {
+  try {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('presentations')
+      .update(config)
       .eq('id', id)
       .select()
       .single()

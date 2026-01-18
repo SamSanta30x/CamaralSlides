@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { getPresentation, updatePresentationObjective, type Presentation } from '@/lib/supabase/presentations'
+import { getPresentation, updatePresentationObjective, updateAgentConfig, type Presentation } from '@/lib/supabase/presentations'
 import DashboardHeader from '@/components/DashboardHeader'
 import DescriptionTextarea from '@/components/DescriptionTextarea'
 
@@ -18,7 +18,14 @@ export default function AgentPage() {
   const [language, setLanguage] = useState('Spanish')
   const [firstMessage, setFirstMessage] = useState("Hello! I'm Emma, your AI assistant. How can I help you today?")
   const [objective, setObjective] = useState('')
+  const [description, setDescription] = useState('')
+  const [showVoiceDropdown, setShowVoiceDropdown] = useState(false)
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false)
   const objectiveSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const agentSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const voices = ['Alejandro', 'Emma', 'Max', 'Sofia', 'James']
+  const languages = ['Spanish', 'English', 'French', 'German', 'Portuguese']
 
   const presentationId = params.id as string
 
@@ -45,6 +52,11 @@ export default function AgentPage() {
     if (data) {
       setPresentation(data)
       setObjective(data.objective || '')
+      setName(data.agent_name || 'Max')
+      setVoice(data.agent_voice || 'Alejandro')
+      setLanguage(data.agent_language || 'Spanish')
+      setFirstMessage(data.agent_first_message || "Hello! I'm Emma, your AI assistant. How can I help you today?")
+      setDescription(data.agent_description || '')
     }
   }
 
@@ -77,11 +89,80 @@ export default function AgentPage() {
     }, 500)
   }
 
+  const saveAgentConfig = async (config: {
+    agent_name?: string
+    agent_voice?: string
+    agent_language?: string
+    agent_first_message?: string
+    agent_description?: string
+  }) => {
+    if (!presentation) return
+
+    try {
+      const { error } = await updateAgentConfig(presentationId, config)
+      
+      if (error) {
+        console.error('Error saving agent config:', error)
+      } else {
+        setPresentation({
+          ...presentation,
+          ...config
+        })
+      }
+    } catch (error) {
+      console.error('Error saving agent config:', error)
+    }
+  }
+
+  const handleAgentFieldChange = (field: string, value: string) => {
+    // Clear existing timeout
+    if (agentSaveTimeoutRef.current) {
+      clearTimeout(agentSaveTimeoutRef.current)
+    }
+
+    // Debounce save for 500ms
+    agentSaveTimeoutRef.current = setTimeout(() => {
+      saveAgentConfig({ [field]: value })
+    }, 500)
+  }
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value
+    setName(newName)
+    handleAgentFieldChange('agent_name', newName)
+  }
+
+  const handleVoiceSelect = (selectedVoice: string) => {
+    setVoice(selectedVoice)
+    setShowVoiceDropdown(false)
+    handleAgentFieldChange('agent_voice', selectedVoice)
+  }
+
+  const handleLanguageSelect = (selectedLanguage: string) => {
+    setLanguage(selectedLanguage)
+    setShowLanguageDropdown(false)
+    handleAgentFieldChange('agent_language', selectedLanguage)
+  }
+
+  const handleFirstMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newMessage = e.target.value
+    setFirstMessage(newMessage)
+    handleAgentFieldChange('agent_first_message', newMessage)
+  }
+
+  const handleDescriptionChange = (newDescription: string) => {
+    setDescription(newDescription)
+    handleAgentFieldChange('agent_description', newDescription)
+  }
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (objectiveSaveTimeoutRef.current) {
         clearTimeout(objectiveSaveTimeoutRef.current)
+      }
+      if (agentSaveTimeoutRef.current) {
+        clearTimeout(agentSaveTimeoutRef.current)
       }
     }
   }, [])
@@ -112,7 +193,7 @@ export default function AgentPage() {
           <input
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={handleNameChange}
             className="w-full bg-white border border-[#dcdcdc] rounded-[20.751px] px-[19.44px] py-[12.96px] font-['SF_Pro',sans-serif] text-[16px] text-[#0d0d0d] tracking-[-0.2371px] focus:outline-none focus:border-[#66e7f5]"
           />
         </div>
@@ -125,19 +206,41 @@ export default function AgentPage() {
               Voice
             </label>
             <div className="relative">
-              <button className="w-full bg-white border border-[#dcdcdc] rounded-[20.751px] px-[19.44px] py-[12.96px] flex items-center justify-between focus:outline-none focus:border-[#66e7f5]">
+              <button 
+                onClick={() => setShowVoiceDropdown(!showVoiceDropdown)}
+                className="w-full bg-white border border-[#dcdcdc] rounded-[20.751px] px-[19.44px] py-[12.96px] flex items-center justify-between focus:outline-none focus:border-[#66e7f5]"
+              >
                 <div className="flex items-center gap-[6px]">
                   <div className="w-[24px] h-[24px] rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-[10px] font-bold">
-                    A
+                    {voice.charAt(0)}
                   </div>
                   <span className="font-['SF_Pro',sans-serif] text-[16px] text-[#0d0d0d] tracking-[-0.2371px]">
                     {voice}
                   </span>
                 </div>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="rotate-90">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className={`rotate-90 transition-transform ${showVoiceDropdown ? 'rotate-[270deg]' : ''}`}>
                   <path d="M9 6L15 12L9 18" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
+              
+              {showVoiceDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-[4px] bg-white border border-[#dcdcdc] rounded-[20.751px] shadow-lg z-10 overflow-hidden">
+                  {voices.map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => handleVoiceSelect(v)}
+                      className="w-full px-[19.44px] py-[12.96px] flex items-center gap-[6px] hover:bg-[#f5f5f5] transition-colors"
+                    >
+                      <div className="w-[24px] h-[24px] rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-[10px] font-bold">
+                        {v.charAt(0)}
+                      </div>
+                      <span className="font-['SF_Pro',sans-serif] text-[16px] text-[#0d0d0d] tracking-[-0.2371px]">
+                        {v}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -147,7 +250,10 @@ export default function AgentPage() {
               Language
             </label>
             <div className="relative">
-              <button className="w-full bg-white border border-[#dcdcdc] rounded-[20.751px] px-[19.44px] py-[12.96px] flex items-center justify-between focus:outline-none focus:border-[#66e7f5]">
+              <button 
+                onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+                className="w-full bg-white border border-[#dcdcdc] rounded-[20.751px] px-[19.44px] py-[12.96px] flex items-center justify-between focus:outline-none focus:border-[#66e7f5]"
+              >
                 <div className="flex items-center gap-[6px]">
                   <div className="w-[24px] h-[24px] rounded-full overflow-hidden">
                     <div className="w-full h-full bg-gradient-to-b from-red-500 via-yellow-400 to-red-500"></div>
@@ -156,10 +262,29 @@ export default function AgentPage() {
                     {language}
                   </span>
                 </div>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="rotate-90">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className={`rotate-90 transition-transform ${showLanguageDropdown ? 'rotate-[270deg]' : ''}`}>
                   <path d="M9 6L15 12L9 18" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
+              
+              {showLanguageDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-[4px] bg-white border border-[#dcdcdc] rounded-[20.751px] shadow-lg z-10 overflow-hidden">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => handleLanguageSelect(lang)}
+                      className="w-full px-[19.44px] py-[12.96px] flex items-center gap-[6px] hover:bg-[#f5f5f5] transition-colors"
+                    >
+                      <div className="w-[24px] h-[24px] rounded-full overflow-hidden">
+                        <div className="w-full h-full bg-gradient-to-b from-red-500 via-yellow-400 to-red-500"></div>
+                      </div>
+                      <span className="font-['SF_Pro',sans-serif] text-[16px] text-[#0d0d0d] tracking-[-0.2371px]">
+                        {lang}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -174,11 +299,11 @@ export default function AgentPage() {
               The first message the agent will say. If empty, the agent will wait for the user to start the conversation
             </p>
           </div>
-          <input
-            type="text"
+          <textarea
             value={firstMessage}
-            onChange={(e) => setFirstMessage(e.target.value)}
-            className="w-full bg-white border border-[#dcdcdc] rounded-[20.751px] px-[19.44px] py-[12.96px] font-['SF_Pro',sans-serif] text-[16px] text-[#0d0d0d] tracking-[-0.2371px] focus:outline-none focus:border-[#66e7f5]"
+            onChange={handleFirstMessageChange}
+            className="w-full bg-white border border-[#dcdcdc] rounded-[20.751px] px-[19.44px] py-[12.96px] font-['SF_Pro',sans-serif] text-[16px] text-[#0d0d0d] tracking-[-0.2371px] focus:outline-none focus:border-[#66e7f5] resize-none"
+            rows={3}
           />
         </div>
 
@@ -195,6 +320,23 @@ export default function AgentPage() {
           <DescriptionTextarea 
             value={objective}
             onChange={handleObjectiveChange}
+            height="159px"
+          />
+        </div>
+
+        {/* Agent Description Field */}
+        <div className="flex flex-col gap-[10px]">
+          <div className="flex flex-col gap-[4px]">
+            <label className="font-['Inter',sans-serif] font-medium text-[16px] text-black tracking-[-0.48px]">
+              Agent description
+            </label>
+            <p className="font-['Inter',sans-serif] text-[16px] text-black tracking-[-0.24px]">
+              Describe what the agent should do and how it should behave during the presentation
+            </p>
+          </div>
+          <DescriptionTextarea 
+            value={description}
+            onChange={handleDescriptionChange}
             height="159px"
           />
         </div>
