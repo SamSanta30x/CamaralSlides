@@ -106,7 +106,8 @@ export default function SharePresentationPage() {
   return (
     <div className="bg-white flex flex-col items-center relative h-screen w-full overflow-hidden">
       {/* Header */}
-      <div className="flex h-[60px] items-center justify-between px-[32px] py-[6px] w-full shrink-0">
+      {!isFullscreen && (
+        <div className="flex h-[60px] items-center justify-between px-[32px] py-[6px] w-full shrink-0">
         <div className="flex gap-[20px] items-center">
           <Link href="/" className="h-[24px] w-[96px] relative">
             <Image
@@ -177,16 +178,21 @@ export default function SharePresentationPage() {
             </svg>
           </button>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Main Slide Container */}
-      <div className="flex flex-col items-center justify-center flex-1 px-[40px] w-full">
+      <div className={`flex flex-col items-center justify-center flex-1 w-full ${isFullscreen ? 'p-0' : 'px-[40px]'}`}
         <div 
-          className="flex items-start justify-center w-full max-w-[1200px] h-full relative"
+          className={`flex items-start justify-center w-full h-full relative ${isFullscreen ? 'max-w-none' : 'max-w-[1200px]'}`}
           onMouseEnter={() => setShowFullscreenButton(true)}
           onMouseLeave={() => setShowFullscreenButton(false)}
         >
-          <div className="border-[0.956px] border-[#0d0d0d] border-solid w-full h-full max-h-[calc(100vh-200px)] relative rounded-[15.289px] overflow-hidden bg-[#0d0d0d]">
+          <div className={`w-full h-full relative overflow-hidden bg-[#0d0d0d] ${
+            isFullscreen 
+              ? 'border-0 rounded-none max-h-none' 
+              : 'border-[0.956px] border-[#0d0d0d] border-solid rounded-[15.289px] max-h-[calc(100vh-200px)]'
+          }`}>
             {imageLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#0d0d0d]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
@@ -205,21 +211,33 @@ export default function SharePresentationPage() {
             )}
             
             {/* Fullscreen Button - Shows on hover */}
-            {showFullscreenButton && !isFullscreen && (
+            {showFullscreenButton && (
               <button
                 onClick={toggleFullscreen}
                 className="absolute top-4 right-4 bg-[rgba(0,0,0,0.6)] hover:bg-[rgba(0,0,0,0.8)] text-white p-2 rounded-lg transition-all z-10"
-                title="Fullscreen (F)"
+                title={isFullscreen ? "Exit Fullscreen (ESC)" : "Fullscreen (F)"}
               >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M2 7V3C2 2.44772 2.44772 2 3 2H7M13 2H17C17.5523 2 18 2.44772 18 3V7M18 13V17C18 17.5523 17.5523 18 17 18H13M7 18H3C2.44772 18 2 17.5523 2 17V13"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                {isFullscreen ? (
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M7 2V6C7 6.55228 6.55228 7 6 7H2M13 2V6C13 6.55228 13.4477 7 14 7H18M13 18V14C13 13.4477 13.4477 13 14 13H18M7 18V14C7 13.4477 6.55228 13 6 13H2"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M2 7V3C2 2.44772 2.44772 2 3 2H7M13 2H17C17.5523 2 18 2.44772 18 3V7M18 13V17C18 17.5523 17.5523 18 17 18H13M7 18H3C2.44772 18 2 17.5523 2 17V13"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
               </button>
             )}
           </div>
@@ -227,7 +245,8 @@ export default function SharePresentationPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="bg-[#2e2e2e] border-[1.4px] border-[rgba(255,255,255,0.4)] border-solid flex gap-[12px] items-center justify-center p-[12px] rounded-[100px] mb-3 shrink-0">
+      {!isFullscreen && (
+        <div className="bg-[#2e2e2e] border-[1.4px] border-[rgba(255,255,255,0.4)] border-solid flex gap-[12px] items-center justify-center p-[12px] rounded-[100px] mb-3 shrink-0">
         {/* Microphone */}
         <button
           onClick={() => setIsMicOn(!isMicOn)}
@@ -322,10 +341,12 @@ export default function SharePresentationPage() {
             />
           </svg>
         </button>
-      </div>
+        </div>
+      )}
 
       {/* Footer - Powered by Camaral */}
-      <div className="flex h-[50px] items-center justify-center w-full shrink-0">
+      {!isFullscreen && (
+        <div className="flex h-[50px] items-center justify-center w-full shrink-0">
         <div className="flex gap-[4px] items-center justify-center">
           <p className="font-['Inter',sans-serif] text-[11px] text-[#0d0d0d] tracking-[-0.22px]">
             Powered by
@@ -340,7 +361,8 @@ export default function SharePresentationPage() {
             />
           </Link>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   )
 }
