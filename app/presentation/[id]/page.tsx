@@ -75,8 +75,13 @@ export default function PresentationPage() {
   }, [user, presentationId])
 
   useEffect(() => {
-    setImageLoading(true)
-  }, [currentSlideIndex])
+    // Only set loading for regular slides (not Welcome or End)
+    const totalSlides = presentation?.slides?.length || 0
+    const isRegularSlide = currentSlideIndex >= 0 && currentSlideIndex < totalSlides
+    if (isRegularSlide) {
+      setImageLoading(true)
+    }
+  }, [currentSlideIndex, presentation?.slides?.length])
 
   // Update description when slide changes or presentation data updates
   useEffect(() => {
