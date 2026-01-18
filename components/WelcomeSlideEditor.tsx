@@ -6,6 +6,7 @@ interface WelcomeSlideEditorProps {
   welcomeTitle?: string | null
   presentationTitle: string // Used as fallback if welcomeTitle is empty
   description?: string
+  slideCount?: number // Number of slides in the presentation
   onDescriptionChange?: (description: string) => void
   onTitleChange?: (title: string) => void
 }
@@ -14,6 +15,7 @@ export default function WelcomeSlideEditor({
   welcomeTitle,
   presentationTitle, 
   description = '',
+  slideCount = 0,
   onDescriptionChange,
   onTitleChange
 }: WelcomeSlideEditorProps) {
@@ -175,7 +177,7 @@ export default function WelcomeSlideEditor({
               <path d="M7 3.5V7L9 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
             <span className="font-['Inter',sans-serif] text-[12px]">
-              Takes X minutes
+              Takes {slideCount} minute{slideCount !== 1 ? 's' : ''}
             </span>
             <span className="font-['Inter',sans-serif] text-[12px] mx-[4px]">•</span>
             <span className="font-['Inter',sans-serif] text-[12px]">

@@ -6,6 +6,7 @@ interface WelcomeSlideProps {
   welcomeTitle?: string | null
   presentationTitle: string // Used as fallback if welcomeTitle is empty
   description?: string
+  slideCount?: number // Number of slides in the presentation
   onStartCall: (name: string, email: string) => void
 }
 
@@ -13,6 +14,7 @@ export default function WelcomeSlide({
   welcomeTitle,
   presentationTitle, 
   description,
+  slideCount = 0,
   onStartCall 
 }: WelcomeSlideProps) {
   // Use welcomeTitle if available, otherwise use presentationTitle
@@ -113,7 +115,7 @@ export default function WelcomeSlide({
               <path d="M7 3.5V7L9 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
             <span className="font-['Inter',sans-serif] text-[12px]">
-              Takes X minutes
+              Takes {slideCount} minute{slideCount !== 1 ? 's' : ''}
             </span>
             <span className="font-['Inter',sans-serif] text-[12px] mx-[4px]">•</span>
             <span className="font-['Inter',sans-serif] text-[12px]">

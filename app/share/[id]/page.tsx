@@ -232,6 +232,7 @@ export default function SharePresentationPage() {
               welcomeTitle={presentation.welcome_title}
               presentationTitle={presentation.title}
               description={presentation.objective || undefined}
+              slideCount={presentation.slides?.length || 0}
               onStartCall={handleStartCall}
             />
           </div>

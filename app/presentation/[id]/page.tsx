@@ -798,6 +798,7 @@ export default function PresentationPage() {
                           welcomeTitle={presentation.welcome_title}
                           presentationTitle={presentation.title}
                           description={welcomeDescription}
+                          slideCount={presentation.slides?.length || 0}
                           onDescriptionChange={handleWelcomeDescriptionChange}
                           onTitleChange={handleWelcomeTitleChange}
                         />
@@ -835,6 +836,7 @@ export default function PresentationPage() {
                         welcomeTitle={presentation.welcome_title}
                         presentationTitle={presentation.title}
                         description={welcomeDescription}
+                        slideCount={presentation.slides?.length || 0}
                         onDescriptionChange={handleWelcomeDescriptionChange}
                         onTitleChange={handleWelcomeTitleChange}
                       />
@@ -984,6 +986,7 @@ export default function PresentationPage() {
                           welcomeTitle={presentation.welcome_title}
                           presentationTitle={presentation.title}
                           description={welcomeDescription}
+                          slideCount={presentation.slides?.length || 0}
                           onDescriptionChange={handleWelcomeDescriptionChange}
                           onTitleChange={handleWelcomeTitleChange}
                         />
