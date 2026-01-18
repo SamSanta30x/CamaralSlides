@@ -145,10 +145,19 @@ export default function PresentationPage() {
         const { updateEstimatedMinutes } = await import('@/lib/supabase/presentations')
         const { error } = await updateEstimatedMinutes(presentationId, minutes)
         if (error) {
-          console.error('Error saving estimated minutes:', error)
+          const supabaseError = error as any
+          console.error('❌ Error saving estimated minutes:', {
+            error,
+            message: error.message,
+            details: supabaseError.details,
+            hint: supabaseError.hint,
+            code: supabaseError.code,
+            presentationId,
+            minutes
+          })
         }
       } catch (error) {
-        console.error('Error saving estimated minutes:', error)
+        console.error('❌ Caught error saving estimated minutes:', error)
       }
     }, 500)
   }
