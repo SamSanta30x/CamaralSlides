@@ -210,29 +210,16 @@ export default function SharePresentationPage() {
           </button>
 
           {/* CTA Button - Show custom CTA if set, otherwise default */}
-          {presentation?.cta_text && presentation?.cta_url ? (
-            <a
-              href={presentation.cta_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#0d0d0d] flex items-center justify-center px-[14px] py-[8px] rounded-[999px] hover:bg-[#2e2e2e] transition-colors"
-            >
-              <span className="font-['Inter',sans-serif] text-[16px] text-white tracking-[-0.32px]">
-                {presentation.cta_text}
-              </span>
-            </a>
-          ) : (
-            <a
-              href="https://camaral.ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#0d0d0d] flex items-center justify-center px-[14px] py-[8px] rounded-[999px] hover:bg-[#2e2e2e] transition-colors"
-            >
-              <span className="font-['Inter',sans-serif] text-[16px] text-white tracking-[-0.32px]">
-                Create your own AI Presenter
-              </span>
-            </a>
-          )}
+          <a
+            href={presentation?.cta_url && presentation.cta_text && presentation.cta_text !== 'Add call to action' ? presentation.cta_url : 'https://camaral.ai'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-[#0d0d0d] flex items-center justify-center px-[14px] py-[8px] rounded-[999px] hover:bg-[#2e2e2e] transition-colors"
+          >
+            <span className="font-['Inter',sans-serif] text-[16px] text-white tracking-[-0.32px]">
+              {presentation?.cta_text && presentation.cta_text !== 'Add call to action' ? presentation.cta_text : 'Create your own AI Presenter'}
+            </span>
+          </a>
         </div>
         </div>
       )}
