@@ -1047,9 +1047,7 @@ export default function PresentationPage() {
                   {isWelcomeSlide && presentation ? (
                     /* Welcome Slide */
                     <div className="flex flex-col gap-3 flex-shrink-0">
-                      <p className="font-['Inter',sans-serif] text-[16px] font-medium text-[#666] text-left">
-                        Welcome Page
-                      </p>
+                      
                       <div className={`relative w-[840px] h-[650px] transition-all duration-300 ${
                         slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
                       }`}>
@@ -1070,9 +1068,7 @@ export default function PresentationPage() {
                   ) : isEndSlide && presentation ? (
                     /* End Slide */
                     <div className="flex flex-col gap-3 flex-shrink-0">
-                      <p className="font-['Inter',sans-serif] text-[16px] font-medium text-[#666] text-left">
-                        End Page
-                      </p>
+                      
                       <div className={`relative w-[840px] h-[650px] bg-white rounded-[16px] border border-[#dcdcdc] overflow-hidden transition-all duration-300 ${
                         slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
                       }`}>
