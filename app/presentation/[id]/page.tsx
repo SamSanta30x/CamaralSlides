@@ -1066,8 +1066,8 @@ export default function PresentationPage() {
                       )}
                     </button>
                   )}
-                  {currentSlideIndex === totalSlides - 1 && presentation && (
-                    /* Show "Add an End page" button on last slide */
+                  {currentSlideIndex === totalSlides - 1 && presentation && !presentation.end_title && !presentation.end_description && (
+                    /* Show "Add an End page" button on last slide only if no end page exists */
                     <button
                       onClick={handleNextSlide}
                       className="w-[756px] h-[423px] bg-white rounded-[16px] border-2 border-dashed border-[#e5e5e5] hover:border-[#66e7f5] hover:bg-[#f9feff] transition-all flex-shrink-0 flex flex-col items-center justify-center gap-3 group"
@@ -1080,6 +1080,25 @@ export default function PresentationPage() {
                       <span className="font-['Inter',sans-serif] text-[16px] font-medium text-[#666] group-hover:text-[#0d0d0d] transition-colors">
                         Add an End page
                       </span>
+                    </button>
+                  )}
+                  {currentSlideIndex === totalSlides - 1 && presentation && (presentation.end_title || presentation.end_description) && (
+                    /* Show End Page preview on last slide if end page exists */
+                    <button
+                      onClick={handleNextSlide}
+                      className="w-[756px] h-[423px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden opacity-50 hover:opacity-70 transition-all flex-shrink-0"
+                    >
+                      <div className="w-full h-full scale-[0.8] origin-center">
+                        <EndSlideEditor
+                          endTitle={presentation.end_title ?? undefined}
+                          presentationTitle={presentation.title}
+                          description={endDescriptionValue}
+                          ctaText={ctaText === 'Add call to action' ? 'Start for free' : ctaText}
+                          ctaUrl={ctaUrl || 'https://camaral.ai'}
+                          onTitleChange={handleEndTitleChange}
+                          onDescriptionChange={handleEndDescriptionChange}
+                        />
+                      </div>
                     </button>
                   )}
                   {currentSlideIndex === totalSlides && presentation && (
