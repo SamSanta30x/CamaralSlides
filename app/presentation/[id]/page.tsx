@@ -56,6 +56,7 @@ export default function PresentationPage() {
   const endTitleTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const endDescriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [hoveredThumbnail, setHoveredThumbnail] = useState<number | null>(null)
+  const [slideTransition, setSlideTransition] = useState(false)
 
   const presentationId = params.id as string
 
@@ -412,9 +413,18 @@ export default function PresentationPage() {
     }
   }, [currentSlideIndex])
 
+  const changeSlideWithAnimation = (newIndex: number) => {
+    if (newIndex === currentSlideIndex) return
+    setSlideTransition(true)
+    setTimeout(() => {
+      setCurrentSlideIndex(newIndex)
+      setSlideTransition(false)
+    }, 150)
+  }
+
   const handlePrevSlide = () => {
     if (currentSlideIndex > -1) {
-      setCurrentSlideIndex(currentSlideIndex - 1)
+      changeSlideWithAnimation(currentSlideIndex - 1)
     }
   }
 
@@ -422,7 +432,7 @@ export default function PresentationPage() {
     // Allow going to end page (slides.length index) after last slide
     const maxIndex = presentation?.slides ? presentation.slides.length : -1
     if (currentSlideIndex < maxIndex) {
-      setCurrentSlideIndex(currentSlideIndex + 1)
+      changeSlideWithAnimation(currentSlideIndex + 1)
     }
   }
 
@@ -861,7 +871,7 @@ export default function PresentationPage() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Slide Viewer Area */}
-        <div className="flex-1 flex flex-col items-center px-8 pb-6">
+        <div className="flex-1 flex flex-col items-center px-8 py-2">
           {/* Carousel with 3 Slides Visible */}
           <div className="relative w-full max-w-[1200px] mb-6 flex items-center justify-center">
             {loading ? (
@@ -973,7 +983,9 @@ export default function PresentationPage() {
                   {/* Current Slide (Center - 100% size) */}
                   {isWelcomeSlide && presentation ? (
                     /* Welcome Slide */
-                    <div className="relative w-[840px] h-[472.5px] flex-shrink-0">
+                    <div className={`relative w-[840px] h-[472.5px] flex-shrink-0 transition-all duration-300 ${
+                      slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
+                    }`}>
                       <WelcomeSlideEditor
                         welcomeTitle={presentation.welcome_title}
                         presentationTitle={presentation.title}
@@ -987,7 +999,9 @@ export default function PresentationPage() {
                     </div>
                   ) : isEndSlide && presentation ? (
                     /* End Slide */
-                    <div className="relative w-[840px] h-[472.5px] bg-white rounded-[16px] border border-[#dcdcdc] overflow-hidden flex-shrink-0">
+                    <div className={`relative w-[840px] h-[472.5px] bg-white rounded-[16px] border border-[#dcdcdc] overflow-hidden flex-shrink-0 transition-all duration-300 ${
+                      slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
+                    }`}>
                       <EndSlideEditor
                         endTitle={presentation.end_title ?? undefined}
                         presentationTitle={presentation.title}
@@ -1000,7 +1014,9 @@ export default function PresentationPage() {
                     </div>
                   ) : currentSlide ? (
                     /* Regular Slide */
-                    <div className="relative w-[840px] h-[472.5px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden flex-shrink-0">
+                    <div className={`relative w-[840px] h-[472.5px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden flex-shrink-0 transition-all duration-300 ${
+                      slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
+                    }`}>
                       {imageLoading && (
                         <div className="absolute inset-0 flex items-center justify-center z-10 bg-white">
                           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#e5e5e5] border-t-[#66e7f5]"></div>
@@ -1170,7 +1186,7 @@ export default function PresentationPage() {
                   <div
                     key="welcome-slide"
                     ref={(el) => { thumbnailRefs.current[-1] = el }}
-                    onClick={() => setCurrentSlideIndex(-1)}
+                    onClick={() => changeSlideWithAnimation(-1)}
                     className="flex-shrink-0 relative cursor-pointer transition-all"
                   >
                     <div className={`relative w-[105px] h-[59px] rounded-[16px] border-[1.713px] overflow-hidden transition-all ${
@@ -1209,7 +1225,7 @@ export default function PresentationPage() {
                     onMouseLeave={() => setHoveredThumbnail(null)}
                     onClick={() => {
                       if (!isDragging) {
-                        setCurrentSlideIndex(index)
+                        changeSlideWithAnimation(index)
                       }
                     }}
                     className={`flex-shrink-0 relative select-none transition-all duration-200 ${
@@ -1278,7 +1294,7 @@ export default function PresentationPage() {
                     ref={(el) => { thumbnailRefs.current[totalSlides] = el }}
                     onMouseEnter={() => setHoveredThumbnail(totalSlides)}
                     onMouseLeave={() => setHoveredThumbnail(null)}
-                    onClick={() => setCurrentSlideIndex(totalSlides)}
+                    onClick={() => changeSlideWithAnimation(totalSlides)}
                     className="flex-shrink-0 relative cursor-pointer transition-all select-none"
                   >
                     <div className={`relative w-[105px] h-[59px] rounded-[16px] border-[1.713px] overflow-hidden transition-all ${
