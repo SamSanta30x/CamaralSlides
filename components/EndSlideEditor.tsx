@@ -123,7 +123,21 @@ export default function EndSlideEditor({
     }
   }
 
-  const handleCtaBlur = () => {
+  const handleCtaTextBlur = () => {
+    // Only close editing if URL popup is not shown
+    // The URL input will handle its own blur
+    if (!showUrlPopup) {
+      setIsEditingCta(false)
+    }
+  }
+
+  const handleUrlBlur = () => {
+    // Close both editing and popup when URL loses focus
+    setIsEditingCta(false)
+    setShowUrlPopup(false)
+  }
+
+  const handleCloseEditing = () => {
     setIsEditingCta(false)
     setShowUrlPopup(false)
   }
@@ -280,7 +294,7 @@ export default function EndSlideEditor({
               type="text"
               value={localCtaText}
               onChange={handleCtaTextChange}
-              onBlur={handleCtaBlur}
+              onBlur={handleCtaTextBlur}
               autoFocus
               className="bg-transparent outline-none text-center w-full"
               style={{ width: ctaTextRef.current?.offsetWidth || 'auto' }}
@@ -299,11 +313,14 @@ export default function EndSlideEditor({
               minWidth: `${Math.max(ctaButtonWidth, 200)}px`,
               maxWidth: '400px'
             }}
+            onMouseDown={(e) => e.preventDefault()} // Prevent blur when clicking inside popup
           >
             <input
               type="url"
               value={localCtaUrl}
               onChange={handleCtaUrlChange}
+              onBlur={handleUrlBlur}
+              autoFocus
               placeholder="https://example.com"
               className="w-full px-3 py-1.5 text-[14px] font-['Inter',sans-serif] text-[#0d0d0d] border border-[#e5e5e5] rounded focus:outline-none focus:border-[#0d0d0d]"
             />
