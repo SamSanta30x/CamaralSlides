@@ -4,11 +4,12 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, updatePresentationObjective, type Presentation, type Slide } from '@/lib/supabase/presentations'
+import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, updatePresentationObjective, updateEndTitle, updateEndDescription, type Presentation, type Slide } from '@/lib/supabase/presentations'
 import { generateSlideDescription } from '@/lib/supabase/edgeFunctions'
 import DashboardHeader from '@/components/DashboardHeader'
 import DescriptionTextarea from '@/components/DescriptionTextarea'
 import WelcomeSlideEditor from '@/components/WelcomeSlideEditor'
+import EndSlideEditor from '@/components/EndSlideEditor'
 import { createClient } from '@/lib/supabase/client'
 
 export default function PresentationPage() {
@@ -50,6 +51,10 @@ export default function PresentationPage() {
   const [presentationObjective, setPresentationObjective] = useState('')
   const [expectedSlideCount, setExpectedSlideCount] = useState<number | null>(null)
   const [totalSlidesExpected, setTotalSlidesExpected] = useState<number>(0)
+  const [endTitleValue, setEndTitleValue] = useState('')
+  const [endDescriptionValue, setEndDescriptionValue] = useState('')
+  const endTitleTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const endDescriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const presentationId = params.id as string
 
@@ -82,6 +87,8 @@ export default function PresentationPage() {
     if (presentation) {
       setCtaText(presentation.cta_text || 'Add call to action')
       setCtaUrl(presentation.cta_url || '')
+      setEndTitleValue(presentation.end_title || '')
+      setEndDescriptionValue(presentation.end_description || '')
       setTitleValue(presentation.title)
       setPresentationObjective(presentation.objective || '')
       setWelcomeDescription(presentation.objective || '')
@@ -164,6 +171,58 @@ export default function PresentationPage() {
         }
       } catch (error) {
         console.error('❌ Caught error saving estimated minutes:', error)
+      }
+    }, 500)
+  }
+
+  // Handle end title changes
+  const handleEndTitleChange = (title: string) => {
+    setEndTitleValue(title)
+    
+    // Update local presentation state
+    if (presentation) {
+      setPresentation({ ...presentation, end_title: title })
+    }
+    
+    // Debounce save
+    if (endTitleTimeoutRef.current) {
+      clearTimeout(endTitleTimeoutRef.current)
+    }
+
+    endTitleTimeoutRef.current = setTimeout(async () => {
+      try {
+        const { error } = await updateEndTitle(presentationId, title || null)
+        if (error) {
+          console.error('Error saving end title:', error)
+        }
+      } catch (error) {
+        console.error('Error saving end title:', error)
+      }
+    }, 500)
+  }
+
+  // Handle end description changes
+  const handleEndDescriptionChange = (description: string) => {
+    setEndDescriptionValue(description)
+    
+    // Update local presentation state
+    if (presentation) {
+      setPresentation({ ...presentation, end_description: description })
+    }
+    
+    // Debounce save
+    if (endDescriptionTimeoutRef.current) {
+      clearTimeout(endDescriptionTimeoutRef.current)
+    }
+
+    endDescriptionTimeoutRef.current = setTimeout(async () => {
+      try {
+        const { error } = await updateEndDescription(presentationId, description || null)
+        if (error) {
+          console.error('Error saving end description:', error)
+        }
+      } catch (error) {
+        console.error('Error saving end description:', error)
       }
     }, 500)
   }
@@ -288,7 +347,9 @@ export default function PresentationPage() {
   }
 
   const handleNextSlide = () => {
-    if (presentation?.slides && currentSlideIndex < presentation.slides.length - 1) {
+    // Allow going to end page (slides.length index) after last slide
+    const maxIndex = presentation?.slides ? presentation.slides.length : -1
+    if (currentSlideIndex < maxIndex) {
       setCurrentSlideIndex(currentSlideIndex + 1)
     }
   }
@@ -714,10 +775,11 @@ export default function PresentationPage() {
     )
   }
 
-  const currentSlide = currentSlideIndex >= 0 ? presentation?.slides?.[currentSlideIndex] : null
+  const currentSlide = currentSlideIndex >= 0 && currentSlideIndex < (presentation?.slides?.length || 0) ? presentation?.slides?.[currentSlideIndex] : null
   const totalSlides = presentation?.slides?.length || 0
   const hasSlides = totalSlides > 0
   const isWelcomeSlide = currentSlideIndex === -1
+  const isEndSlide = currentSlideIndex === totalSlides
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -914,7 +976,7 @@ export default function PresentationPage() {
                       </div>
                     </button>
                   )}
-                  {currentSlideIndex > 0 && presentation?.slides?.[currentSlideIndex - 1] && (
+                  {currentSlideIndex > 0 && currentSlideIndex < totalSlides && presentation?.slides?.[currentSlideIndex - 1] && (
                     <button
                       onClick={handlePrevSlide}
                       className="w-[756px] h-[423px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden opacity-50 hover:opacity-70 transition-all flex-shrink-0"
@@ -928,6 +990,26 @@ export default function PresentationPage() {
                         <img
                           src={presentation.slides[currentSlideIndex - 1].image_url}
                           alt={`Slide ${currentSlideIndex}`}
+                          className="w-full h-full object-contain p-3"
+                        />
+                      )}
+                    </button>
+                  )}
+                  {currentSlideIndex === totalSlides && presentation?.slides?.[totalSlides - 1] && (
+                    /* Show last slide as previous when on end page */
+                    <button
+                      onClick={handlePrevSlide}
+                      className="w-[756px] h-[423px] bg-white rounded-[16px] border border-[#e5e5e5] overflow-hidden opacity-50 hover:opacity-70 transition-all flex-shrink-0"
+                    >
+                      {presentation.slides[totalSlides - 1].image_url.endsWith('.pdf') ? (
+                        <iframe
+                          src={`${presentation.slides[totalSlides - 1].image_url}#toolbar=0&navpanes=0&scrollbar=0`}
+                          className="w-full h-full pointer-events-none"
+                        />
+                      ) : (
+                        <img
+                          src={presentation.slides[totalSlides - 1].image_url}
+                          alt={`Slide ${totalSlides}`}
                           className="w-full h-full object-contain p-3"
                         />
                       )}
@@ -950,6 +1032,19 @@ export default function PresentationPage() {
                         onDescriptionChange={handleWelcomeDescriptionChange}
                         onTitleChange={handleWelcomeTitleChange}
                         onEstimatedMinutesChange={handleEstimatedMinutesChange}
+                      />
+                    </div>
+                  ) : isEndSlide && presentation ? (
+                    /* End Slide */
+                    <div className="relative w-[840px] h-[472.5px] flex-shrink-0">
+                      <EndSlideEditor
+                        endTitle={presentation.end_title ?? undefined}
+                        presentationTitle={presentation.title}
+                        description={endDescriptionValue}
+                        ctaText={ctaText === 'Add call to action' ? 'Start for free' : ctaText}
+                        ctaUrl={ctaUrl || 'https://camaral.ai'}
+                        onTitleChange={handleEndTitleChange}
+                        onDescriptionChange={handleEndDescriptionChange}
                       />
                     </div>
                   ) : currentSlide ? (
@@ -1020,7 +1115,24 @@ export default function PresentationPage() {
                       )}
                     </button>
                   )}
-                  {currentSlideIndex === totalSlides - 1 && (
+                  {currentSlideIndex === totalSlides - 1 && presentation && (
+                    /* Show "Add an End page" button on last slide */
+                    <button
+                      onClick={handleNextSlide}
+                      className="w-[756px] h-[423px] bg-white rounded-[16px] border-2 border-dashed border-[#e5e5e5] hover:border-[#66e7f5] hover:bg-[#f9feff] transition-all flex-shrink-0 flex flex-col items-center justify-center gap-3 group"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-[#f5f5f5] group-hover:bg-[#66e7f5] transition-colors flex items-center justify-center">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                          <path d="M12 5V19M5 12H19" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span className="font-['Inter',sans-serif] text-[16px] font-medium text-[#666] group-hover:text-[#0d0d0d] transition-colors">
+                        Add an End page
+                      </span>
+                    </button>
+                  )}
+                  {currentSlideIndex === totalSlides && presentation && (
+                    /* Show last slide as previous when on end page */
                     <div className="w-[756px] h-[423px]"></div>
                   )}
                 </div>
@@ -1042,7 +1154,7 @@ export default function PresentationPage() {
                     {/* Next Arrow */}
                     <button
                       onClick={handleNextSlide}
-                      disabled={currentSlideIndex === totalSlides - 1}
+                      disabled={currentSlideIndex === totalSlides}
                       className="absolute right-4 top-1/2 -translate-y-1/2 w-[56px] h-[56px] bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#f5f5f5] transition-all disabled:opacity-30 disabled:cursor-not-allowed z-10"
                     >
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">

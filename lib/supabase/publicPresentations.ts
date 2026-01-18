@@ -29,6 +29,9 @@ export interface Presentation {
   // Welcome Slide fields
   welcome_title: string | null
   estimated_minutes: number | null
+  // End Slide fields
+  end_title: string | null
+  end_description: string | null
 }
 
 /**

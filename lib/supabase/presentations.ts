@@ -95,6 +95,8 @@ export interface Presentation {
   agent_description: string | null
   welcome_title: string | null
   estimated_minutes: number | null
+  end_title: string | null
+  end_description: string | null
   created_at: string
   updated_at: string
   slides?: Slide[]
@@ -458,6 +460,56 @@ export async function updateEstimatedMinutes(
       return { data: null, error }
     }
 
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+export async function updateEndTitle(
+  id: string,
+  endTitle: string | null
+): Promise<{ data: Presentation | null; error: Error | null }> {
+  try {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('presentations')
+      .update({ end_title: endTitle, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      return { data: null, error }
+    }
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+export async function updateEndDescription(
+  id: string,
+  endDescription: string | null
+): Promise<{ data: Presentation | null; error: Error | null }> {
+  try {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('presentations')
+      .update({ end_description: endDescription, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      return { data: null, error }
+    }
     return { data, error: null }
   } catch (error) {
     return {
