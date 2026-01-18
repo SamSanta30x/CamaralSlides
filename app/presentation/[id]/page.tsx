@@ -1398,6 +1398,23 @@ export default function PresentationPage() {
                   )
                 })}
 
+                {/* Add New Slide Button - Before End Page */}
+                {presentation && (
+                  <button
+                    onClick={() => {
+                      // TODO: Implement add slide functionality
+                      console.log('Add new slide')
+                    }}
+                    className="flex-shrink-0 w-[105px] h-[59px] rounded-[16px] border-[1.713px] border-dashed border-[#dcdcdc] hover:border-[#66e7f5] hover:bg-[#f9feff] transition-all flex items-center justify-center cursor-pointer group"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#f5f5f5] group-hover:bg-[#66e7f5] transition-colors flex items-center justify-center">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 3.33333V12.6667M3.33333 8H12.6667" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </button>
+                )}
+
                 {/* End Page Thumbnail - Show if end page exists */}
                 {presentation && (presentation.end_title || presentation.end_description) && (
                   <div
