@@ -98,8 +98,23 @@ export default function DashboardHeader({
         </div>
       )}
 
-      {/* Right side - Upgrade button and Avatar */}
+      {/* Right side - Share, Upgrade button and Avatar */}
       <div className="flex items-center gap-[10px]">
+        {/* Share Button - Only show in presentation view */}
+        {showTabs && presentationId && (
+          <button className="flex items-center gap-[6px] px-[14px] py-[6px] bg-white border border-[#e5e5e5] rounded-[999px] hover:bg-[#fafafa] transition-colors">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M12 5.5C12.8284 5.5 13.5 4.82843 13.5 4C13.5 3.17157 12.8284 2.5 12 2.5C11.1716 2.5 10.5 3.17157 10.5 4C10.5 4.82843 11.1716 5.5 12 5.5Z" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4 10C4.82843 10 5.5 9.32843 5.5 8.5C5.5 7.67157 4.82843 7 4 7C3.17157 7 2.5 7.67157 2.5 8.5C2.5 9.32843 3.17157 10 4 10Z" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 13.5C12.8284 13.5 13.5 12.8284 13.5 12C13.5 11.1716 12.8284 10.5 12 10.5C11.1716 10.5 10.5 11.1716 10.5 12C10.5 12.8284 11.1716 13.5 12 13.5Z" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5.3125 9.3125L10.6875 11.6875M10.6875 4.3125L5.3125 7.1875" stroke="#0d0d0d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="font-['Inter',sans-serif] text-[14px] leading-[20px] text-[#0d0d0d]">
+              Share
+            </span>
+          </button>
+        )}
+        
         <UpgradeButton />
 
         {/* Avatar with dropdown */}
