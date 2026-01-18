@@ -1189,9 +1189,9 @@ export default function PresentationPage() {
             )}
           </div>
 
-          {/* Description/Prompt Area - Only show for regular slides */}
-          {!isWelcomeSlide && (
-            <div className="w-full max-w-[840px] mb-6">
+          {/* Description/Prompt Area - Only show for regular slides, but keep space for Welcome/End */}
+          <div className="w-full max-w-[840px] mb-6">
+            {!isWelcomeSlide && !isEndSlide ? (
               <DescriptionTextarea 
                 value={descriptionValue}
                 onChange={setDescriptionValue}
@@ -1199,8 +1199,11 @@ export default function PresentationPage() {
                 onImproveAI={handleImproveDescription}
                 isGenerating={isGeneratingDescription}
               />
-            </div>
-          )}
+            ) : (
+              /* Empty space to keep carousel position consistent */
+              <div className="h-[200px]"></div>
+            )}
+          </div>
 
           {/* Bottom Carousel - Thumbnails */}
           <div className="w-full max-w-[840px] flex justify-center">
