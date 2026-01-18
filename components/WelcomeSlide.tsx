@@ -45,18 +45,17 @@ export default function WelcomeSlide({
         </h1>
 
         {/* Description */}
-        {description && (
-          <p 
-            className="font-['Inter',sans-serif] text-[16px] text-[#000] text-center self-stretch"
-            style={{
-              fontWeight: 400,
-              lineHeight: '26px',
-              letterSpacing: '-0.4px'
-            }}
-          >
-            {description}
-          </p>
-        )}
+        <p 
+          className="font-['Inter',sans-serif] text-[16px] text-[#000] text-center self-stretch"
+          style={{
+            fontWeight: 400,
+            lineHeight: '26px',
+            letterSpacing: '-0.4px',
+            minHeight: '26px'
+          }}
+        >
+          {description || 'Description (optional)'}
+        </p>
 
         {/* Form */}
         <div className="flex flex-col gap-[12px] w-full">

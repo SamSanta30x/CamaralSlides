@@ -29,7 +29,7 @@ export default function WelcomeSlideEditor({
   return (
     <div className="w-full h-full bg-white flex items-center justify-center rounded-[16px] border border-[#e5e5e5] p-[40px]">
       <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full">
-        {/* Title */}
+        {/* Title - Shows presentation title (not editable here, edited in header) */}
         <h1 
           className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center self-stretch"
           style={{
@@ -42,19 +42,27 @@ export default function WelcomeSlideEditor({
           {presentationTitle}
         </h1>
 
-        {/* Description - Editable */}
-        <textarea
-          value={localDescription}
-          onChange={(e) => handleDescriptionChange(e.target.value)}
-          placeholder="Description (optional)"
-          className="w-full self-stretch bg-white border border-[#e5e5e5] rounded-[12px] px-[20px] py-[12px] font-['Inter',sans-serif] text-[16px] text-[#000] placeholder:text-[#999] text-center focus:outline-none focus:border-[#0d0d0d] transition-colors resize-none min-h-[60px]"
+        {/* Description - Editable inline */}
+        <div 
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={(e) => handleDescriptionChange(e.currentTarget.textContent || '')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              e.currentTarget.blur()
+            }
+          }}
+          className="font-['Inter',sans-serif] text-[16px] text-[#000] text-center self-stretch outline-none cursor-text hover:text-[#666] transition-colors"
           style={{
             fontWeight: 400,
             lineHeight: '26px',
-            letterSpacing: '-0.4px'
+            letterSpacing: '-0.4px',
+            minHeight: '26px'
           }}
-          rows={2}
-        />
+        >
+          {localDescription || 'Description (optional)'}
+        </div>
 
         {/* Form Preview */}
         <div className="flex flex-col gap-[12px] w-full opacity-50 pointer-events-none">
