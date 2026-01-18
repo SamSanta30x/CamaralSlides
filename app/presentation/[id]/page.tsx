@@ -1247,7 +1247,7 @@ export default function PresentationPage() {
               />
             ) : (
               /* Empty space for Welcome/End pages to keep carousel at same position */
-              <div className="h-[160px]"></div>
+              <div className="h-[0px]"></div>
             )}
           </div>
 

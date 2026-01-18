@@ -400,6 +400,7 @@ export default function WelcomeSlideEditor({
           </div>
         </div>
       </div>
+      </div>
       
       {/* Powered by Camaral - Bottom Center */}
       <div className="w-full pb-6 flex items-center justify-center">
