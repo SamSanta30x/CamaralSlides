@@ -48,20 +48,26 @@ function SignUpForm() {
     setLoading(true)
     setError('')
     
-    const { error } = await signUp(email, password)
+    // Check if there's an invitation token
+    const invitationToken = searchParams.get('invitation')
+    
+    // Set up redirect URL after email verification
+    const emailRedirectTo = invitationToken
+      ? `${window.location.origin}/auth/callback?next=/auth/accept-invitation?token=${invitationToken}`
+      : `${window.location.origin}/auth/callback?next=/dashboard`
+    
+    const { error } = await signUp(email, password, emailRedirectTo)
     if (error) {
       setError(error.message)
       setLoading(false)
     } else {
-      // Check if there's an invitation token to redirect back to
-      const invitationToken = searchParams.get('invitation')
-      if (invitationToken) {
-        // Redirect back to accept invitation page after signup
-        router.push(`/auth/accept-invitation?token=${invitationToken}`)
-      } else {
-        // Normal flow - redirect to verify email page
-        router.push(`/verify-email?email=${encodeURIComponent(email)}`)
-      }
+      // Always redirect to verify email page first
+      // After verification, they'll be redirected based on emailRedirectTo
+      const verifyUrl = invitationToken 
+        ? `/verify-email?email=${encodeURIComponent(email)}&invitation=${invitationToken}`
+        : `/verify-email?email=${encodeURIComponent(email)}`
+      
+      router.push(verifyUrl)
     }
   }
 

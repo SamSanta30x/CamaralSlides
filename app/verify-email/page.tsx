@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation'
 function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const email = searchParams.get('email') || ''
+  const invitationToken = searchParams.get('invitation')
   const [resending, setResending] = useState(false)
   const [resent, setResent] = useState(false)
 
@@ -66,6 +67,15 @@ function VerifyEmailContent() {
           <p className="font-['Inter',sans-serif] text-[14px] leading-[20px] text-[#5f5f5d] text-center">
             Click the link we sent to to finish your account setup.
           </p>
+
+          {/* Invitation notice */}
+          {invitationToken && (
+            <div className="w-full bg-[#e0f2fe] border border-[#bae6fd] rounded-[8px] px-4 py-3">
+              <p className="font-['Inter',sans-serif] text-[14px] leading-[20px] text-[#0369a1] text-center">
+                ✉️ After verifying your email, you'll be able to accept your team invitation.
+              </p>
+            </div>
+          )}
 
           {/* Email display if available */}
           {email && (
