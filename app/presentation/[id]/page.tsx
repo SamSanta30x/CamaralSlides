@@ -53,6 +53,7 @@ export default function PresentationPage() {
   const [totalSlidesExpected, setTotalSlidesExpected] = useState<number>(0)
   const [endTitleValue, setEndTitleValue] = useState('')
   const [endDescriptionValue, setEndDescriptionValue] = useState('')
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const endTitleTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const endDescriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [hoveredThumbnail, setHoveredThumbnail] = useState<number | null>(null)
@@ -241,6 +242,41 @@ export default function PresentationPage() {
         console.error('Error saving end description:', error)
       }
     }, 500)
+  }
+
+  // Handle logo upload
+  const handleLogoUpload = async (file: File) => {
+    try {
+      const supabase = createClient()
+      const fileExt = file.name.split('.').pop()
+      const fileName = `logo-${presentationId}-${Date.now()}.${fileExt}`
+      const filePath = `${presentationId}/${fileName}`
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('slides')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (uploadError) {
+        console.error('Error uploading logo:', uploadError)
+        return
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('slides')
+        .getPublicUrl(filePath)
+
+      setLogoUrl(publicUrl)
+
+      // TODO: Save logo URL to database when schema is updated
+      console.log('Logo uploaded:', publicUrl)
+    } catch (error) {
+      console.error('Error uploading logo:', error)
+    }
   }
 
   // Handle slide deletion
@@ -1010,7 +1046,7 @@ export default function PresentationPage() {
                   {/* Current Slide (Center - 100% size) */}
                   {isWelcomeSlide && presentation ? (
                     /* Welcome Slide */
-                    <div className={`relative w-[840px] h-[472.5px] flex-shrink-0 transition-all duration-300 ${
+                    <div className={`relative w-[840px] h-[550px] flex-shrink-0 transition-all duration-300 ${
                       slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
                     }`}>
                       <WelcomeSlideEditor
@@ -1019,14 +1055,16 @@ export default function PresentationPage() {
                         description={welcomeDescription}
                         slideCount={presentation.slides?.length || 0}
                         estimatedMinutes={presentation.estimated_minutes ?? undefined}
+                        logoUrl={logoUrl}
                         onDescriptionChange={handleWelcomeDescriptionChange}
                         onTitleChange={handleWelcomeTitleChange}
                         onEstimatedMinutesChange={handleEstimatedMinutesChange}
+                        onLogoUpload={handleLogoUpload}
                       />
                     </div>
                   ) : isEndSlide && presentation ? (
                     /* End Slide */
-                    <div className={`relative w-[840px] h-[472.5px] bg-white rounded-[16px] border border-[#dcdcdc] overflow-hidden flex-shrink-0 transition-all duration-300 ${
+                    <div className={`relative w-[840px] h-[550px] bg-white rounded-[16px] border border-[#dcdcdc] overflow-hidden flex-shrink-0 transition-all duration-300 ${
                       slideTransition ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
                     }`}>
                       <EndSlideEditor
@@ -1035,8 +1073,10 @@ export default function PresentationPage() {
                         description={endDescriptionValue}
                         ctaText={ctaText === 'Add call to action' ? 'Start for free' : ctaText}
                         ctaUrl={ctaUrl || 'https://camaral.ai'}
+                        logoUrl={logoUrl}
                         onTitleChange={handleEndTitleChange}
                         onDescriptionChange={handleEndDescriptionChange}
+                        onLogoUpload={handleLogoUpload}
                       />
                     </div>
                   ) : currentSlide ? (

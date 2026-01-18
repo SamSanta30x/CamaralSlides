@@ -8,9 +8,11 @@ interface WelcomeSlideEditorProps {
   description?: string
   slideCount?: number // Number of slides in the presentation
   estimatedMinutes?: number // Estimated duration in minutes (editable)
+  logoUrl?: string | null // URL of the uploaded logo
   onDescriptionChange?: (description: string) => void
   onTitleChange?: (title: string) => void
   onEstimatedMinutesChange?: (minutes: number) => void
+  onLogoUpload?: (file: File) => void
 }
 
 export default function WelcomeSlideEditor({ 
@@ -19,9 +21,11 @@ export default function WelcomeSlideEditor({
   description = '',
   slideCount = 0,
   estimatedMinutes,
+  logoUrl,
   onDescriptionChange,
   onTitleChange,
-  onEstimatedMinutesChange
+  onEstimatedMinutesChange,
+  onLogoUpload
 }: WelcomeSlideEditorProps) {
   const [localDescription, setLocalDescription] = useState(description)
   // Use welcomeTitle if available, otherwise use presentationTitle as default
@@ -32,9 +36,13 @@ export default function WelcomeSlideEditor({
   // Refs for contentEditable elements
   const titleRef = useRef<HTMLHeadingElement>(null)
   const descriptionRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   // State for minutes input focus/hover
   const [minutesInputActive, setMinutesInputActive] = useState(false)
+  
+  // State for drag and drop
+  const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     setLocalDescription(description)
@@ -89,9 +97,96 @@ export default function WelcomeSlideEditor({
     }
   }
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && file.type.startsWith('image/') && onLogoUpload) {
+      onLogoUpload(file)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file && file.type.startsWith('image/') && onLogoUpload) {
+      onLogoUpload(file)
+    }
+  }
+
   return (
-    <div className="w-full h-full bg-white flex items-center justify-center rounded-[16px] border border-[#e5e5e5] p-[40px]">
-      <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full">
+    <div className="w-full h-full bg-white flex flex-col rounded-[16px] border border-[#e5e5e5]">
+      {/* Page Title */}
+      <div className="w-full px-[40px] pt-[24px] pb-[12px]">
+        <p className="font-['Inter',sans-serif] text-[16px] font-medium text-[#666] text-center">
+          Welcome Page
+        </p>
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center px-[40px] pb-[40px]">
+        <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full">
+        {/* Logo Upload */}
+        <div className="w-full flex justify-center">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          {logoUrl ? (
+            <div className="relative group">
+              <img 
+                src={logoUrl} 
+                alt="Logo" 
+                className="h-[80px] w-auto object-contain rounded-lg"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center"
+              >
+                <span className="text-white text-sm font-medium">Change Logo</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`w-[200px] h-[80px] border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2 transition-all ${
+                isDragging 
+                  ? 'border-[#66e7f5] bg-[#f9feff]' 
+                  : 'border-[#dcdcdc] hover:border-[#66e7f5] hover:bg-[#fafafa]'
+              }`}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M17 8L12 3L7 8" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 3V15" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <div className="text-center">
+                <p className="font-['Inter',sans-serif] text-[12px] font-medium text-[#666]">
+                  Upload Logo
+                </p>
+                <p className="font-['Inter',sans-serif] text-[10px] text-[#999]">
+                  Recommended: 400x100px
+                </p>
+              </div>
+            </button>
+          )}
+        </div>
+
         {/* Title - Editable inline with placeholder */}
         <div className="relative self-stretch" style={{ minHeight: '26px' }}>
           {!localTitle?.trim() && (
@@ -302,6 +397,7 @@ export default function WelcomeSlideEditor({
             </span>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
