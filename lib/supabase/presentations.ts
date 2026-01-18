@@ -15,6 +15,8 @@ export interface Presentation {
   id: string
   user_id: string
   title: string
+  cta_text: string | null
+  cta_url: string | null
   created_at: string
   updated_at: string
   slides?: Slide[]
@@ -222,6 +224,40 @@ export async function updateSlide(
       .from('slides')
       .update({ title, description })
       .eq('id', slideId)
+      .select()
+      .single()
+
+    if (error) {
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+/**
+ * Update presentation call to action
+ */
+export async function updatePresentationCTA(
+  id: string,
+  ctaText: string,
+  ctaUrl: string
+): Promise<{ data: Presentation | null; error: Error | null }> {
+  try {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('presentations')
+      .update({ 
+        cta_text: ctaText,
+        cta_url: ctaUrl
+      })
+      .eq('id', id)
       .select()
       .single()
 
