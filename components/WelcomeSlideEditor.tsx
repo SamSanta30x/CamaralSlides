@@ -7,8 +7,10 @@ interface WelcomeSlideEditorProps {
   presentationTitle: string // Used as fallback if welcomeTitle is empty
   description?: string
   slideCount?: number // Number of slides in the presentation
+  estimatedMinutes?: number // Estimated duration in minutes (editable)
   onDescriptionChange?: (description: string) => void
   onTitleChange?: (title: string) => void
+  onEstimatedMinutesChange?: (minutes: number) => void
 }
 
 export default function WelcomeSlideEditor({ 
@@ -16,12 +18,16 @@ export default function WelcomeSlideEditor({
   presentationTitle, 
   description = '',
   slideCount = 0,
+  estimatedMinutes,
   onDescriptionChange,
-  onTitleChange
+  onTitleChange,
+  onEstimatedMinutesChange
 }: WelcomeSlideEditorProps) {
   const [localDescription, setLocalDescription] = useState(description)
   // Use welcomeTitle if available, otherwise use presentationTitle as default
   const [localTitle, setLocalTitle] = useState(welcomeTitle || presentationTitle)
+  // Use estimatedMinutes if provided, otherwise default to slideCount
+  const [localMinutes, setLocalMinutes] = useState(estimatedMinutes ?? slideCount)
 
   useEffect(() => {
     setLocalDescription(description)
@@ -31,6 +37,11 @@ export default function WelcomeSlideEditor({
     // Update local title when welcomeTitle or presentationTitle changes
     setLocalTitle(welcomeTitle || presentationTitle)
   }, [welcomeTitle, presentationTitle])
+
+  useEffect(() => {
+    // Update local minutes when estimatedMinutes or slideCount changes
+    setLocalMinutes(estimatedMinutes ?? slideCount)
+  }, [estimatedMinutes, slideCount])
 
   const handleDescriptionChange = (value: string) => {
     setLocalDescription(value)
@@ -43,6 +54,22 @@ export default function WelcomeSlideEditor({
     setLocalTitle(value)
     if (onTitleChange) {
       onTitleChange(value)
+    }
+  }
+
+  const handleMinutesChange = (value: string) => {
+    // Only allow numbers
+    const numValue = parseInt(value, 10)
+    if (!isNaN(numValue) && numValue >= 0) {
+      setLocalMinutes(numValue)
+      if (onEstimatedMinutesChange) {
+        onEstimatedMinutesChange(numValue)
+      }
+    } else if (value === '') {
+      setLocalMinutes(0)
+      if (onEstimatedMinutesChange) {
+        onEstimatedMinutesChange(0)
+      }
     }
   }
 
@@ -176,9 +203,33 @@ export default function WelcomeSlideEditor({
               <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
               <path d="M7 3.5V7L9 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
-            <span className="font-['Inter',sans-serif] text-[12px]">
-              Takes {slideCount} minute{slideCount !== 1 ? 's' : ''}
-            </span>
+            <div className="flex items-center gap-[4px]">
+              <span className="font-['Inter',sans-serif] text-[12px]">Takes</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={localMinutes}
+                onChange={(e) => handleMinutesChange(e.target.value)}
+                onKeyDown={(e) => {
+                  // Only allow numbers, backspace, delete, arrow keys
+                  if (
+                    !/[0-9]/.test(e.key) &&
+                    e.key !== 'Backspace' &&
+                    e.key !== 'Delete' &&
+                    e.key !== 'ArrowLeft' &&
+                    e.key !== 'ArrowRight' &&
+                    e.key !== 'Tab'
+                  ) {
+                    e.preventDefault()
+                  }
+                }}
+                className="w-[32px] text-center bg-transparent border-b border-dashed border-[#999] font-['Inter',sans-serif] text-[12px] text-[#999] outline-none focus:border-[#0d0d0d] focus:text-[#0d0d0d] transition-colors"
+              />
+              <span className="font-['Inter',sans-serif] text-[12px]">
+                minute{localMinutes !== 1 ? 's' : ''}
+              </span>
+            </div>
             <span className="font-['Inter',sans-serif] text-[12px] mx-[4px]">•</span>
             <span className="font-['Inter',sans-serif] text-[12px]">
               press Enter ↵ to start

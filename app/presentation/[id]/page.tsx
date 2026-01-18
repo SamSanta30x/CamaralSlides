@@ -128,6 +128,31 @@ export default function PresentationPage() {
     }, 500)
   }
 
+  // Handle estimated minutes changes
+  const handleEstimatedMinutesChange = (minutes: number) => {
+    // Update local presentation state
+    if (presentation) {
+      setPresentation({ ...presentation, estimated_minutes: minutes })
+    }
+    
+    // Debounce save
+    if (welcomeDescriptionTimeoutRef.current) {
+      clearTimeout(welcomeDescriptionTimeoutRef.current)
+    }
+
+    welcomeDescriptionTimeoutRef.current = setTimeout(async () => {
+      try {
+        const { updateEstimatedMinutes } = await import('@/lib/supabase/presentations')
+        const { error } = await updateEstimatedMinutes(presentationId, minutes)
+        if (error) {
+          console.error('Error saving estimated minutes:', error)
+        }
+      } catch (error) {
+        console.error('Error saving estimated minutes:', error)
+      }
+    }, 500)
+  }
+
   const loadPresentation = async () => {
     setLoading(true)
     const { data, error } = await getPresentation(presentationId)
@@ -799,8 +824,10 @@ export default function PresentationPage() {
                           presentationTitle={presentation.title}
                           description={welcomeDescription}
                           slideCount={presentation.slides?.length || 0}
+                          estimatedMinutes={presentation.estimated_minutes ?? undefined}
                           onDescriptionChange={handleWelcomeDescriptionChange}
                           onTitleChange={handleWelcomeTitleChange}
+                          onEstimatedMinutesChange={handleEstimatedMinutesChange}
                         />
                       </div>
                     </button>
@@ -837,8 +864,10 @@ export default function PresentationPage() {
                         presentationTitle={presentation.title}
                         description={welcomeDescription}
                         slideCount={presentation.slides?.length || 0}
+                        estimatedMinutes={presentation.estimated_minutes ?? undefined}
                         onDescriptionChange={handleWelcomeDescriptionChange}
                         onTitleChange={handleWelcomeTitleChange}
+                        onEstimatedMinutesChange={handleEstimatedMinutesChange}
                       />
                     </div>
                   ) : currentSlide ? (
@@ -987,8 +1016,10 @@ export default function PresentationPage() {
                           presentationTitle={presentation.title}
                           description={welcomeDescription}
                           slideCount={presentation.slides?.length || 0}
+                          estimatedMinutes={presentation.estimated_minutes ?? undefined}
                           onDescriptionChange={handleWelcomeDescriptionChange}
                           onTitleChange={handleWelcomeTitleChange}
+                          onEstimatedMinutesChange={handleEstimatedMinutesChange}
                         />
                       </div>
                     </div>

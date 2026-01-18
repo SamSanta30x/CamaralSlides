@@ -233,6 +233,7 @@ export default function SharePresentationPage() {
               presentationTitle={presentation.title}
               description={presentation.objective || undefined}
               slideCount={presentation.slides?.length || 0}
+              estimatedMinutes={presentation.estimated_minutes ?? undefined}
               onStartCall={handleStartCall}
             />
           </div>
