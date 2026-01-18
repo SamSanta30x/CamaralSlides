@@ -143,7 +143,7 @@ export default function EndSlideEditor({
       {/* Social Share Section - Preview only */}
       <div className="mt-12 opacity-50 pointer-events-none">
         <p className="font-['Inter',sans-serif] text-[14px] text-[#999] text-center mb-4">
-          Or share this form in
+          Or share this presentation in
         </p>
         <div className="flex items-center gap-4">
           {/* Facebook */}
