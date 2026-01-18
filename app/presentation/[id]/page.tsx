@@ -434,11 +434,19 @@ export default function PresentationPage() {
 
   const changeSlideWithAnimation = (newIndex: number) => {
     if (newIndex === currentSlideIndex) return
+    
+    // Start fade out animation
     setSlideTransition(true)
+    
+    // After animation, change slide and reset transition
     setTimeout(() => {
       setCurrentSlideIndex(newIndex)
-      setSlideTransition(false)
     }, 150)
+    
+    // Reset transition after slide change
+    setTimeout(() => {
+      setSlideTransition(false)
+    }, 160)
   }
 
   const handlePrevSlide = () => {
@@ -1049,6 +1057,7 @@ export default function PresentationPage() {
                         />
                       ) : (
                         <img
+                          key={`slide-${currentSlideIndex}-${currentSlide.id}`}
                           src={currentSlide.image_url}
                           alt={currentSlide.title || `Slide ${currentSlideIndex + 1}`}
                           className={`w-full h-full object-cover transition-opacity duration-300 ${
