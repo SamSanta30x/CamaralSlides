@@ -22,6 +22,8 @@ export default function PresentationPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [processedSlides, setProcessedSlides] = useState(0)
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   const presentationId = params.id as string
 
@@ -129,6 +131,84 @@ export default function PresentationPage() {
     if (presentation?.slides && currentSlideIndex < presentation.slides.length - 1) {
       setCurrentSlideIndex(currentSlideIndex + 1)
     }
+  }
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null)
+  }
+
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    
+    if (draggedIndex === null || draggedIndex === dropIndex || !presentation?.slides) {
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+
+    const supabase = createClient()
+    const slides = [...presentation.slides]
+    const [draggedSlide] = slides.splice(draggedIndex, 1)
+    slides.splice(dropIndex, 0, draggedSlide)
+
+    // Update slide_order for all affected slides
+    const updates = slides.map((slide, index) => ({
+      id: slide.id,
+      slide_order: index + 1
+    }))
+
+    try {
+      // Update all slides in parallel
+      await Promise.all(
+        updates.map(({ id, slide_order }) =>
+          supabase
+            .from('slides')
+            .update({ slide_order })
+            .eq('id', id)
+        )
+      )
+
+      // Update local state
+      setPresentation({
+        ...presentation,
+        slides: slides.map((slide, index) => ({
+          ...slide,
+          slide_order: index + 1
+        }))
+      })
+
+      // Adjust current slide index if needed
+      if (currentSlideIndex === draggedIndex) {
+        setCurrentSlideIndex(dropIndex)
+      } else if (draggedIndex < currentSlideIndex && dropIndex >= currentSlideIndex) {
+        setCurrentSlideIndex(currentSlideIndex - 1)
+      } else if (draggedIndex > currentSlideIndex && dropIndex <= currentSlideIndex) {
+        setCurrentSlideIndex(currentSlideIndex + 1)
+      }
+    } catch (error) {
+      console.error('Error reordering slides:', error)
+      // Reload presentation on error
+      loadPresentation()
+    }
+
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
   }
 
   // Handle keyboard navigation
@@ -390,15 +470,31 @@ export default function PresentationPage() {
             ) : (
               <div className="flex gap-[12px] overflow-x-auto pb-2 scrollbar-hide justify-center">
                 {presentation?.slides?.map((slide, index) => (
-                  <button
+                  <div
                     key={slide.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
                     onClick={() => setCurrentSlideIndex(index)}
-                    className="flex-shrink-0 relative"
+                    className={`flex-shrink-0 relative cursor-move transition-all ${
+                      draggedIndex === index ? 'opacity-50 scale-95' : ''
+                    } ${
+                      dragOverIndex === index && draggedIndex !== index
+                        ? 'scale-105'
+                        : ''
+                    }`}
                   >
                     <div className={`relative w-[156px] h-[88px] rounded-[13.703px] border-[1.713px] overflow-hidden transition-all ${
                       index === currentSlideIndex
                         ? 'border-[#0d0d0d]'
                         : 'border-[#dcdcdc] opacity-60 hover:opacity-100'
+                    } ${
+                      dragOverIndex === index && draggedIndex !== index
+                        ? 'border-[#66e7f5] border-[3px]'
+                        : ''
                     }`}>
                       <div className="w-full h-full bg-white flex items-center justify-center p-2">
                         {slide.image_url.endsWith('.pdf') ? (
@@ -414,8 +510,17 @@ export default function PresentationPage() {
                           />
                         )}
                       </div>
+                      
+                      {/* Drag indicator */}
+                      {draggedIndex === index && (
+                        <div className="absolute inset-0 bg-[#66e7f5] bg-opacity-20 flex items-center justify-center">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 5H15M9 12H15M9 19H15" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round"/>
+                          </svg>
+                        </div>
+                      )}
                     </div>
-                  </button>
+                  </div>
                 ))}
 
                 {/* Add New Slide Button */}
