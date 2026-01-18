@@ -104,7 +104,7 @@ export default function EndSlideEditor({
       </div>
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8 pb-8">
+      <div className="flex-1 flex flex-col items-center justify-center px-8">
         {/* Logo Upload */}
         <div className="w-full max-w-[600px] flex justify-center mb-6">
         <input

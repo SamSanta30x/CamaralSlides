@@ -135,7 +135,7 @@ export default function WelcomeSlideEditor({
       </div>
       
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-[40px] pb-[40px]">
+      <div className="flex-1 flex items-center justify-center px-[40px]">
         <div className="flex flex-col items-center gap-[24px] max-w-[520px] w-full">
         {/* Logo Upload */}
         <div className="w-full flex justify-center">
