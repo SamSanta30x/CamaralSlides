@@ -15,6 +15,7 @@ export interface Presentation {
   id: string
   user_id: string
   title: string
+  objective: string | null
   cta_text: string | null
   cta_url: string | null
   created_at: string
@@ -253,6 +254,36 @@ export async function updatePresentationTitle(
     const { data, error } = await supabase
       .from('presentations')
       .update({ title })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+/**
+ * Update presentation objective
+ */
+export async function updatePresentationObjective(
+  id: string,
+  objective: string
+): Promise<{ data: Presentation | null; error: Error | null }> {
+  try {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('presentations')
+      .update({ objective })
       .eq('id', id)
       .select()
       .single()

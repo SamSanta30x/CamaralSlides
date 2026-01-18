@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { getPresentation, updatePresentationObjective, type Presentation } from '@/lib/supabase/presentations'
 import DashboardHeader from '@/components/DashboardHeader'
 import DescriptionTextarea from '@/components/DescriptionTextarea'
 
@@ -11,11 +12,13 @@ export default function AgentPage() {
   const router = useRouter()
   const params = useParams()
   const { user, loading: authLoading } = useAuth()
+  const [presentation, setPresentation] = useState<Presentation | null>(null)
   const [name, setName] = useState('Max')
   const [voice, setVoice] = useState('Alejandro')
   const [language, setLanguage] = useState('Spanish')
   const [firstMessage, setFirstMessage] = useState("Hello! I'm Emma, your AI assistant. How can I help you today?")
   const [objective, setObjective] = useState('')
+  const objectiveSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const presentationId = params.id as string
 
@@ -24,6 +27,64 @@ export default function AgentPage() {
       router.push('/')
     }
   }, [user, authLoading, router])
+
+  useEffect(() => {
+    if (user && presentationId) {
+      loadPresentation()
+    }
+  }, [user, presentationId])
+
+  const loadPresentation = async () => {
+    const { data, error } = await getPresentation(presentationId)
+    
+    if (error) {
+      console.error('Error loading presentation:', error)
+      return
+    }
+
+    if (data) {
+      setPresentation(data)
+      setObjective(data.objective || '')
+    }
+  }
+
+  const handleObjectiveChange = (newObjective: string) => {
+    setObjective(newObjective)
+    
+    // Clear existing timeout
+    if (objectiveSaveTimeoutRef.current) {
+      clearTimeout(objectiveSaveTimeoutRef.current)
+    }
+
+    // Debounce save for 500ms
+    objectiveSaveTimeoutRef.current = setTimeout(async () => {
+      if (!presentation) return
+
+      try {
+        const { error } = await updatePresentationObjective(presentationId, newObjective)
+        
+        if (error) {
+          console.error('Error saving objective:', error)
+        } else {
+          setPresentation({
+            ...presentation,
+            objective: newObjective
+          })
+        }
+      } catch (error) {
+        console.error('Error saving objective:', error)
+      }
+    }, 500)
+  }
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (objectiveSaveTimeoutRef.current) {
+        clearTimeout(objectiveSaveTimeoutRef.current)
+      }
+    }
+  }, [])
 
   if (authLoading) {
     return (
@@ -133,7 +194,7 @@ export default function AgentPage() {
           </div>
           <DescriptionTextarea 
             value={objective}
-            onChange={setObjective}
+            onChange={handleObjectiveChange}
             height="159px"
           />
         </div>

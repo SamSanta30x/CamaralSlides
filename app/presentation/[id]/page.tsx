@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, type Presentation, type Slide } from '@/lib/supabase/presentations'
+import { generateSlideDescription } from '@/lib/supabase/edgeFunctions'
 import DashboardHeader from '@/components/DashboardHeader'
 import DescriptionTextarea from '@/components/DescriptionTextarea'
 import { createClient } from '@/lib/supabase/client'
@@ -35,6 +36,8 @@ export default function PresentationPage() {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [titleValue, setTitleValue] = useState('')
   const titleSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
+  const [presentationObjective, setPresentationObjective] = useState('')
 
   const presentationId = params.id as string
 
@@ -61,6 +64,7 @@ export default function PresentationPage() {
       setCtaText(presentation.cta_text || 'Add call to action')
       setCtaUrl(presentation.cta_url || '')
       setTitleValue(presentation.title)
+      setPresentationObjective(presentation.objective || '')
     }
   }, [presentation])
 
@@ -337,6 +341,47 @@ export default function PresentationPage() {
     if (!titleValue.trim() && presentation) {
       setTitleValue(presentation.title)
     }
+  }
+
+  const handleGenerateDescription = async () => {
+    if (!presentation?.slides || !presentation.slides[currentSlideIndex]) return
+
+    const currentSlide = presentation.slides[currentSlideIndex]
+    
+    setIsGeneratingDescription(true)
+    try {
+      const result = await generateSlideDescription(
+        currentSlide.id,
+        currentSlide.image_url,
+        presentationObjective || undefined
+      )
+
+      if (result.success && result.description) {
+        setDescriptionValue(result.description)
+        // Update local state
+        const updatedSlides = [...presentation.slides]
+        updatedSlides[currentSlideIndex] = {
+          ...currentSlide,
+          description: result.description
+        }
+        setPresentation({
+          ...presentation,
+          slides: updatedSlides
+        })
+      } else {
+        alert(`Failed to generate description: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error generating description:', error)
+      alert('Failed to generate description')
+    } finally {
+      setIsGeneratingDescription(false)
+    }
+  }
+
+  const handleImproveDescription = async () => {
+    // TODO: Implement improve functionality
+    alert('Improve functionality coming soon!')
   }
 
   // Handle keyboard navigation
@@ -666,6 +711,9 @@ export default function PresentationPage() {
             <DescriptionTextarea 
               value={descriptionValue}
               onChange={setDescriptionValue}
+              onGenerateAI={handleGenerateDescription}
+              onImproveAI={handleImproveDescription}
+              isGenerating={isGeneratingDescription}
             />
           </div>
 

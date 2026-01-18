@@ -142,3 +142,58 @@ export async function uploadAndProcessPDF(
     }
   }
 }
+
+export interface GenerateDescriptionResponse {
+  success: boolean
+  description?: string
+  error?: string
+}
+
+export async function generateSlideDescription(
+  slideId: string,
+  imageUrl: string,
+  presentationObjective?: string
+): Promise<GenerateDescriptionResponse> {
+  try {
+    const supabase = createClient()
+
+    // Get current user session
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      return {
+        success: false,
+        error: 'User not authenticated',
+      }
+    }
+
+    console.log('Generating description for slide:', slideId)
+
+    // Call Edge Function to generate description
+    const { data, error } = await supabase.functions.invoke('generate-slide-description', {
+      body: {
+        slideId,
+        imageUrl,
+        presentationObjective,
+      },
+    })
+
+    if (error) {
+      console.error('Edge function error:', error)
+      return {
+        success: false,
+        error: `Failed to generate description: ${error.message}`,
+      }
+    }
+
+    return data as GenerateDescriptionResponse
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
