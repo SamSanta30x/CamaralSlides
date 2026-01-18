@@ -80,6 +80,8 @@ export default function PresentationPage() {
     const isRegularSlide = currentSlideIndex >= 0 && currentSlideIndex < totalSlides
     if (isRegularSlide) {
       setImageLoading(true)
+    } else {
+      setImageLoading(false)
     }
   }, [currentSlideIndex, presentation?.slides?.length])
 
