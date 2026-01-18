@@ -99,9 +99,18 @@ export async function startPresentationView(
         message: error.message,
         details: error.details,
         hint: error.hint,
-        code: error.code
+        code: error.code,
+        errorString: JSON.stringify(error, null, 2)
       })
-      return { data: null, error }
+      
+      // Create a more descriptive error
+      const descriptiveError = new Error(
+        `Failed to create presentation view: ${error.message || 'Unknown error'}. ` +
+        `Code: ${error.code || 'N/A'}. ` +
+        `Hint: ${error.hint || 'Check if presentation_views table exists and RLS policies are configured.'}`
+      )
+      
+      return { data: null, error: descriptiveError }
     }
 
     console.log('✅ Presentation view started:', data.id)
