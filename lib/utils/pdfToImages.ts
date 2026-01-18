@@ -65,6 +65,7 @@ export async function convertPDFToImages(
       const renderContext = {
         canvasContext: context,
         viewport: viewport,
+        canvas: canvas,
       }
       
       await page.render(renderContext).promise
