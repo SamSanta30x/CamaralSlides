@@ -1082,7 +1082,7 @@ export default function PresentationPage() {
                       )}
                     </button>
                   )}
-                  {currentSlideIndex === totalSlides - 1 && presentation && !presentation.end_title && !presentation.end_description && (
+                  {currentSlideIndex === totalSlides - 1 && presentation && !presentation.end_title?.trim() && !presentation.end_description?.trim() && (
                     /* Show "Add an End page" button on last slide only if no end page exists */
                     <button
                       onClick={handleNextSlide}
@@ -1098,7 +1098,7 @@ export default function PresentationPage() {
                       </span>
                     </button>
                   )}
-                  {currentSlideIndex === totalSlides - 1 && presentation && (presentation.end_title || presentation.end_description) && (
+                  {currentSlideIndex === totalSlides - 1 && presentation && (presentation.end_title?.trim() || presentation.end_description?.trim()) && (
                     /* Show End Page preview on last slide if end page exists */
                     <button
                       onClick={handleNextSlide}
@@ -1284,7 +1284,7 @@ export default function PresentationPage() {
                 })}
 
                 {/* End Page Thumbnail - Show if end page exists */}
-                {presentation && (presentation.end_title || presentation.end_description) && (
+                {presentation && (presentation.end_title?.trim() || presentation.end_description?.trim()) && (
                   <div
                     key="end-slide"
                     ref={(el) => { thumbnailRefs.current[totalSlides] = el }}
