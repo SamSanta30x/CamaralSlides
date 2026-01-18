@@ -11,6 +11,8 @@ interface EndSlideEditorProps {
   logoUrl?: string | null
   onTitleChange: (title: string) => void
   onDescriptionChange: (description: string) => void
+  onCtaTextChange?: (text: string) => void
+  onCtaUrlChange?: (url: string) => void
   onLogoUpload?: (file: File) => void
 }
 
@@ -23,16 +25,24 @@ export default function EndSlideEditor({
   logoUrl,
   onTitleChange,
   onDescriptionChange,
+  onCtaTextChange,
+  onCtaUrlChange,
   onLogoUpload
 }: EndSlideEditorProps) {
   const titleRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const ctaTextRef = useRef<HTMLSpanElement>(null)
+  const ctaButtonRef = useRef<HTMLDivElement>(null)
   const [localTitle, setLocalTitle] = useState(endTitle || '')
   const [localDescription, setLocalDescription] = useState(description || '')
   const [isTitleFocused, setIsTitleFocused] = useState(false)
   const [isDescriptionFocused, setIsDescriptionFocused] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [isEditingCta, setIsEditingCta] = useState(false)
+  const [localCtaText, setLocalCtaText] = useState(ctaText)
+  const [showUrlPopup, setShowUrlPopup] = useState(false)
+  const [localCtaUrl, setLocalCtaUrl] = useState(ctaUrl)
 
   const displayTitle = endTitle || `Say bye! Recall information with @${presentationTitle}`
 
@@ -91,6 +101,40 @@ export default function EndSlideEditor({
       onLogoUpload(file)
     }
   }
+
+  const handleCtaClick = () => {
+    setIsEditingCta(true)
+    setShowUrlPopup(true)
+  }
+
+  const handleCtaTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newText = e.target.value
+    setLocalCtaText(newText)
+    if (onCtaTextChange) {
+      onCtaTextChange(newText)
+    }
+  }
+
+  const handleCtaUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newUrl = e.target.value
+    setLocalCtaUrl(newUrl)
+    if (onCtaUrlChange) {
+      onCtaUrlChange(newUrl)
+    }
+  }
+
+  const handleCtaBlur = () => {
+    setIsEditingCta(false)
+    setShowUrlPopup(false)
+  }
+
+  // Measure CTA button width for URL popup
+  const [ctaButtonWidth, setCtaButtonWidth] = useState(0)
+  useEffect(() => {
+    if (ctaButtonRef.current) {
+      setCtaButtonWidth(ctaButtonRef.current.offsetWidth)
+    }
+  }, [localCtaText])
 
   return (
     <div className="w-full h-full bg-white flex flex-col rounded-[16px]">
@@ -224,9 +268,47 @@ export default function EndSlideEditor({
         />
       </div>
 
-      {/* CTA Button - Preview only */}
-      <div className="bg-[#0d0d0d] text-white font-['Inter',sans-serif] text-[16px] font-medium px-8 py-4 rounded-full pointer-events-none cursor-not-allowed">
-        {ctaText}
+      {/* CTA Button - Editable */}
+      <div className="relative">
+        <div
+          ref={ctaButtonRef}
+          onClick={handleCtaClick}
+          className="bg-[#0d0d0d] text-white font-['Inter',sans-serif] text-[16px] font-medium px-8 py-4 rounded-full cursor-pointer hover:bg-[#2d2d2d] transition-colors"
+        >
+          {isEditingCta ? (
+            <input
+              type="text"
+              value={localCtaText}
+              onChange={handleCtaTextChange}
+              onBlur={handleCtaBlur}
+              autoFocus
+              className="bg-transparent outline-none text-center w-full"
+              style={{ width: ctaTextRef.current?.offsetWidth || 'auto' }}
+            />
+          ) : (
+            <span ref={ctaTextRef}>{localCtaText}</span>
+          )}
+        </div>
+
+        {/* URL Popup */}
+        {showUrlPopup && (
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 bg-white border border-[#e5e5e5] rounded-lg shadow-lg p-2 z-50"
+            style={{
+              top: '-40px',
+              minWidth: `${Math.max(ctaButtonWidth, 200)}px`,
+              maxWidth: '400px'
+            }}
+          >
+            <input
+              type="url"
+              value={localCtaUrl}
+              onChange={handleCtaUrlChange}
+              placeholder="https://example.com"
+              className="w-full px-3 py-1.5 text-[14px] font-['Inter',sans-serif] text-[#0d0d0d] border border-[#e5e5e5] rounded focus:outline-none focus:border-[#0d0d0d]"
+            />
+          </div>
+        )}
       </div>
 
       {/* Helper Text */}

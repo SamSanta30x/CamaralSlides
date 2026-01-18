@@ -1082,11 +1082,13 @@ export default function PresentationPage() {
                           endTitle={presentation.end_title ?? undefined}
                           presentationTitle={presentation.title}
                           description={endDescriptionValue}
-                          ctaText={ctaText === 'Add call to action' ? 'Start for free' : ctaText}
+                          ctaText={ctaText === 'Add call to action' ? 'Create your own AI Presenter' : ctaText}
                           ctaUrl={ctaUrl || 'https://camaral.ai'}
                           logoUrl={logoUrl}
                           onTitleChange={handleEndTitleChange}
                           onDescriptionChange={handleEndDescriptionChange}
+                          onCtaTextChange={setCtaText}
+                          onCtaUrlChange={handleUrlChange}
                           onLogoUpload={handleLogoUpload}
                         />
                       </div>
@@ -1195,10 +1197,12 @@ export default function PresentationPage() {
                           endTitle={presentation.end_title ?? undefined}
                           presentationTitle={presentation.title}
                           description={endDescriptionValue}
-                          ctaText={ctaText === 'Add call to action' ? 'Start for free' : ctaText}
+                          ctaText={ctaText === 'Add call to action' ? 'Create your own AI Presenter' : ctaText}
                           ctaUrl={ctaUrl || 'https://camaral.ai'}
                           onTitleChange={handleEndTitleChange}
                           onDescriptionChange={handleEndDescriptionChange}
+                          onCtaTextChange={setCtaText}
+                          onCtaUrlChange={handleUrlChange}
                         />
                       </div>
                     </button>
