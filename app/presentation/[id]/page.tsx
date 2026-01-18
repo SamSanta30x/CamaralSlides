@@ -942,7 +942,7 @@ export default function PresentationPage() {
             ) : (
               <>
                 {/* Carousel Container */}
-                <div className="flex items-center justify-center gap-4 relative">
+                <div className="flex items-center justify-center gap-4 relative overflow-x-hidden">
                   {/* Previous Slide (Left - 90% size) */}
                   {currentSlideIndex === 0 && presentation && (
                     /* Show Welcome Slide as previous when on first real slide */
