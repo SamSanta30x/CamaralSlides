@@ -20,6 +20,15 @@ export interface Presentation {
   created_at: string
   updated_at: string
   slides?: Slide[]
+  // Agent fields
+  agent_name: string | null
+  agent_voice: string | null
+  agent_language: string | null
+  agent_first_message: string | null
+  agent_description: string | null
+  // Welcome Slide fields
+  welcome_title: string | null
+  estimated_minutes: number | null
 }
 
 /**
