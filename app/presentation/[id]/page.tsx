@@ -1200,18 +1200,22 @@ export default function PresentationPage() {
                 isGenerating={isGeneratingDescription}
               />
             ) : (
-              /* Powered by Camaral for Welcome/End pages */
-              <div className="flex flex-col items-center justify-start pt-6">
-                <p className="font-['Inter',sans-serif] text-[12px] text-[#999] flex items-center gap-2">
-                  Powered by
-                  <Image 
-                    src="/Camaral Logo.svg" 
-                    alt="Camaral" 
-                    width={70}
-                    height={16}
-                    className="opacity-60"
-                  />
-                </p>
+              /* Powered by Camaral for Welcome/End pages - with spacing to keep carousel at same position */
+              <div className="flex flex-col items-center justify-between h-full min-h-[160px]">
+                <div className="pt-6">
+                  <p className="font-['Inter',sans-serif] text-[12px] text-[#999] flex items-center gap-2">
+                    Powered by
+                    <Image 
+                      src="/Camaral Logo.svg" 
+                      alt="Camaral" 
+                      width={70}
+                      height={16}
+                      className="opacity-60"
+                    />
+                  </p>
+                </div>
+                {/* Spacer to push carousel down */}
+                <div className="flex-1"></div>
               </div>
             )}
           </div>
