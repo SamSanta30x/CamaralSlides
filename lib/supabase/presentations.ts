@@ -97,6 +97,8 @@ export interface Presentation {
   estimated_minutes: number | null
   end_title: string | null
   end_description: string | null
+  welcome_logo_url: string | null
+  end_logo_url: string | null
   created_at: string
   updated_at: string
   slides?: Slide[]
@@ -503,6 +505,56 @@ export async function updateEndDescription(
     const { data, error } = await supabase
       .from('presentations')
       .update({ end_description: endDescription, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      return { data: null, error }
+    }
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+export async function updateWelcomeLogo(
+  id: string,
+  logoUrl: string | null
+): Promise<{ data: Presentation | null; error: Error | null }> {
+  try {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('presentations')
+      .update({ welcome_logo_url: logoUrl, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      return { data: null, error }
+    }
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+export async function updateEndLogo(
+  id: string,
+  logoUrl: string | null
+): Promise<{ data: Presentation | null; error: Error | null }> {
+  try {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('presentations')
+      .update({ end_logo_url: logoUrl, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single()

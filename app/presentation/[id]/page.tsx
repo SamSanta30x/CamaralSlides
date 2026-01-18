@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, updatePresentationObjective, updateEndTitle, updateEndDescription, deleteSlide, deleteEndPage, type Presentation, type Slide } from '@/lib/supabase/presentations'
+import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, updatePresentationObjective, updateEndTitle, updateEndDescription, updateWelcomeLogo, updateEndLogo, deleteSlide, deleteEndPage, type Presentation, type Slide } from '@/lib/supabase/presentations'
 import { generateSlideDescription } from '@/lib/supabase/edgeFunctions'
 import DashboardHeader from '@/components/DashboardHeader'
 import DescriptionTextarea from '@/components/DescriptionTextarea'
@@ -109,8 +109,17 @@ export default function PresentationPage() {
       setTitleValue(presentation.title)
       setPresentationObjective(presentation.objective || '')
       setWelcomeDescription(presentation.objective || '')
+      
+      // Initialize logo based on current page
+      const isWelcome = currentSlideIndex === -1
+      const isEnd = currentSlideIndex === totalSlides
+      if (isWelcome) {
+        setLogoUrl(presentation.welcome_logo_url || null)
+      } else if (isEnd) {
+        setLogoUrl(presentation.end_logo_url || null)
+      }
     }
-  }, [presentation])
+  }, [presentation, currentSlideIndex])
 
   // Handle welcome slide description changes
   const handleWelcomeDescriptionChange = (description: string) => {
@@ -272,8 +281,25 @@ export default function PresentationPage() {
 
       setLogoUrl(publicUrl)
 
-      // TODO: Save logo URL to database when schema is updated
-      console.log('Logo uploaded:', publicUrl)
+      // Save to database based on current page
+      const isWelcome = currentSlideIndex === -1
+      const isEnd = currentSlideIndex === totalSlides
+      
+      if (isWelcome) {
+        const { error } = await updateWelcomeLogo(presentationId, publicUrl)
+        if (error) {
+          console.error('Error saving welcome logo to database:', error)
+        } else {
+          console.log('Welcome logo saved successfully')
+        }
+      } else if (isEnd) {
+        const { error } = await updateEndLogo(presentationId, publicUrl)
+        if (error) {
+          console.error('Error saving end logo to database:', error)
+        } else {
+          console.log('End logo saved successfully')
+        }
+      }
     } catch (error) {
       console.error('Error uploading logo:', error)
     }
@@ -1237,7 +1263,7 @@ export default function PresentationPage() {
 
           {/* Description/Prompt Area - Only show for regular slides */}
           {!isWelcomeSlide && !isEndSlide && (
-            <div className="w-full max-w-[840px] mb-6">
+            <div className="w-full max-w-[840px] mb-[18px]">
               <DescriptionTextarea 
                 value={descriptionValue}
                 onChange={setDescriptionValue}
