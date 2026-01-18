@@ -222,14 +222,16 @@ export default function SharePresentationPage() {
               </span>
             </a>
           ) : (
-            <Link
-              href="/signup"
+            <a
+              href="https://camaral.ai"
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-[#0d0d0d] flex items-center justify-center px-[14px] py-[8px] rounded-[999px] hover:bg-[#2e2e2e] transition-colors"
             >
               <span className="font-['Inter',sans-serif] text-[16px] text-white tracking-[-0.32px]">
-                Start for free
+                Create your own AI Presenter
               </span>
-            </Link>
+            </a>
           )}
         </div>
         </div>
@@ -257,7 +259,7 @@ export default function SharePresentationPage() {
               endTitle={presentation.end_title ?? undefined}
               presentationTitle={presentation.title}
               description={presentation.end_description ?? undefined}
-              ctaText={presentation.cta_text || 'Start for free'}
+              ctaText={presentation.cta_text || 'Create your own AI Presenter'}
               ctaUrl={presentation.cta_url || 'https://camaral.ai'}
               logoUrl={presentation.logo_url}
             />

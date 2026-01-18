@@ -13,7 +13,7 @@ export default function EndSlide({
   endTitle,
   presentationTitle,
   description,
-  ctaText = 'Start for free',
+  ctaText = 'Create your own AI Presenter',
   ctaUrl = 'https://camaral.ai',
   logoUrl
 }: EndSlideProps) {
