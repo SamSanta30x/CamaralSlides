@@ -293,6 +293,7 @@ export default function EndSlideEditor({
           />
         </p>
       </div>
+      </div>
     </div>
   )
 }
