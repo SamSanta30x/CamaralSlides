@@ -67,7 +67,11 @@ export default function WelcomeSlide({
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full bg-white border border-[#e5e5e5] rounded-[999px] px-[20px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors"
+            className="flex items-center self-stretch flex-shrink-0 bg-white border border-[#e5e5e5] rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors"
+            style={{
+              height: '42px',
+              minWidth: '120px'
+            }}
           />
 
           {/* Email Input */}
@@ -77,7 +81,11 @@ export default function WelcomeSlide({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="w-full bg-white border border-[#e5e5e5] rounded-[999px] px-[20px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors"
+            className="flex items-center self-stretch flex-shrink-0 bg-white border border-[#e5e5e5] rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors"
+            style={{
+              height: '42px',
+              minWidth: '120px'
+            }}
           />
 
           {/* Add Question Link */}

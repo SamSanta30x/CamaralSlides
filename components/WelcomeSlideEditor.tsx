@@ -63,7 +63,11 @@ export default function WelcomeSlideEditor({
             type="text"
             placeholder="Your name"
             disabled
-            className="w-full bg-white border border-[#e5e5e5] rounded-[999px] px-[20px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999]"
+            className="flex items-center self-stretch flex-shrink-0 bg-white border border-[#e5e5e5] rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999]"
+            style={{
+              height: '42px',
+              minWidth: '120px'
+            }}
           />
 
           {/* Email Input */}
@@ -71,7 +75,11 @@ export default function WelcomeSlideEditor({
             type="email"
             placeholder="Your email"
             disabled
-            className="w-full bg-white border border-[#e5e5e5] rounded-[999px] px-[20px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999]"
+            className="flex items-center self-stretch flex-shrink-0 bg-white border border-[#e5e5e5] rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999]"
+            style={{
+              height: '42px',
+              minWidth: '120px'
+            }}
           />
 
           {/* Add Question Link */}
