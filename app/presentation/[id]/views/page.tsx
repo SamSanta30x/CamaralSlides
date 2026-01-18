@@ -7,98 +7,50 @@ import DashboardHeader from '@/components/DashboardHeader'
 import ViewDetailModal from '@/components/ViewDetailModal'
 import SearchInput from '@/components/SearchInput'
 import ActionButton from '@/components/ActionButton'
-
-interface ViewData {
-  id: string
-  date: string
-  name: string
-  email: string
-  duration: string
-  status: 'Successful' | 'Failed'
-}
+import { getPresentationViews, formatDuration, formatViewDate, type PresentationView } from '@/lib/supabase/analytics'
 
 export default function ViewsPage() {
   const router = useRouter()
   const params = useParams()
   const { user, loading: authLoading } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedView, setSelectedView] = useState<ViewData | null>(null)
+  const [selectedView, setSelectedView] = useState<PresentationView | null>(null)
+  const [views, setViews] = useState<PresentationView[]>([])
+  const [loading, setLoading] = useState(true)
 
   const presentationId = params.id as string
-
-  // Mock data - replace with real data from API
-  const [views] = useState<ViewData[]>([
-    {
-      id: '1',
-      date: 'Sep 22, 2025, 1:16 am',
-      name: 'Sofia Hoyos',
-      email: 'sof@gmail.com',
-      duration: '09:00',
-      status: 'Successful'
-    },
-    {
-      id: '2',
-      date: 'Sep 22, 2025, 1:16 am',
-      name: 'Laura Mejia',
-      email: 'lucasz@accenture.com',
-      duration: '10:00',
-      status: 'Successful'
-    },
-    {
-      id: '3',
-      date: 'Sep 22, 2025, 1:16 am',
-      name: 'Orlando Ortiz',
-      email: 'germa@dupta.ai',
-      duration: '10:00',
-      status: 'Successful'
-    },
-    {
-      id: '4',
-      date: 'Sep 22, 2025, 1:16 am',
-      name: 'Vanessa Duque',
-      email: 'grises32@openai.com',
-      duration: '10:00',
-      status: 'Successful'
-    },
-    {
-      id: '5',
-      date: 'Sep 22, 2025, 1:16 am',
-      name: 'Alan Paol',
-      email: 'alanpol-2@outlook.com',
-      duration: '10:00',
-      status: 'Successful'
-    },
-    {
-      id: '6',
-      date: 'Sep 22, 2025, 1:16 am',
-      name: 'Pol Volandia',
-      email: 'ljog@gmail.com',
-      duration: '10:00',
-      status: 'Successful'
-    },
-    {
-      id: '7',
-      date: 'Sep 22, 2025, 1:16 am',
-      name: 'Lucas López',
-      email: 'mlnvar324@luca.com',
-      duration: '10:00',
-      status: 'Successful'
-    },
-    {
-      id: '8',
-      date: 'Sep 22, 2025, 1:16 am',
-      name: 'Grisela Giraldo',
-      email: 'grise53giral.2@gmail.com',
-      duration: '10:00',
-      status: 'Successful'
-    }
-  ])
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/')
     }
   }, [user, authLoading, router])
+
+  useEffect(() => {
+    if (user && presentationId) {
+      loadViews()
+      
+      // Refresh views every 30 seconds
+      const interval = setInterval(loadViews, 30000)
+      
+      return () => clearInterval(interval)
+    }
+  }, [user, presentationId])
+
+  const loadViews = async () => {
+    try {
+      const { data, error } = await getPresentationViews(presentationId)
+      if (error) {
+        console.error('Error loading views:', error)
+        return
+      }
+      setViews(data || [])
+    } catch (error) {
+      console.error('Error loading views:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (authLoading) {
     return (
@@ -112,8 +64,8 @@ export default function ViewsPage() {
   }
 
   const filteredViews = views.filter(view =>
-    view.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    view.email.toLowerCase().includes(searchQuery.toLowerCase())
+    (view.viewer_name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+    (view.viewer_email?.toLowerCase().includes(searchQuery.toLowerCase()) || false)
   )
 
   return (
@@ -168,35 +120,58 @@ export default function ViewsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredViews.map((view, index) => (
-                <tr 
-                  key={view.id} 
-                  onClick={() => setSelectedView(view)}
-                  className="hover:bg-[#fafafa] transition-colors cursor-pointer"
-                >
-                  <td className="px-6 py-4 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
-                    {view.date}
-                  </td>
-                  <td className="px-6 py-4 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
-                    {view.name}
-                  </td>
-                  <td className="px-6 py-4 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
-                    {view.email}
-                  </td>
-                  <td className="px-6 py-4 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
-                    {view.duration}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center justify-center gap-[10px] rounded-[6px] font-['Inter',sans-serif] text-[12px] ${
-                      view.status === 'Successful' 
-                        ? 'bg-[#CBFFA3] text-[#0d0d0d] border border-[#88E73F] px-[5px] pt-[2px] pb-[3px]' 
-                        : 'bg-[#ef4444] text-white px-3 py-1'
-                    }`}>
-                      {view.status}
-                    </span>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#66e7f5] border-t-transparent"></div>
+                      <p className="font-['Inter',sans-serif] text-[14px] text-[#666]">Loading views...</p>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : filteredViews.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <p className="font-['Inter',sans-serif] text-[14px] text-[#666]">
+                      No views yet. Share your presentation to start tracking views.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredViews.map((view) => (
+                  <tr 
+                    key={view.id} 
+                    onClick={() => setSelectedView(view)}
+                    className="hover:bg-[#fafafa] transition-colors cursor-pointer"
+                  >
+                    <td className="px-6 py-4 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                      {formatViewDate(view.started_at)}
+                    </td>
+                    <td className="px-6 py-4 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                      {view.viewer_name || 'Anonymous'}
+                    </td>
+                    <td className="px-6 py-4 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                      {view.viewer_email || '-'}
+                    </td>
+                    <td className="px-6 py-4 font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                      {formatDuration(view.duration_seconds)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center justify-center gap-[10px] rounded-[6px] font-['Inter',sans-serif] text-[12px] ${
+                        view.call_status === 'Successful' 
+                          ? 'bg-[#CBFFA3] text-[#0d0d0d] border border-[#88E73F] px-[5px] pt-[2px] pb-[3px]' 
+                          : view.call_status === 'Failed'
+                          ? 'bg-[#ef4444] text-white px-3 py-1'
+                          : view.call_status === 'In Progress'
+                          ? 'bg-[#fbbf24] text-[#0d0d0d] px-3 py-1'
+                          : 'bg-[#e5e5e5] text-[#666] px-3 py-1'
+                      }`}>
+                        {view.call_status || 'No Call'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

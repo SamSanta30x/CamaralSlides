@@ -2,76 +2,20 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-
-interface Message {
-  id: string
-  sender: string
-  text: string
-  timestamp: string
-  isUser: boolean
-}
+import { type PresentationView, formatDuration, formatViewDate } from '@/lib/supabase/analytics'
 
 interface ViewDetailModalProps {
   isOpen: boolean
   onClose: () => void
-  viewData: {
-    id: string
-    name: string
-    date: string
-    duration: string
-    email: string
-  }
+  viewData: PresentationView
 }
 
 export default function ViewDetailModal({ isOpen, onClose, viewData }: ViewDetailModalProps) {
   const [isAnimating, setIsAnimating] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'transcription'>('overview')
 
-  // Mock messages data
-  const messages: Message[] = [
-    {
-      id: '1',
-      sender: 'Charlie Layne',
-      text: 'The report header needs to be larger. Can we adjust it?',
-      timestamp: 'Sep 22, 2025, 1:16 PM',
-      isUser: false
-    },
-    {
-      id: '2',
-      sender: 'Charlie Layne',
-      text: 'The report header needs to be larger. Can we adjust it?',
-      timestamp: 'Sep 22, 2025, 1:16 PM',
-      isUser: true
-    },
-    {
-      id: '3',
-      sender: 'Charlie Layne',
-      text: 'The report header needs to be larger. Can we adjust it?',
-      timestamp: 'Sep 22, 2025, 1:16 PM',
-      isUser: false
-    },
-    {
-      id: '4',
-      sender: 'Charlie Layne',
-      text: 'The report header needs to be larger. Can we adjust it?',
-      timestamp: 'Sep 22, 2025, 1:16 PM',
-      isUser: true
-    },
-    {
-      id: '5',
-      sender: 'Charlie Layne',
-      text: 'The report header needs to be larger. Can we adjust it?',
-      timestamp: 'Sep 22, 2025, 1:16 PM',
-      isUser: false
-    },
-    {
-      id: '6',
-      sender: 'Charlie Layne',
-      text: 'The report header needs to be larger. Can we adjust it?',
-      timestamp: 'Sep 22, 2025, 1:16 PM',
-      isUser: true
-    }
-  ]
+  // Get transcription messages from viewData
+  const messages = viewData.transcription || []
 
   // Handle animation on mount/unmount
   useEffect(() => {
@@ -126,10 +70,10 @@ export default function ViewDetailModal({ isOpen, onClose, viewData }: ViewDetai
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e5e5]">
             <div className="flex items-center gap-3">
               <h2 className="font-['Inter',sans-serif] text-[16px] font-semibold text-[#0d0d0d]">
-                Conversation with {viewData.name.split(' ')[0]}
+                Conversation with {viewData.viewer_name?.split(' ')[0] || 'Anonymous'}
               </h2>
               <span className="font-['Inter',sans-serif] text-[12px] text-[#999]">
-                3b0a6566-9fab-4888-bb24-f5704f48bf4c
+                {viewData.id}
               </span>
             </div>
           </div>
@@ -187,7 +131,7 @@ export default function ViewDetailModal({ isOpen, onClose, viewData }: ViewDetai
                       Summary
                     </h3>
                     <p className="font-['Inter',sans-serif] text-[14px] text-[#666] leading-relaxed">
-                      The user wants to join the FIA Ventas program. The AI agent, named Toby, gathers information about the user's current sales situation, specifically that they sell audiobooks for children and are struggling to find prospects. The agent offers two options: starting the program immediately or scheduling a call to refine their prospecting plan with AI. The user prefers the call, and the agent proposes scheduling options.
+                      {viewData.summary || 'No summary available yet. Summary will be generated after the call ends.'}
                     </p>
                   </div>
 
@@ -196,46 +140,83 @@ export default function ViewDetailModal({ isOpen, onClose, viewData }: ViewDetai
                     <span className="font-['Inter',sans-serif] text-[14px] text-[#666]">
                       Call status
                     </span>
-                    <span className="inline-flex items-center justify-center gap-[10px] rounded-[6px] font-['Inter',sans-serif] text-[12px] bg-[#CBFFA3] text-[#0d0d0d] border border-[#88E73F] px-[5px] pt-[2px] pb-[3px]">
-                      Successful
+                    <span className={`inline-flex items-center justify-center gap-[10px] rounded-[6px] font-['Inter',sans-serif] text-[12px] ${
+                      viewData.call_status === 'Successful' 
+                        ? 'bg-[#CBFFA3] text-[#0d0d0d] border border-[#88E73F] px-[5px] pt-[2px] pb-[3px]' 
+                        : viewData.call_status === 'Failed'
+                        ? 'bg-[#ef4444] text-white px-3 py-1'
+                        : viewData.call_status === 'In Progress'
+                        ? 'bg-[#fbbf24] text-[#0d0d0d] px-3 py-1'
+                        : 'bg-[#e5e5e5] text-[#666] px-3 py-1'
+                    }`}>
+                      {viewData.call_status || 'No Call'}
                     </span>
                   </div>
+
+                  {/* Recording */}
+                  {viewData.recording_url && (
+                    <div className="flex flex-col gap-3">
+                      <h3 className="font-['Inter',sans-serif] text-[14px] font-semibold text-[#0d0d0d]">
+                        Recording
+                      </h3>
+                      <a 
+                        href={viewData.recording_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-[#0d0d0d] hover:text-[#66e7f5] transition-colors"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12z" stroke="currentColor" strokeWidth="1.5"/>
+                          <path d="M6.5 5.5L10 8l-3.5 2.5V5.5z" fill="currentColor"/>
+                        </svg>
+                        <span className="font-['Inter',sans-serif] text-[14px]">
+                          Play Recording
+                        </span>
+                      </a>
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* Transcription Content - Messages */
                 <div className="flex flex-col gap-4">
-                  {messages.map((message) => (
-                    <div 
-                      key={message.id} 
-                      className={`flex gap-3 ${message.isUser ? 'flex-row-reverse' : ''}`}
-                    >
-                      {/* Avatar */}
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-[12px] font-bold flex-shrink-0">
-                        {message.sender.charAt(0)}
-                      </div>
-                      
-                      {/* Message Content */}
-                      <div className={`flex flex-col gap-1 flex-1 ${message.isUser ? 'items-end' : ''}`}>
-                        <div className={`flex items-center gap-2 ${message.isUser ? 'flex-row-reverse' : ''}`}>
-                          <span className="font-['Inter',sans-serif] text-[14px] font-medium text-[#0d0d0d]">
-                            {message.sender}
-                          </span>
-                          <span className="font-['Inter',sans-serif] text-[11px] text-[#999]">
-                            {message.timestamp}
-                          </span>
+                  {messages.length === 0 ? (
+                    <p className="font-['Inter',sans-serif] text-[14px] text-[#666] text-center py-8">
+                      No transcription available yet.
+                    </p>
+                  ) : (
+                    messages.map((message, index) => (
+                      <div 
+                        key={index} 
+                        className={`flex gap-3 ${message.speaker === 'User' ? 'flex-row-reverse' : ''}`}
+                      >
+                        {/* Avatar */}
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-[12px] font-bold flex-shrink-0">
+                          {message.speaker === 'User' ? (viewData.viewer_name?.charAt(0) || 'U') : 'A'}
                         </div>
-                        <div className={`px-4 py-3 rounded-[12px] max-w-[400px] ${
-                          message.isUser 
-                            ? 'bg-[#f5f5f5]' 
-                            : 'bg-white border border-[#e5e5e5]'
-                        }`}>
-                          <p className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] leading-relaxed">
-                            {message.text}
-                          </p>
+                        
+                        {/* Message Content */}
+                        <div className={`flex flex-col gap-1 flex-1 ${message.speaker === 'User' ? 'items-end' : ''}`}>
+                          <div className={`flex items-center gap-2 ${message.speaker === 'User' ? 'flex-row-reverse' : ''}`}>
+                            <span className="font-['Inter',sans-serif] text-[14px] font-medium text-[#0d0d0d]">
+                              {message.speaker === 'User' ? (viewData.viewer_name || 'User') : 'Agent'}
+                            </span>
+                            <span className="font-['Inter',sans-serif] text-[11px] text-[#999]">
+                              {message.timestamp}
+                            </span>
+                          </div>
+                          <div className={`px-4 py-3 rounded-[12px] max-w-[400px] ${
+                            message.speaker === 'User' 
+                              ? 'bg-[#f5f5f5]' 
+                              : 'bg-white border border-[#e5e5e5]'
+                          }`}>
+                            <p className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] leading-relaxed">
+                              {message.text}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               )}
             </div>
@@ -262,16 +243,46 @@ export default function ViewDetailModal({ isOpen, onClose, viewData }: ViewDetai
           {/* Metadata Content */}
           <div className="flex-1 overflow-y-auto p-6">
             <div className="flex flex-col gap-6">
+              {/* Name */}
+              <div className="flex flex-col gap-2">
+                <span className="font-['Inter',sans-serif] text-[14px] text-[#666]">Name</span>
+                <span className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                  {viewData.viewer_name || 'Anonymous'}
+                </span>
+              </div>
+
+              {/* Email */}
+              {viewData.viewer_email && (
+                <div className="flex flex-col gap-2">
+                  <span className="font-['Inter',sans-serif] text-[14px] text-[#666]">Email</span>
+                  <span className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                    {viewData.viewer_email}
+                  </span>
+                </div>
+              )}
+
               {/* Date */}
               <div className="flex flex-col gap-2">
                 <span className="font-['Inter',sans-serif] text-[14px] text-[#666]">Date</span>
-                <span className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">{viewData.date}</span>
+                <span className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                  {formatViewDate(viewData.started_at)}
+                </span>
               </div>
 
               {/* Duration */}
               <div className="flex flex-col gap-2">
                 <span className="font-['Inter',sans-serif] text-[14px] text-[#666]">Duration</span>
-                <span className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">{viewData.duration}</span>
+                <span className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                  {formatDuration(viewData.duration_seconds)}
+                </span>
+              </div>
+
+              {/* Status */}
+              <div className="flex flex-col gap-2">
+                <span className="font-['Inter',sans-serif] text-[14px] text-[#666]">Status</span>
+                <span className="font-['Inter',sans-serif] text-[14px] text-[#0d0d0d]">
+                  {viewData.is_active ? 'Active' : 'Ended'}
+                </span>
               </div>
             </div>
           </div>

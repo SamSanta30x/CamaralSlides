@@ -1,5 +1,11 @@
 import { createClient } from '@/lib/supabase/client'
 
+export interface TranscriptionMessage {
+  timestamp: string
+  speaker: 'Agent' | 'User'
+  text: string
+}
+
 export interface PresentationView {
   id: string
   presentation_id: string
@@ -10,6 +16,12 @@ export interface PresentationView {
   is_active: boolean
   user_agent: string | null
   ip_address: string | null
+  viewer_name: string | null
+  viewer_email: string | null
+  recording_url: string | null
+  summary: string | null
+  call_status: 'Successful' | 'Failed' | 'In Progress' | 'No Call' | null
+  transcription: TranscriptionMessage[] | null
   created_at: string
   updated_at: string
 }
@@ -291,6 +303,71 @@ export async function getPresentationViews(
 }
 
 /**
+ * Update view details (name, email, call status, etc.)
+ * This should be called when ElevenLabs provides viewer information
+ */
+export async function updateViewDetails(
+  viewId: string,
+  details: {
+    viewer_name?: string
+    viewer_email?: string
+    recording_url?: string
+    summary?: string
+    call_status?: 'Successful' | 'Failed' | 'In Progress' | 'No Call'
+    transcription?: TranscriptionMessage[]
+  }
+): Promise<{ error: Error | null }> {
+  try {
+    const supabase = createClient()
+
+    const { error } = await supabase
+      .from('presentation_views')
+      .update(details)
+      .eq('id', viewId)
+
+    if (error) {
+      console.error('Error updating view details:', error)
+      return { error }
+    }
+
+    return { error: null }
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+/**
+ * Get a single view by ID (for modal details)
+ */
+export async function getViewById(
+  viewId: string
+): Promise<{ data: PresentationView | null; error: Error | null }> {
+  try {
+    const supabase = createClient()
+
+    const { data, error } = await supabase
+      .from('presentation_views')
+      .select('*')
+      .eq('id', viewId)
+      .single()
+
+    if (error) {
+      console.error('Error fetching view:', error)
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Unknown error'),
+    }
+  }
+}
+
+/**
  * Format duration in seconds to MM:SS format
  */
 export function formatDuration(seconds: number | null): string {
@@ -300,4 +377,20 @@ export function formatDuration(seconds: number | null): string {
   const remainingSeconds = seconds % 60
   
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+/**
+ * Format date to readable format
+ */
+export function formatViewDate(dateString: string): string {
+  const date = new Date(dateString)
+  const options: Intl.DateTimeFormatOptions = {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  }
+  return date.toLocaleDateString('en-US', options)
 }
