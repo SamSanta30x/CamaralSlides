@@ -246,8 +246,8 @@ export default function SharePresentationPage() {
               endTitle={presentation.end_title ?? undefined}
               presentationTitle={presentation.title}
               description={presentation.end_description ?? undefined}
-              ctaText={presentation.cta_text || 'Create your own AI Presenter'}
-              ctaUrl={presentation.cta_url || 'https://camaral.ai'}
+              ctaText={presentation.cta_text && presentation.cta_text !== 'Add call to action' ? presentation.cta_text : 'Create your own AI Presenter'}
+              ctaUrl={presentation.cta_url && presentation.cta_text && presentation.cta_text !== 'Add call to action' ? presentation.cta_url : 'https://camaral.ai'}
               logoUrl={presentation.logo_url}
             />
           </div>
