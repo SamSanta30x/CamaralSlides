@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth/AuthContext'
 function SignUpForm() {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState(searchParams.get('email') || '')
+  const [isEditingEmail, setIsEditingEmail] = useState(!searchParams.get('email'))
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,9 +18,6 @@ function SignUpForm() {
   })
   const { signUp, signInWithGoogle, user } = useAuth()
   const router = useRouter()
-  
-  // Show password field when email is filled
-  const showPasswordField = email.trim() !== ''
 
   useEffect(() => {
     if (user) {
@@ -121,23 +119,43 @@ function SignUpForm() {
 
 
             {/* Email Section */}
-            <div className="flex flex-col gap-1">
-              <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
-                required
-                disabled={loading}
-                autoFocus={!email}
-              />
-            </div>
+            {isEditingEmail ? (
+              <div className="flex flex-col gap-1">
+                <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
+                  required
+                  disabled={loading}
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1">
+                <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
+                  Email
+                </label>
+                <div className="bg-[#f5f5f5] h-[36px] rounded-[6px] px-3 flex items-center justify-between">
+                  <span className="font-['Inter',sans-serif] text-[13.9px] text-[#1c1c1c]">
+                    {email}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingEmail(true)}
+                    className="font-['Inter',sans-serif] text-[13.9px] text-[#1c1c1c] underline"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
+            )}
 
-            {/* Password Label and Input - Show when email is filled */}
-            {showPasswordField && (
+            {/* Password Label and Input - Only show if email is locked (not editing) */}
+            {!isEditingEmail && (
               <>
                 <div className="flex flex-col gap-1">
                   <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
@@ -151,7 +169,7 @@ function SignUpForm() {
                     required
                     disabled={loading}
                     minLength={8}
-                    autoFocus={!!email}
+                    autoFocus
                   />
                 </div>
 
@@ -182,7 +200,7 @@ function SignUpForm() {
             </div>
 
             {/* Continue/Create Account Button */}
-            {showPasswordField && (
+            {!isEditingEmail && (
               <button
                 type="submit"
                 className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333] disabled:opacity-50 disabled:cursor-not-allowed"
