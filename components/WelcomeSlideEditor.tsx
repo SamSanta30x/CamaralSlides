@@ -204,15 +204,14 @@ export default function WelcomeSlideEditor({
           </div>
 
           {/* Start Call Button */}
-          <button
-            disabled
-            className="w-full bg-[#0d0d0d] text-white rounded-[999px] px-[20px] py-[14px] font-['Inter',sans-serif] text-[16px] font-medium cursor-not-allowed pointer-events-none"
+          <div
+            className="w-full bg-[#0d0d0d] text-white rounded-[999px] px-[20px] py-[14px] font-['Inter',sans-serif] text-[16px] font-medium cursor-not-allowed pointer-events-none text-center"
             style={{
               backgroundColor: '#0d0d0d'
             }}
           >
             Start call
-          </button>
+          </div>
 
           {/* Helper Text */}
           <div className="flex items-center justify-center gap-[8px] text-[#0d0d0d] py-[4px]">
