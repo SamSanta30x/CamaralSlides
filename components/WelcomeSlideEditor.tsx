@@ -220,7 +220,7 @@ export default function WelcomeSlideEditor({
               <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
               <path d="M7 3.5V7L9 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
-            <div className="flex items-center gap-[4px]">
+            <div className="flex items-center gap-[2px]">
               <span className="font-['Inter',sans-serif] text-[12px]">Takes</span>
               <div 
                 className="relative inline-flex items-center"

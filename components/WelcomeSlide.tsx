@@ -192,9 +192,11 @@ export default function WelcomeSlide({
               <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2"/>
               <path d="M7 3.5V7L9 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
-            <span className="font-['Inter',sans-serif] text-[12px]">
-              Takes {displayMinutes} minute{displayMinutes !== 1 ? 's' : ''}
-            </span>
+            <div className="flex items-center gap-[2px]">
+              <span className="font-['Inter',sans-serif] text-[12px]">Takes</span>
+              <span className="font-['Inter',sans-serif] text-[12px]">{displayMinutes}</span>
+              <span className="font-['Inter',sans-serif] text-[12px]">minute{displayMinutes !== 1 ? 's' : ''}</span>
+            </div>
             <span className="font-['Inter',sans-serif] text-[12px] mx-[4px]">•</span>
             <span className="font-['Inter',sans-serif] text-[12px]">
               press Enter ↵ to start
