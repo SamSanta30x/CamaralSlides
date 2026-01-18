@@ -42,26 +42,40 @@ export default function WelcomeSlideEditor({
           {presentationTitle}
         </h1>
 
-        {/* Description - Editable inline */}
-        <div 
-          contentEditable
-          suppressContentEditableWarning
-          onBlur={(e) => handleDescriptionChange(e.currentTarget.textContent || '')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              e.currentTarget.blur()
-            }
-          }}
-          className="font-['Inter',sans-serif] text-[16px] text-[#000] text-center self-stretch outline-none cursor-text hover:text-[#666] transition-colors"
-          style={{
-            fontWeight: 400,
-            lineHeight: '26px',
-            letterSpacing: '-0.4px',
-            minHeight: '26px'
-          }}
-        >
-          {localDescription || 'Description (optional)'}
+        {/* Description - Editable inline with placeholder */}
+        <div className="relative self-stretch" style={{ minHeight: '26px' }}>
+          {!localDescription && (
+            <div 
+              className="absolute inset-0 font-['Inter',sans-serif] text-[16px] text-[#999] text-center pointer-events-none"
+              style={{
+                fontWeight: 400,
+                lineHeight: '26px',
+                letterSpacing: '-0.4px'
+              }}
+            >
+              Description (optional)
+            </div>
+          )}
+          <div 
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={(e) => handleDescriptionChange(e.currentTarget.textContent || '')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                e.currentTarget.blur()
+              }
+            }}
+            className="font-['Inter',sans-serif] text-[16px] text-[#000] text-center self-stretch outline-none cursor-text hover:text-[#666] transition-colors"
+            style={{
+              fontWeight: 400,
+              lineHeight: '26px',
+              letterSpacing: '-0.4px',
+              minHeight: '26px'
+            }}
+          >
+            {localDescription}
+          </div>
         </div>
 
         {/* Form Preview */}
