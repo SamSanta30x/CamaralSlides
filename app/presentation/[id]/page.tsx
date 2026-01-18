@@ -29,6 +29,7 @@ export default function PresentationPage() {
   const [ctaUrl, setCtaUrl] = useState('')
   const [showUrlPopup, setShowUrlPopup] = useState(false)
   const ctaButtonRef = useRef<HTMLDivElement>(null)
+  const urlSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const presentationId = params.id as string
 
@@ -257,26 +258,34 @@ export default function PresentationPage() {
     setIsEditingCTA(false)
   }
 
-  const handleUrlChange = async (newUrl: string) => {
+  const handleUrlChange = (newUrl: string) => {
     setCtaUrl(newUrl)
     
-    if (!presentation) return
-
-    try {
-      const { error } = await updatePresentationCTA(presentationId, ctaText, newUrl)
-      
-      if (error) {
-        console.error('Error saving CTA URL:', error)
-      } else {
-        setPresentation({
-          ...presentation,
-          cta_text: ctaText,
-          cta_url: newUrl
-        })
-      }
-    } catch (error) {
-      console.error('Error saving CTA URL:', error)
+    // Clear existing timeout
+    if (urlSaveTimeoutRef.current) {
+      clearTimeout(urlSaveTimeoutRef.current)
     }
+
+    // Debounce save for 500ms
+    urlSaveTimeoutRef.current = setTimeout(async () => {
+      if (!presentation) return
+
+      try {
+        const { error } = await updatePresentationCTA(presentationId, ctaText, newUrl)
+        
+        if (error) {
+          console.error('Error saving CTA URL:', error)
+        } else {
+          setPresentation({
+            ...presentation,
+            cta_text: ctaText,
+            cta_url: newUrl
+          })
+        }
+      } catch (error) {
+        console.error('Error saving CTA URL:', error)
+      }
+    }, 500)
   }
 
   const handleUrlPopupClose = () => {
@@ -296,6 +305,15 @@ export default function PresentationPage() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentSlideIndex, presentation])
+
+  // Cleanup URL save timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (urlSaveTimeoutRef.current) {
+        clearTimeout(urlSaveTimeoutRef.current)
+      }
+    }
+  }, [])
 
   if (authLoading) {
     return (
@@ -351,7 +369,7 @@ export default function PresentationPage() {
                   onClick={handleCTAClick}
                   className="px-5 py-2 bg-[#0d0d0d] rounded-full font-['Inter',sans-serif] text-[13px] font-medium text-white hover:bg-[#2a2a2a] transition-colors flex items-center gap-2 cursor-pointer"
                 >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0">
                     <path d="M7 3V11M3 7H11" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
                   {isEditingCTA ? (
@@ -366,10 +384,11 @@ export default function PresentationPage() {
                         }
                       }}
                       autoFocus
-                      className="bg-transparent outline-none text-white font-['Inter',sans-serif] text-[13px] font-medium w-[150px]"
+                      style={{ width: `${Math.max(ctaText.length * 8, 120)}px` }}
+                      className="bg-transparent outline-none text-white font-['Inter',sans-serif] text-[13px] font-medium"
                     />
                   ) : (
-                    <span>{presentation?.cta_text || 'Add call to action'}</span>
+                    <span className="whitespace-nowrap">{presentation?.cta_text || 'Add call to action'}</span>
                   )}
                 </div>
 
