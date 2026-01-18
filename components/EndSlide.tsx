@@ -20,13 +20,28 @@ export default function EndSlide({
   return (
     <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8 py-12">
       {/* Title */}
-      <h1 className="font-['Inter',sans-serif] text-[32px] font-semibold text-[#0d0d0d] text-center mb-4 max-w-[600px] leading-[1.2]">
+      <h1 
+        className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center mb-4 max-w-[600px]"
+        style={{
+          fontWeight: 590,
+          lineHeight: '26px',
+          letterSpacing: '-0.45px',
+          fontFeatureSettings: "'ss01' on, 'cv01' on"
+        }}
+      >
         {displayTitle}
       </h1>
 
       {/* Description */}
       {description && (
-        <p className="font-['Inter',sans-serif] text-[16px] text-[#666] text-center mb-8 max-w-[500px]">
+        <p 
+          className="font-['Inter',sans-serif] text-[16px] text-[#000] text-center mb-8 max-w-[500px]"
+          style={{
+            fontWeight: 400,
+            lineHeight: '26px',
+            letterSpacing: '-0.4px'
+          }}
+        >
           {description}
         </p>
       )}

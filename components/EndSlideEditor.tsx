@@ -63,7 +63,20 @@ export default function EndSlideEditor({
   return (
     <div className="w-full h-full bg-white flex flex-col items-center justify-center px-8 py-12">
       {/* Title - Editable */}
-      <div className="relative w-full max-w-[600px] mb-4">
+      <div className="relative w-full max-w-[600px] mb-4" style={{ minHeight: '26px' }}>
+        {!localTitle && !isTitleFocused && (
+          <div 
+            className="absolute inset-0 font-['Inter',sans-serif] text-[18px] text-[#999] text-center pointer-events-none"
+            style={{
+              fontWeight: 590,
+              lineHeight: '26px',
+              letterSpacing: '-0.45px',
+              fontFeatureSettings: "'ss01' on, 'cv01' on"
+            }}
+          >
+            {displayTitle}
+          </div>
+        )}
         <div
           ref={titleRef}
           contentEditable
@@ -71,21 +84,33 @@ export default function EndSlideEditor({
           onFocus={() => setIsTitleFocused(true)}
           onBlur={() => setIsTitleFocused(false)}
           suppressContentEditableWarning
-          className="font-['Inter',sans-serif] text-[32px] font-semibold text-[#0d0d0d] text-center leading-[1.2] outline-none focus:outline-none min-h-[40px]"
-          style={{ 
+          className="font-['Inter',sans-serif] text-[18px] text-[#000] text-center outline-none cursor-text hover:text-[#666] transition-colors"
+          style={{
+            fontWeight: 590,
+            lineHeight: '26px',
+            letterSpacing: '-0.45px',
+            fontFeatureSettings: "'ss01' on, 'cv01' on",
+            minHeight: '26px',
             wordBreak: 'break-word',
             whiteSpace: 'pre-wrap'
           }}
         />
-        {!localTitle && !isTitleFocused && (
-          <div className="absolute inset-0 font-['Inter',sans-serif] text-[32px] font-semibold text-[#999] text-center leading-[1.2] pointer-events-none">
-            {displayTitle}
-          </div>
-        )}
       </div>
 
       {/* Description - Editable */}
-      <div className="relative w-full max-w-[500px] mb-8">
+      <div className="relative w-full max-w-[500px] mb-8" style={{ minHeight: '26px' }}>
+        {!localDescription && !isDescriptionFocused && (
+          <div 
+            className="absolute inset-0 font-['Inter',sans-serif] text-[16px] text-[#999] text-center pointer-events-none"
+            style={{
+              fontWeight: 400,
+              lineHeight: '26px',
+              letterSpacing: '-0.4px'
+            }}
+          >
+            Description (optional)
+          </div>
+        )}
         <div
           ref={descriptionRef}
           contentEditable
@@ -93,17 +118,16 @@ export default function EndSlideEditor({
           onFocus={() => setIsDescriptionFocused(true)}
           onBlur={() => setIsDescriptionFocused(false)}
           suppressContentEditableWarning
-          className="font-['Inter',sans-serif] text-[16px] text-[#666] text-center outline-none focus:outline-none min-h-[24px]"
-          style={{ 
+          className="font-['Inter',sans-serif] text-[16px] text-[#000] text-center outline-none cursor-text hover:text-[#666] transition-colors"
+          style={{
+            fontWeight: 400,
+            lineHeight: '26px',
+            letterSpacing: '-0.4px',
+            minHeight: '26px',
             wordBreak: 'break-word',
             whiteSpace: 'pre-wrap'
           }}
         />
-        {!localDescription && !isDescriptionFocused && (
-          <div className="absolute inset-0 font-['Inter',sans-serif] text-[16px] text-[#999] text-center pointer-events-none">
-            Description (optional)
-          </div>
-        )}
       </div>
 
       {/* CTA Button - Preview only */}
