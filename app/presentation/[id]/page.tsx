@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, updatePresentationObjective, updateEndTitle, updateEndDescription, updateWelcomeLogo, updateEndLogo, deleteSlide, deleteEndPage, type Presentation, type Slide } from '@/lib/supabase/presentations'
+import { getPresentation, updateSlide, updatePresentationCTA, updatePresentationTitle, updatePresentationObjective, updateEndTitle, updateEndDescription, updatePresentationLogo, deleteSlide, deleteEndPage, type Presentation, type Slide } from '@/lib/supabase/presentations'
 import { generateSlideDescription } from '@/lib/supabase/edgeFunctions'
 import DashboardHeader from '@/components/DashboardHeader'
 import DescriptionTextarea from '@/components/DescriptionTextarea'
@@ -109,17 +109,9 @@ export default function PresentationPage() {
       setTitleValue(presentation.title)
       setPresentationObjective(presentation.objective || '')
       setWelcomeDescription(presentation.objective || '')
-      
-      // Initialize logo based on current page
-      const isWelcome = currentSlideIndex === -1
-      const isEnd = currentSlideIndex === totalSlides
-      if (isWelcome) {
-        setLogoUrl(presentation.welcome_logo_url || null)
-      } else if (isEnd) {
-        setLogoUrl(presentation.end_logo_url || null)
-      }
+      setLogoUrl(presentation.logo_url || null)
     }
-  }, [presentation, currentSlideIndex])
+  }, [presentation])
 
   // Handle welcome slide description changes
   const handleWelcomeDescriptionChange = (description: string) => {
@@ -281,24 +273,12 @@ export default function PresentationPage() {
 
       setLogoUrl(publicUrl)
 
-      // Save to database based on current page
-      const isWelcome = currentSlideIndex === -1
-      const isEnd = currentSlideIndex === totalSlides
-      
-      if (isWelcome) {
-        const { error } = await updateWelcomeLogo(presentationId, publicUrl)
-        if (error) {
-          console.error('Error saving welcome logo to database:', error)
-        } else {
-          console.log('Welcome logo saved successfully')
-        }
-      } else if (isEnd) {
-        const { error } = await updateEndLogo(presentationId, publicUrl)
-        if (error) {
-          console.error('Error saving end logo to database:', error)
-        } else {
-          console.log('End logo saved successfully')
-        }
+      // Save to database (same logo for both Welcome and End pages)
+      const { error } = await updatePresentationLogo(presentationId, publicUrl)
+      if (error) {
+        console.error('Error saving logo to database:', error)
+      } else {
+        console.log('Logo saved successfully')
       }
     } catch (error) {
       console.error('Error uploading logo:', error)
