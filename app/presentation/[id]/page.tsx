@@ -1136,7 +1136,7 @@ export default function PresentationPage() {
             {loading ? (
               <div className="flex gap-[12px] overflow-x-auto pb-2 justify-center">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="flex-shrink-0 w-[156px] h-[88px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-[#dcdcdc] flex items-center justify-center">
+                  <div key={i} className="flex-shrink-0 w-[105px] h-[59px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-[#dcdcdc] flex items-center justify-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#e5e5e5] border-t-[#66e7f5]"></div>
                   </div>
                 ))}
@@ -1154,7 +1154,7 @@ export default function PresentationPage() {
                     onClick={() => setCurrentSlideIndex(-1)}
                     className="flex-shrink-0 relative cursor-pointer transition-all"
                   >
-                    <div className={`relative w-[156px] h-[88px] rounded-[13.703px] border-[1.713px] overflow-hidden transition-all ${
+                    <div className={`relative w-[105px] h-[59px] rounded-[13.703px] border-[1.713px] overflow-hidden transition-all ${
                       currentSlideIndex === -1
                         ? 'border-[#0d0d0d]'
                         : 'border-[#dcdcdc] opacity-60 hover:opacity-100'
@@ -1203,7 +1203,7 @@ export default function PresentationPage() {
                         : ''
                     }`}
                   >
-                    <div className={`relative w-[156px] h-[88px] rounded-[13.703px] border-[1.713px] overflow-hidden transition-all ${
+                    <div className={`relative w-[105px] h-[59px] rounded-[13.703px] border-[1.713px] overflow-hidden transition-all ${
                       index === currentSlideIndex
                         ? 'border-[#0d0d0d]'
                         : 'border-[#dcdcdc] opacity-60 hover:opacity-100'
@@ -1262,7 +1262,7 @@ export default function PresentationPage() {
                     onClick={() => setCurrentSlideIndex(totalSlides)}
                     className="flex-shrink-0 relative cursor-pointer transition-all select-none"
                   >
-                    <div className={`relative w-[156px] h-[88px] rounded-[13.703px] border-[1.713px] overflow-hidden transition-all ${
+                    <div className={`relative w-[105px] h-[59px] rounded-[13.703px] border-[1.713px] overflow-hidden transition-all ${
                       currentSlideIndex === totalSlides
                         ? 'border-[#0d0d0d]'
                         : 'border-[#dcdcdc] opacity-60 hover:opacity-100'
@@ -1303,7 +1303,7 @@ export default function PresentationPage() {
                     {[...Array(Math.max(0, totalSlidesExpected - presentation.slides.length))].map((_, i) => (
                       <div
                         key={`loading-${i}`}
-                        className="flex-shrink-0 w-[156px] h-[88px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-dashed border-[#dcdcdc] flex flex-col items-center justify-center gap-2"
+                        className="flex-shrink-0 w-[105px] h-[59px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-dashed border-[#dcdcdc] flex flex-col items-center justify-center gap-2"
                       >
                         <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#e5e5e5] border-t-[#66e7f5]"></div>
                         <span className="text-[10px] text-[#999] font-['Inter',sans-serif]">
@@ -1320,7 +1320,7 @@ export default function PresentationPage() {
                     {[...Array(3)].map((_, i) => (
                       <div
                         key={`loading-fallback-${i}`}
-                        className="flex-shrink-0 w-[156px] h-[88px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-dashed border-[#dcdcdc] flex flex-col items-center justify-center gap-2"
+                        className="flex-shrink-0 w-[105px] h-[59px] bg-[#f5f5f5] rounded-[13.703px] border-[1.713px] border-dashed border-[#dcdcdc] flex flex-col items-center justify-center gap-2"
                       >
                         <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#e5e5e5] border-t-[#66e7f5]"></div>
                         <span className="text-[10px] text-[#999] font-['Inter',sans-serif]">
@@ -1333,7 +1333,7 @@ export default function PresentationPage() {
 
                 {/* Add New Slide Button */}
                 {!isProcessing && (
-                  <button className="flex-shrink-0 w-[156px] h-[88px] bg-[#fafafa] border-[1.713px] border-[#dcdcdc] rounded-[13.703px] flex items-center justify-center hover:bg-[#f0f0f0] transition-all">
+                  <button className="flex-shrink-0 w-[105px] h-[59px] bg-[#fafafa] border-[1.713px] border-[#dcdcdc] rounded-[13.703px] flex items-center justify-center hover:bg-[#f0f0f0] transition-all">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                       <path d="M12 6V18M6 12H18" stroke="#999999" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
@@ -1375,7 +1375,7 @@ export default function PresentationPage() {
           className="transition-none"
         >
           <div className="relative w-full h-full scale-110 opacity-90 shadow-2xl">
-            <div className="relative w-[156px] h-[88px] rounded-[13.703px] border-[1.713px] border-[#0d0d0d] overflow-hidden">
+            <div className="relative w-[105px] h-[59px] rounded-[13.703px] border-[1.713px] border-[#0d0d0d] overflow-hidden">
               <div className="w-full h-full bg-white flex items-center justify-center p-2">
                 {presentation.slides[draggedIndex].image_url.endsWith('.pdf') ? (
                   <iframe
