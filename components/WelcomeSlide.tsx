@@ -25,16 +25,65 @@ export default function WelcomeSlide({
   const displayMinutes = estimatedMinutes ?? slideCount
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [nameError, setNameError] = useState(false)
+  const [emailError, setEmailError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  // Email validation regex
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
 
   const handleStartCall = () => {
-    if (name.trim() && email.trim()) {
-      onStartCall(name, email)
+    // Reset errors
+    setNameError(false)
+    setEmailError(false)
+    setErrorMessage('')
+
+    // Validate name
+    if (!name.trim()) {
+      setNameError(true)
+      setErrorMessage('Please enter your name')
+      return
     }
+
+    // Validate email
+    if (!email.trim()) {
+      setEmailError(true)
+      setErrorMessage('Please enter your email')
+      return
+    }
+
+    if (!isValidEmail(email)) {
+      setEmailError(true)
+      setErrorMessage('Please enter a valid email address')
+      return
+    }
+
+    // All valid, start call
+    onStartCall(name, email)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleStartCall()
+    }
+  }
+
+  const handleNameChange = (value: string) => {
+    setName(value)
+    if (nameError && value.trim()) {
+      setNameError(false)
+      setErrorMessage('')
+    }
+  }
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value)
+    if (emailError && value.trim() && isValidEmail(value)) {
+      setEmailError(false)
+      setErrorMessage('')
     }
   }
 
@@ -75,9 +124,13 @@ export default function WelcomeSlide({
             type="text"
             placeholder="Your name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => handleNameChange(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="flex items-center self-stretch flex-shrink-0 bg-white border border-[#e5e5e5] rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors"
+            className={`flex items-center self-stretch flex-shrink-0 bg-white rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none transition-colors ${
+              nameError 
+                ? 'border-2 border-[#ef4444] focus:border-[#ef4444]' 
+                : 'border border-[#e5e5e5] focus:border-[#0d0d0d]'
+            }`}
             style={{
               height: '42px',
               minWidth: '120px'
@@ -89,14 +142,31 @@ export default function WelcomeSlide({
             type="email"
             placeholder="Your email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => handleEmailChange(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="flex items-center self-stretch flex-shrink-0 bg-white border border-[#e5e5e5] rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none focus:border-[#0d0d0d] transition-colors"
+            className={`flex items-center self-stretch flex-shrink-0 bg-white rounded-[999px] px-[16px] py-[12px] font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] placeholder:text-[#999] focus:outline-none transition-colors ${
+              emailError 
+                ? 'border-2 border-[#ef4444] focus:border-[#ef4444]' 
+                : 'border border-[#e5e5e5] focus:border-[#0d0d0d]'
+            }`}
             style={{
               height: '42px',
               minWidth: '120px'
             }}
           />
+
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#fef2f2] border border-[#ef4444] rounded-[8px]">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="7" stroke="#ef4444" strokeWidth="1.5"/>
+                <path d="M8 4V8M8 11V11.5" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <span className="font-['Inter',sans-serif] text-[12px] text-[#ef4444]">
+                {errorMessage}
+              </span>
+            </div>
+          )}
 
           {/* Add Question Link */}
           <button className="text-center font-['Inter',sans-serif] text-[14px] text-[#0d0d0d] hover:text-[#666] transition-colors py-[8px]">
