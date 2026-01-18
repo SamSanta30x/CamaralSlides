@@ -26,7 +26,7 @@ export default function DescriptionTextarea({
     <div className="bg-white rounded-[12px] border border-[#e5e5e5] flex flex-col relative" style={{ height }}>
       {/* Custom Placeholder with Button */}
       {!value && (
-        <div className="absolute top-4 left-4 pointer-events-none flex flex-wrap items-center gap-[5px]">
+        <div className="absolute top-4 left-4 pointer-events-none flex flex-wrap items-center gap-[5px] z-20">
           <span className="font-['Inter',sans-serif] text-[15px] text-[#999]">
             {placeholder}
           </span>
@@ -60,7 +60,7 @@ export default function DescriptionTextarea({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder=""
-        className="flex-1 w-full bg-transparent font-['Inter',sans-serif] text-[15px] text-[#0d0d0d] outline-none resize-none relative z-10 px-4 pt-4 pb-2"
+        className="flex-1 w-full bg-transparent font-['Inter',sans-serif] text-[15px] text-[#0d0d0d] outline-none resize-none relative px-4 pt-4 pb-2"
       />
       <div className="flex items-center justify-end px-4 pb-3">
         <button
