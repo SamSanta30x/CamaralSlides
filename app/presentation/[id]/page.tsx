@@ -78,6 +78,13 @@ export default function PresentationPage() {
     // Only set loading for regular slides (not Welcome or End)
     const totalSlides = presentation?.slides?.length || 0
     const isRegularSlide = currentSlideIndex >= 0 && currentSlideIndex < totalSlides
+    console.log('🔍 Image Loading Effect:', {
+      currentSlideIndex,
+      totalSlides,
+      isRegularSlide,
+      currentSlide: presentation?.slides?.[currentSlideIndex],
+      imageUrl: presentation?.slides?.[currentSlideIndex]?.image_url
+    })
     if (isRegularSlide) {
       setImageLoading(true)
     } else {
@@ -1042,8 +1049,14 @@ export default function PresentationPage() {
                           className={`w-full h-full object-cover transition-opacity duration-300 ${
                             imageLoading ? 'opacity-0' : 'opacity-100'
                           }`}
-                          onLoad={() => setImageLoading(false)}
-                          onError={() => setImageLoading(false)}
+                          onLoad={() => {
+                            console.log('✅ Image loaded successfully:', currentSlide.image_url)
+                            setImageLoading(false)
+                          }}
+                          onError={(e) => {
+                            console.error('❌ Image failed to load:', currentSlide.image_url, e)
+                            setImageLoading(false)
+                          }}
                         />
                       )}
                     </div>
