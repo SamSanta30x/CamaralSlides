@@ -170,6 +170,8 @@ export async function generateSlideDescription(
     }
 
     console.log('Generating description for slide:', slideId)
+    console.log('Image URL:', imageUrl)
+    console.log('Presentation objective:', presentationObjective)
 
     // Call Edge Function to generate description
     const { data, error } = await supabase.functions.invoke('generate-slide-description', {
@@ -181,13 +183,41 @@ export async function generateSlideDescription(
     })
 
     if (error) {
-      console.error('Edge function error:', error)
+      console.error('❌ Edge function error:', error)
+      console.error('❌ Error name:', error.name)
+      console.error('❌ Error message:', error.message)
+      
+      // Try to read the response body if it's a FunctionsHttpError
+      if (error.context && error.context instanceof Response) {
+        try {
+          const responseText = await error.context.text()
+          console.error('📄 Response body:', responseText)
+          
+          // Try to parse as JSON
+          try {
+            const responseJson = JSON.parse(responseText)
+            console.error('📄 Parsed error:', responseJson)
+            
+            // Return the actual error from the Edge Function
+            return {
+              success: false,
+              error: responseJson.error || error.message,
+            }
+          } catch (parseError) {
+            console.error('Could not parse response as JSON')
+          }
+        } catch (readError) {
+          console.error('Could not read response body:', readError)
+        }
+      }
+      
       return {
         success: false,
         error: `Failed to generate description: ${error.message}`,
       }
     }
 
+    console.log('✅ Description generated successfully')
     return data as GenerateDescriptionResponse
   } catch (error) {
     console.error('Unexpected error:', error)
