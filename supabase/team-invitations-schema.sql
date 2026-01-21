@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS team_invitations (
   UNIQUE(organization_id, invited_email)
 );
 
+
 -- Create index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_team_invitations_email ON team_invitations(invited_email);
 CREATE INDEX IF NOT EXISTS idx_team_invitations_token ON team_invitations(invitation_token);
