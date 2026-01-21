@@ -126,20 +126,38 @@ function SignUpForm() {
 
             {/* Email Section */}
             {isEditingEmail ? (
-              <div className="flex flex-col gap-1">
-                <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
-                  required
-                  disabled={loading}
-                  autoFocus
-                />
-              </div>
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="border border-[#eceae4] h-[36px] rounded-[6px] px-3 text-[13.9px] font-['Inter',sans-serif] outline-none focus:border-[#1c1c1c]"
+                    required
+                    disabled={loading}
+                    autoFocus
+                  />
+                </div>
+
+                {/* Continue Button - Only show when editing email */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (email && email.includes('@')) {
+                      setIsEditingEmail(false)
+                    } else {
+                      setError('Please enter a valid email address')
+                    }
+                  }}
+                  className="bg-[#1c1c1c] h-[32px] rounded-[6px] font-['Inter',sans-serif] text-[13.5px] leading-[21px] text-[#fcfbf8] hover:bg-[#333] disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading || !email || !email.includes('@')}
+                >
+                  Continue
+                </button>
+              </>
             ) : (
               <div className="flex flex-col gap-1">
                 <label className="font-['Inter',sans-serif] text-[13.9px] leading-[21px] text-[#1c1c1c]">
