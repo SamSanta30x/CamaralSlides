@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth/AuthContext";
+import AdoraScript from "@/components/AdoraScript";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,22 +30,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
-        <Script
-          src="https://adora-cdn.com/adora-start.js"
-          strategy="afterInteractive"
-          onLoad={() => {
-            if (typeof window !== 'undefined' && (window as any).adoraStart) {
-              (window as any).adoraStart({
-                orgId: "c5ab12e4-249d-4873-84ea-685a0c345a87",
-                uid: "",
-                properties: {
-                  "Subscription tier": "",
-                  "Company name": ""
-                }
-              });
-            }
-          }}
-        />
+        <AdoraScript />
       </body>
     </html>
   );
